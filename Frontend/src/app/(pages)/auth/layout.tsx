@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 // import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
-  title: "Hotel booking system",
+  title: "Ecommerce Analysis system",
   description: "Hotel booking system for many gorgeous rooms inside",
 };
 

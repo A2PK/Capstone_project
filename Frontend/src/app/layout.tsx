@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Hotel booking system",
+  title: "Ecommerce Analysis system",
   description: "Hotel booking system for many gorgeous rooms inside",
 };
 
@@ -17,14 +17,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link
-          rel="icon"
-          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏨</text></svg>"
-        />
+      <link rel="icon" href="https://www.svgrepo.com/show/324142/dashboard-graph-analytics-report.svg" type="image/svg+xml" sizes="16x16" />
       </head>
       <body>
         <Toaster />
         {children}
+       
       </body>
     </html>
   );

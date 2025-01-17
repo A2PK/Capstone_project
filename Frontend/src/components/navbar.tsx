@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import {
   Calendar,
@@ -9,6 +10,7 @@ import {
   Menu,
   Search,
   User,
+  X,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,23 +23,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getRole, getSession, logout } from "@/lib/auth";
 
 export default function Navbar() {
   let isLoggedIn = true;
-  const token = getSession();
-  if (!token) {
-    isLoggedIn = false;
-  }
   const onLogoutSubmit = async (_: FormData) => {
     "use server";
-    await logout();
-    redirect("auth/login");
+    redirect("/auth/login");
   };
-  const role = getRole();
-  const bookingPageLink =
-    role === "manager" ? "/dashboard/mybooking" : "/bookings";
-  const homeLink = role === "manager" ? "/dashboard/homepage" : "/home";
 
   return (
     <nav className="bg-white shadow-md">
@@ -48,7 +40,7 @@ export default function Navbar() {
               <Link href="/dashboard/homepage">
                 <Hotel className="h-8 w-8 text-blue-500" />
               </Link>
-              <Link href={homeLink}>
+              <Link href="/dashboard/homepage">
                 <span className="ml-2 text-xl font-bold text-gray-800">
                   HotelBooker
                 </span>
@@ -56,39 +48,29 @@ export default function Navbar() {
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link
-                href={homeLink}
+                href="/dashboard/homepage"
                 className="inline-flex items-center border-b-2 border-blue-500 px-1 pt-1 text-sm font-medium text-gray-900"
               >
                 Home
               </Link>
               <Link
-                href={bookingPageLink}
+                href="/dashboard/homepage"
                 className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
               >
-                Bookings
+                Rooms
               </Link>
-              {role === "manager" && (
-                <>
-                  <Link
-                    href="/dashboard/homepage"
-                    className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  >
-                    Rooms
-                  </Link>
-                  <Link
-                    href="/dashboard/amenities"
-                    className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  >
-                    Amenities
-                  </Link>
-                  <Link
-                    href="/dashboard/contact"
-                    className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  >
-                    Contact
-                  </Link>
-                </>
-              )}
+              <Link
+                href="/dashboard/amenities"
+                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+              >
+                Amenities
+              </Link>
+              <Link
+                href="/dashboard/contact"
+                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+              >
+                Contact
+              </Link>
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
@@ -123,9 +105,7 @@ export default function Navbar() {
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Calendar className="mr-2 h-4 w-4" />
-                    <Link href={bookingPageLink}>
-                      <span>My Bookings</span>
-                    </Link>
+                    <span>My Bookings</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
@@ -212,7 +192,7 @@ export default function Navbar() {
                 Profile
               </Link>
               <Link
-                href={bookingPageLink}
+                href="/dashboard/bookings"
                 className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
               >
                 My Bookings
