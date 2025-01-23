@@ -1,63 +1,71 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import logo from "/public/thuvien.jpg";
+import logo from "/public/atlogo.png";
+
 const AppFooter = () => {
   return (
-    <div>
-    <div className="pb-2 border-b border-gray-800">
-      <p></p>
-    </div>
-    <div
-      className="bg-light bg-gradient px-2 text-primary-emphasis"
-      style={{ fontFamily: "Inria Serif, serif", padding: "50px 0 30px 0" }}
-    >
-      <div className="container mx-auto flex flex-col gap-5 md:flex-row">
-        <div className="flex flex-col gap-2 w-full max-w-md">
-          <h2 className="text-2xl font-semibold">Hotel sample</h2>
-          <div className="rounded-3 flex justify-center items-center">
-            <Image
-              src={logo}
-              alt="school"
-              width={450}
-              className="rounded-3"
-            />
+    <footer className="bg-gray-900 text-gray-200">
+      <div className="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-3">
+        {/* Logo and Application Name */}
+        <div className="flex flex-col items-center text-center md:items-start md:text-left">
+          <div className="flex justify-center items-center">
+            <Image src={logo} alt="Water Quality Monitoring Logo" width={150} />
           </div>
+          <h2 className="text-xl font-semibold mt-4">
+            Water Quality Monitoring
+          </h2>
+          <p className="text-sm">
+            Empowering environmental research and data-driven solutions for
+            water quality management.
+          </p>
         </div>
-        <div className="flex mx-5 flex-col gap-2 w-full">
-          <h2 className="text-2xl font-semibold">Website</h2>
-          <div className="flex flex-col gap-2 text-primary-emphasis text-sm">
-            <Link
-              href={"https://hotelBooker.vn"}
-              className="no-underline text-primary-emphasis italic underline"
-            >
-              hotelBooker
+
+        {/* Quick Links */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold">Quick Links</h2>
+          <nav className="flex flex-col gap-2">
+            <Link href="/" className="hover:underline">
+              Home
             </Link>
-            <Link
-              href={"https://hotelAsker.vn"}
-              className="no-underline text-primary-emphasis italic underline"
-            >
-              hotelAsker
+            <Link href="/about" className="hover:underline">
+              About Us
             </Link>
-            <Link
-              href={"https://hotelReporter.vn"}
-              className="no-underline text-primary-emphasis italic underline"
-            >
-              hotelReporter
+            <Link href="/features" className="hover:underline">
+              Features
             </Link>
-          </div>
+            <Link href="/contact" className="hover:underline">
+              Contact
+            </Link>
+          </nav>
         </div>
-        <div className="flex mx-5 flex-col gap-2 w-full">
-          <h2 className="text-2xl font-semibold">Address</h2>
-          <div className="flex flex-col gap-2 text-sm">
-            <p>234 Pasteur Street, Ward 3, District 1, HCM City</p>
-            <p>(028) 38 651 670 - (028) 38 647 256</p>
-            <p>donotMail@gmail.com</p>
-          </div>
+
+        {/* Contact Information */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold">Contact</h2>
+          <address className="not-italic text-sm">
+            123 Waterway Drive, Eco City, Green State, 54321
+            <br />
+            Phone: +1 (800) 555-1234
+            <br />
+            Email:{" "}
+            <a
+              href="mailto:info@watermonitoring.com"
+              className="hover:underline text-blue-400"
+            >
+              info@watermonitoring.com
+            </a>
+          </address>
         </div>
       </div>
-    </div>
-  </div>
+      <div className="border-t border-gray-700 py-4">
+        <p className="text-center text-xs text-gray-500">
+          &copy; {new Date().getFullYear()} Water Quality Monitoring. All
+          rights reserved.
+        </p>
+      </div>
+    </footer>
   );
 };
 

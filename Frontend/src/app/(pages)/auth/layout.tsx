@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 // import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
-  title: "Ecommerce Analysis system",
-  description: "Hotel booking system for many gorgeous rooms inside",
+  title: "Water quality monitoring system",
+  description: "The system which helps officiers collect and research the data inside",
 };
 
 export default function DashboardLayout({
