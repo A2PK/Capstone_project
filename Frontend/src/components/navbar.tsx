@@ -1,20 +1,11 @@
-import Link from "next/link";
+'use client'
+import Image from "next/image";
 import { redirect } from "next/navigation";
-import { useEffect, useState } from "react";
-
-import {
-  Calendar,
-  Hotel,
-  LogIn,
-  LogOut,
-  Menu,
-  Search,
-  User,
-  X,
-} from "lucide-react";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import logo from "/public/wqm.jpg";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,201 +14,158 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LogOut, Bell, Mail, Menu, X, User } from "lucide-react";
+import Link from "next/link";
 
 export default function Navbar() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
   let isLoggedIn = true;
-  const onLogoutSubmit = async (_: FormData) => {
-    "use server";
-    redirect("/auth/login");
+  const handleLogout = () => {
+    router.push("/auth/login"); // Redirect to the login page
   };
+  // const onLogoutSubmit = async (_: FormData) => {
+  //   "use server";
+  //   redirect("/auth/login");
+  // };
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-white shadow-md border-b border-gray-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between">
-          <div className="flex">
-            <div className="flex flex-shrink-0 items-center">
-              <Link href="/dashboard/homepage">
-                <Hotel className="h-8 w-8 text-blue-500" />
-              </Link>
-              <Link href="/dashboard/homepage">
-                <span className="ml-2 text-xl font-bold text-gray-800">
-                  HotelBooker
-                </span>
-              </Link>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link
-                href="/dashboard/homepage"
-                className="inline-flex items-center border-b-2 border-blue-500 px-1 pt-1 text-sm font-medium text-gray-900"
-              >
-                Home
-              </Link>
-              <Link
-                href="/dashboard/homepage"
-                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              >
-                Rooms
-              </Link>
-              <Link
-                href="/dashboard/amenities"
-                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              >
-                Amenities
-              </Link>
-              <Link
-                href="/dashboard/contact"
-                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              >
-                Contact
-              </Link>
-            </div>
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo Section */}
+          <div className="flex items-center">
+            <Image
+              src={logo}
+              alt="Water Monitoring System Logo"
+              width={90}
+              height={40}
+            />
+            {/* <span className="ml-2 text-xl font-bold text-blue-600">
+              WQM
+            </span> */}
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+
+          {/* Desktop Icons and User Section */}
+          <div className="hidden sm:flex items-center space-x-4">
             <Button variant="ghost" size="icon">
-              <Search className="h-5 w-5" />
+              <Bell className="h-5 w-5 text-gray-500" />
             </Button>
             <Button variant="ghost" size="icon">
-              <Calendar className="h-5 w-5" />
+              <Mail className="h-5 w-5 text-gray-500" />
             </Button>
-            {isLoggedIn ? (
+            {isLoggedIn && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     className="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
-                    <span className="sr-only">Open user menu</span>
                     <Avatar>
                       <AvatarImage
                         src="https://github.com/shadcn.png"
-                        alt="@shadcn"
+                        alt="User Avatar"
                       />
-                      <AvatarFallback>CN</AvatarFallback>
+                      <AvatarFallback>U</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuItem>
+  <Link
+    href="/dashboard/profile"
+    className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-600 rounded-md transition-all duration-200 ease-in-out"
+  >
+    <User className="mr-2 h-4 w-4" />
+    My Profile
+  </Link>
+</DropdownMenuItem>
                   <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Calendar className="mr-2 h-4 w-4" />
-                    <span>My Bookings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <form action={onLogoutSubmit}>
-                      <Button type="submit">
+                    {/* <form action={onLogoutSubmit}>
+                      <Button type="submit" className="flex items-center">
                         <LogOut className="mr-2 h-4 w-4" />
                         Log out
                       </Button>
-                    </form>
+                    </form> */}
+                    <Button
+    type="button" // Changed to "button" as "submit" is unnecessary here
+    onClick={handleLogout}
+    className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
+  >
+    <LogOut className="mr-2 h-4 w-4" />
+    Log out
+  </Button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <Link href="/auth/login">
-                <Button variant="ghost">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Sign In
-                </Button>
-              </Link>
             )}
           </div>
-          <div className="-mr-2 flex items-center sm:hidden">
-            <Button variant="ghost" size="icon">
-              <span className="sr-only">Open main menu</span>
-              <Menu className="block h-6 w-6" aria-hidden="true" />
+
+          {/* Mobile Menu Button */}
+          <div className="flex sm:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? (
+                <X className="block h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Menu className="block h-6 w-6" aria-hidden="true" />
+              )}
             </Button>
           </div>
         </div>
-      </div>
+        {isMobileMenuOpen && (
+  <div className="sm:hidden bg-white shadow-md absolute top-16 right-0 w-full max-w-xs z-50 p-4">
+    <div className="flex space-x-4 py-2 px-4 items-center">
 
-      <div className="sm:hidden">
-        <div className="space-y-1 pb-3 pt-2">
-          <Link
-            href="/dashboard/homepage"
-            className="block border-l-4 border-blue-500 bg-blue-50 py-2 pl-3 pr-4 text-base font-medium text-blue-700"
-          >
-            Home
-          </Link>
-          <Link
-            href="/dashboard/rooms"
-            className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
-          >
-            Rooms
-          </Link>
-          <Link
-            href="/dashboard/amenities"
-            className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
-          >
-            Amenities
-          </Link>
-          <Link
-            href="/dashboard/contact"
-            className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
-          >
-            Contact
-          </Link>
-        </div>
-        {isLoggedIn ? (
-          <div className="border-t border-gray-200 pb-3 pt-4">
-            <div className="flex items-center px-4">
-              <div className="flex-shrink-0">
-                <Avatar>
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="@shadcn"
-                  />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-              </div>
-              <div className="ml-3">
-                <div className="text-base font-medium text-gray-800">
-                  Tom Cook
-                </div>
-                <div className="text-sm font-medium text-gray-500">
-                  tom@example.com
-                </div>
-              </div>
-            </div>
-            <div className="mt-3 space-y-1">
-              <Link
-                href="/dashboard/profile"
-                className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-              >
-                Profile
+      <Button variant="ghost" className="flex items-center justify-center">
+        <Bell className="h-5 w-5 text-gray-500" />
+      </Button>
+
+      <Button variant="ghost" className="flex items-center justify-center">
+        <Mail className="h-5 w-5 text-gray-500" />
+      </Button>
+
+      {isLoggedIn && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="flex items-center justify-center">
+              <Avatar className="mr-2">
+                <AvatarImage
+                  src="https://github.com/shadcn.png"
+                  alt="User Avatar"
+                />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+          <DropdownMenuItem>
+              <Link href="/dashboard/profile" className="flex items-center w-full">
+                <User className="mr-2 h-4 w-4" />
+                My Profile
               </Link>
-              <Link
-                href="/dashboard/bookings"
-                className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-              >
-                My Bookings
-              </Link>
-              <form action={onLogoutSubmit}>
-                <Button
-                  type="submit"
-                  className="block w-full px-4 py-2 text-left text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-                >
-                  Log out
-                </Button>
-              </form>
-            </div>
-          </div>
-        ) : (
-          <div className="border-t border-gray-200 pb-3 pt-4">
-            <div className="mt-3 space-y-1">
-              <Link href="/auth/login">
-                <Button className="block w-full px-4 py-2 text-left text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">
-                  Sign In
-                </Button>
-              </Link>
-            </div>
-          </div>
-        )}
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+            <Button
+    type="button" // Changed to "button" as "submit" is unnecessary here
+    onClick={handleLogout}
+    className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
+  >
+    <LogOut className="mr-2 h-4 w-4" />
+    Log out
+  </Button>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
+  </div>
+)}
+
+
       </div>
     </nav>
   );

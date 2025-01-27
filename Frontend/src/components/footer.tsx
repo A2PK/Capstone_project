@@ -6,7 +6,7 @@ import logo from "/public/atlogo.png";
 
 const AppFooter = () => {
   return (
-    <footer className="bg-gray-900 text-gray-200">
+    <footer className="bg-gray-800 text-gray-200">
       <div className="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-3">
         {/* Logo and Application Name */}
         <div className="flex flex-col items-center text-center md:items-start md:text-left">
