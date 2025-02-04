@@ -1,9 +1,9 @@
 "use client"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/pagination";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const monitoringStations = [
   {
@@ -69,13 +69,24 @@ const monitoringStations = [
     recommendation: "WQI rất tốt, chú ý an toàn vệ sinh thực phẩm",
   },
 ];
-
-const ITEMS_PER_PAGE = 6; // Number of items per page
+let ITEMS_PER_PAGE = 6; // Number of items per page
 
 export default function Realtimedata() {
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const totalPages = Math.ceil(monitoringStations.length / ITEMS_PER_PAGE);
+  const [ITEMS_PER_PAGE, setItemAmount] = useState<number>(6);
+  const [currentDate, setCurrentDate] = useState<string>("");
 
+  useEffect(() => {
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString("vi-VN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    setCurrentDate(formattedDate);
+  }, []);
+
+  const totalPages = Math.ceil(monitoringStations.length / ITEMS_PER_PAGE);
   const displayedStations = monitoringStations.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
@@ -100,7 +111,7 @@ export default function Realtimedata() {
           </div>
           <div className="flex items-center border px-3 py-2 rounded-md">
             <Calendar className="w-5 h-5 text-gray-500 mr-2" />
-            <span className="text-sm text-gray-600">Tháng 9 năm 2023</span>
+            <span className="text-sm text-gray-600">{currentDate}</span>
           </div>
         </div>
       </header>
@@ -155,14 +166,27 @@ export default function Realtimedata() {
         </TableBody>
       </Table>
 
-      <footer className="mt-6 flex justify-center">
-        {totalPages > 1 && (
+      <footer className="mt-6 flex justify-center items-center">
+        {totalPages >= 1 && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}
           />
         )}
+        <div className="flex items-center ml-4">
+          <label className="mr-2">Items per page:</label>
+          <select
+            value={ITEMS_PER_PAGE}
+            onChange={(e) => setItemAmount(Number(e.target.value) || 1)}
+            className="border px-2 py-1 rounded-md w-20 text-center"
+          >
+            <option value="3">3</option>
+            <option value="6">6</option>
+            <option value="9">9</option>
+            <option value="12">12</option>
+          </select>
+        </div>
       </footer>
     </div>
   );
