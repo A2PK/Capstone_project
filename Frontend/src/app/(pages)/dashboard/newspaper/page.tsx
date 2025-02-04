@@ -130,8 +130,8 @@ const NewsPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayedNews.map((item, index) => (
-          <Card key={index} className="overflow-hidden">
-            <img src={item.imageUrl} alt={item.title} className="w-full h-64 object-cover" />
+          <Card key={index} className="hover:shadow-lg transition-shadow">
+            <img src={item.imageUrl} alt={item.title} className="w-full h-64 object-cover rounded-t-md" />
             <CardHeader>
               <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
             </CardHeader>
