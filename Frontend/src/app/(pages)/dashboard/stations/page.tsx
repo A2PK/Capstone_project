@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
-import { Search, Calendar, AlertTriangle, Droplet, MapPin } from "lucide-react";
 import { Pagination } from "@/components/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Line } from "react-chartjs-2";
-import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale } from "chart.js";
+import { CategoryScale, Chart as ChartJS, LinearScale, LineElement, PointElement } from "chart.js";
 import "leaflet/dist/leaflet.css";
+import { Calendar, Search } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useState } from "react";
+import { Line } from "react-chartjs-2";
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale);
 
@@ -43,6 +43,8 @@ if (typeof window !== "undefined") {
   };
 }
 
+
+
 export default function StationsPage() {
   const [selectedStation, setSelectedStation] = useState(stations[0]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,26 +52,48 @@ export default function StationsPage() {
 
   const handlePageChange = (page: any) => setCurrentPage(page);
 
-  const wqiData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
-    datasets: [
-      {
-        label: "WQI Năm nay",
-        data: selectedStation.trend,
-        borderColor: "#4f46e5",
-        backgroundColor: "#4f46e5",
-        tension: 0.4
-      },
-      {
-        label: "Dự đoán WQI",
-        data: selectedStation.prediction,
-        borderColor: "#22c55e",
-        backgroundColor: "#22c55e",
-        borderDash: [5, 5],
-        tension: 0.4
-      }
-    ]
+  const getMonthLabels = () => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date().getMonth(); // Get current month index (0-based)
+  
+    return [
+      months[(now - 3 + 12) % 12],
+      months[(now - 2 + 12) % 12],
+      months[(now - 1 + 12) % 12],
+      "Tháng này",
+      months[(now + 1) % 12],
+      months[(now + 2) % 12],
+      months[(now + 3) % 12],
+    ];
   };
+  const labels = getMonthLabels();
+
+  const nowIndex = Math.floor(labels.length / 2); // Find the index of "Now" in the labels array
+
+  const wqiData = {
+  labels,
+  datasets: [
+    {
+      label: "WQI thực tế",
+      data: selectedStation.trend.map((value, index) =>
+        index > nowIndex ? null : value // Set past values to null
+      ),
+      borderColor: "#4f46e5",
+      backgroundColor: "#4f46e5",
+      tension: 0.4
+    },
+    {
+      label: "Dự đoán WQI",
+      data: selectedStation.prediction.map((value, index) =>
+        index < nowIndex ? null : index === nowIndex ? selectedStation.trend[nowIndex] : value
+      ),
+      borderColor: "#22c55e",
+      backgroundColor: "#22c55e",
+      borderDash: [5, 5],
+      tension: 0.4
+    }
+  ]
+};
 
   return (
     <div className="flex flex-1 overflow-hidden"> {/* Sidebar-aware container */}
