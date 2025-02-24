@@ -2,15 +2,11 @@
 
 import { Pagination } from "@/components/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CategoryScale, Chart as ChartJS, LinearScale, LineElement, PointElement } from "chart.js";
 import "leaflet/dist/leaflet.css";
 import { Calendar, Search } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { Line } from "react-chartjs-2";
-
-ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale);
-
+import Chartline from "@/components/linechart";
 const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), { ssr: false });
@@ -70,30 +66,6 @@ export default function StationsPage() {
 
   const nowIndex = Math.floor(labels.length / 2); // Find the index of "Now" in the labels array
 
-  const wqiData = {
-  labels,
-  datasets: [
-    {
-      label: "WQI thực tế",
-      data: selectedStation.trend.map((value, index) =>
-        index > nowIndex ? null : value // Set past values to null
-      ),
-      borderColor: "#4f46e5",
-      backgroundColor: "#4f46e5",
-      tension: 0.4
-    },
-    {
-      label: "Dự đoán WQI",
-      data: selectedStation.prediction.map((value, index) =>
-        index < nowIndex ? null : index === nowIndex ? selectedStation.trend[nowIndex] : value
-      ),
-      borderColor: "#22c55e",
-      backgroundColor: "#22c55e",
-      borderDash: [5, 5],
-      tension: 0.4
-    }
-  ]
-};
 
   return (
     <div className="flex flex-1 overflow-hidden"> {/* Sidebar-aware container */}
@@ -207,19 +179,9 @@ export default function StationsPage() {
       <p>Thời gian: {selectedStation.time}</p>
 
       <div className="mt-4">
-        <h3 className="text-lg font-bold">Xu hướng và Dự đoán WQI</h3>
-        <div className="h-96 md:h-[300px]">
-          <Line
-            data={wqiData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { position: "top" } },
-            }}
-          />
-        </div>
+        
       </div>
-    </section>
+    </section><Chartline />
   </div>
 </div>
   );

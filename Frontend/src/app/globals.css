@@ -1,9 +1,271 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.menu-sidebar {
+    box-shadow: 7px 7px 10px rgba(0, 0, 0, .03);
+    flex-shrink: 0;
+    z-index: 99;
+    transition: .2s ease-in;
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 100%;
+    width: 260px;
+}
 
+.logo img {
+    margin: 0 auto;
+}
+
+.miniicons {
+    height: calc(100vh - 150px);
+}
+
+.sidebar-nav .caption {
+    padding-top: 20px !important;
+    margin-top: 20px !important;
+    border-top: 1px dashed var(--color-border);
+}
+
+.sidebar-nav .caption:first-child {
+    padding-top: 0 !important;
+    margin-top: 0px !important;
+    border-top: 0 !important;
+}
+
+.sidebar-dropdown li a {
+    opacity: 0.9;
+    padding: 8px 16px;
+}
+
+.sidebar-dropdown li a {
+    background-color: transparent !important;
+}
+
+.sidebar-dropdown li a:hover {
+    background-color: transparent !important;
+    opacity: 1;
+}
+
+.sidebar-dropdown li button:hover {
+    background-color: transparent !important;
+}
+
+.sidebar-dropdown li .iconify--fad {
+    height: 9px;
+    width: 9px;
+    margin: 0 4px;
+}
+
+.menu-sidebar .hide-icon {
+    display: none;
+}
+
+.brand-logo img {
+    max-width: unset;
+}
+
+.menu-sidebar [data-testid="flowbite-sidebar-item-group"] li {
+    display: flex;
+}
+
+.menu-sidebar [data-testid="flowbite-sidebar-item-group"] .collpase-items li {
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-sidebar [data-testid="flowbite-sidebar-item-group"] .collpase-items li button {
+    flex-grow: 1;
+}
+
+.menu-sidebar [data-testid="flowbite-sidebar-item-group"] .collpase-items li button .iconify {
+    flex-shrink: 0;
+}
+
+.menu-sidebar [data-testid="flowbite-sidebar-item-group"] .collpase-items li button [data-testid="flowbite-sidebar-collapse-label"] {
+    flex-grow: 1; 
+}
+
+.menu-sidebar [data-testid="flowbite-sidebar-item-group"] li a {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
+
+@media (min-width: 1199px) {
+    [data-sidebar-type="mini-sidebar"] .page-wrapper {
+        margin-left: 80px;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar {
+        width: 80px !important;
+        overflow: hidden;
+        box-shadow: 7px 7px 10px rgba(0, 0, 0, .03);
+    }
+
+    [data-sidebar-type="mini-sidebar"] .brand-logo {
+        overflow: hidden;
+        margin-left: 4px;
+        margin-right: 12px;
+    }
+
+    [data-sidebar-type="mini-sidebar"]:hover .brand-logo {
+        width: auto;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .profile-menu {
+        padding-left: 0px;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar:hover .profile-menu {
+        padding-left: 40px;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar:hover {
+        width: 260px !important;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar:hover .hide-menu {
+        display: block !important;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar .hide-icon {
+        display: block;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar .hide-menu {
+        display: none;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar:hover .hide-icon {
+        display: none !important;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar [data-testid="flowbite-sidebar-collapse-label"] {
+        display: none;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar:hover [data-testid="flowbite-sidebar-collapse-label"] {
+        display: flex;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar .collapse-menu .drop-icon {
+        display: none;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar:hover .collapse-menu .drop-icon {
+        display: block;
+    }
+
+    [data-sidebar-type="mini-sidebar"] .menu-sidebar [data-testid="flowbite-sidebar-item-group"] li button {
+        width: auto;
+        white-space: nowrap;
+    }
+
+
+}
+.mobile-header-menu {
+    height: 0;
+    overflow: hidden;
+    transition: all .3s ease-in-out;
+}
+.mobile-header-menu.active {
+    min-height: 70px;
+    overflow: visible;
+}
+
+
+.page-wrapper {
+    margin-left: calc(0px + 260px);
+    transition: .2s ease-in;
+}
+
+
+
+@media screen and (max-width:1280px) {
+    .page-wrapper{
+        margin-left: 0;
+    }
+}
+.megamenu {
+    transform: translateY(38px) !important;
+  }
+  
+  .simplebar-scrollbar:before {
+    background: var(--color-border) !important;
+  }
+  
+  .translate {
+    transform: translate(-88%, 40px) !important;
+    transition: 0.5s;
+  }
+  .translate-lng {
+    transform: translate(-81%, 40px) !important;
+    transition: 0.5s;
+  }
+  
+  .h-n80 {
+    height: calc(100vh - 80px);
+  }
+  
+  /* styles/globals.css */
+  .dropdown-enter {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  
+  .dropdown-enter-active {
+    opacity: 1;
+    transform: translate(0);
+    transition: opacity 150ms, transform 150ms;
+  }
+  
+  .dropdown-leave {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .dropdown-leave-active {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 150ms, transform 150ms;
+  }
+  
+  .two-cols{
+    -webkit-columns: 4;
+    -moz-columns: 4;
+    columns: 4;
+  }
+  
+  [data-simplebar], .simplebar-offset, .simplebar-content,.simplebar-wrapper,.simplebar-mask,.simplebar-content-wrapper{
+    outline:none !important;
+    border:none !important
+  }
+  
 @layer base {
   :root {
+    --color-primary: #00A1FF;
+    --color-secondary: #8965E5;
+    --color-primary-emphasis:#0091E5;   
+    --color-secondary-emphasis:#673ADE;
+    --color-lightprimary:#00A1FF20;
+    --color-lightsecondary:#8965E520; 
+    --color-info:#46caeb;
+    --color-success:#00ceb6;
+    --color-warning:#FFB900;
+    --color-error:#FF6692;
+    --color-lightsuccess:#00ceb625;
+    --color-lighterror:#FF669230;
+    --color-lightinfo:#46caeb25;
+    --color-lightwarning:#FFB90025;
+    --color-white:#fff ;
+    --color-dark:#111c2d;
+    --color-border:#e0e6eb;
+    --color-bordergray:#cfd6db;
+    --color-link:#2a3547;
+    --color-muted:#EFF4FA;
+    --color-darklink:#7b8893;
+    --color-lightgray:#F8FAFD;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
