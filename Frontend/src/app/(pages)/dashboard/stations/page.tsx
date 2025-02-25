@@ -74,7 +74,7 @@ export default function StationsPage() {
     {/* Header */}
     <header className="flex justify-between items-center border-b pb-2">
       <h1 className="text-2xl font-bold">Trạm Quan Trắc</h1>
-      <div className="flex space-x-2">
+      {/* <div className="flex space-x-2">
         <div className="flex items-center border px-3 py-1 rounded-md">
           <Search className="w-4 h-4 text-gray-500 mr-2" />
           <input type="text" placeholder="Tìm kiếm" className="outline-none text-sm" />
@@ -83,7 +83,7 @@ export default function StationsPage() {
           <Calendar className="w-4 h-4 text-gray-500 mr-2" />
           <span className="text-sm">Tháng 9 năm 2024</span>
         </div>
-      </div>
+      </div> */}
     </header>
 
     {/* Map & Table */}

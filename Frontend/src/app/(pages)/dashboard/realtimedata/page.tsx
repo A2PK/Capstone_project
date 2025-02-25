@@ -1,125 +1,207 @@
 "use client"
-import { Pagination } from "@/components/pagination";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Search } from "lucide-react";
-import { useEffect, useState } from "react";
-
+import { Pagination } from "@/components/pagination"
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState } from "react"
+import { addDays, format } from "date-fns"
+import type { DateRange, SelectRangeEventHandler } from "react-day-picker"
+import { CalendarIcon } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import { ChevronDown } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
+import { parse } from "date-fns"
 const monitoringStations = [
   {
     station: "Phú Giềng",
-    time: "12:32, Sep 9, 2024",
-    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5,40],
+    time: "12:32, Sep 9, 2023",
+    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 40],
     status: "Nguy hiểm",
     recommendation: "WQI nguy hiểm, cần lọc nước khẩn cấp",
   },
   {
     station: "Châu Phú",
     time: "12:32, Sep 9, 2024",
-    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5,80],
+    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 80],
     status: "Tốt",
     recommendation: "WQI tốt, chú ý lọc nước",
   },
   {
     station: "Thoại Sơn",
-    time: "12:31, Sep 9, 2024",
-    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5,100],
+    time: "12:31, Sep 9, 2025",
+    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 100],
     status: "Rất tốt",
     recommendation: "WQI rất tốt, chú ý an toàn vệ sinh thực phẩm",
   },
   {
     station: "Phú Giềng",
     time: "12:32, Sep 9, 2024",
-    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5,40],
+    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 40],
     status: "Nguy hiểm",
     recommendation: "WQI nguy hiểm, cần lọc nước khẩn cấp",
   },
   {
     station: "Châu Phú",
     time: "12:32, Sep 9, 2024",
-    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5,80],
+    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 80],
     status: "Tốt",
     recommendation: "WQI tốt, chú ý lọc nước",
   },
   {
     station: "Thoại Sơn",
     time: "12:31, Sep 9, 2024",
-    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5,100],
+    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 100],
     status: "Rất tốt",
     recommendation: "WQI rất tốt, chú ý an toàn vệ sinh thực phẩm",
-  },{
+  },
+  {
     station: "Phú Giềng",
     time: "12:32, Sep 9, 2024",
-    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5,40],
+    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 40],
     status: "Nguy hiểm",
     recommendation: "WQI nguy hiểm, cần lọc nước khẩn cấp",
   },
   {
     station: "Châu Phú",
     time: "12:32, Sep 9, 2024",
-    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5,80],
+    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 80],
     status: "Tốt",
     recommendation: "WQI tốt, chú ý lọc nước",
   },
   {
     station: "Thoại Sơn",
     time: "12:31, Sep 9, 2024",
-    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5,100],
+    metrics: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 100],
     status: "Rất tốt",
     recommendation: "WQI rất tốt, chú ý an toàn vệ sinh thực phẩm",
   },
-];
-let ITEMS_PER_PAGE = 6; // Number of items per page
+]
+const ITEMS_PER_PAGE = 6 // Number of items per page
 
 export default function Realtimedata() {
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [ITEMS_PER_PAGE, setItemAmount] = useState<number>(6);
-  const [currentDate, setCurrentDate] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [ITEMS_PER_PAGE, setItemAmount] = useState<number>(6)
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 7),
+  })
+  const [selectedStation, setSelectedStation] = useState<string | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
+  const [selectedWQI, setSelectedWQI] = useState<number | null>(null)
+  const { toast } = useToast()
+  const [filteredData, setFilteredData] = useState(monitoringStations);
 
-  useEffect(() => {
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString("vi-VN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    setCurrentDate(formattedDate);
-  }, []);
+  const uniqueStations = Array.from(new Set(monitoringStations.map((s) => s.station)))
+  const uniqueStatuses = Array.from(new Set(monitoringStations.map((s) => s.status)))
+  const uniqueWQI = Array.from(new Set(monitoringStations.map((s) => s.metrics[9])))
 
-  const totalPages = Math.ceil(monitoringStations.length / ITEMS_PER_PAGE);
-  const displayedStations = monitoringStations.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+  const filteredStations = monitoringStations.filter((station) => {
+    return (
+      (selectedStation ? station.station === selectedStation : true) &&
+      (selectedStatus ? station.status === selectedStatus : true) &&
+      (selectedWQI ? station.metrics[9] === selectedWQI : true)
+    )
+  })
+  const commonFilteredData = filteredStations.filter(station =>
+    filteredData.some(filtered => (filtered.time === station.time)&&(filtered.station === station.station))
   );
+  const totalPages = Math.ceil(commonFilteredData.length / ITEMS_PER_PAGE);
+  const displayedStations = commonFilteredData.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    setCurrentPage(page)
+  }
+  const handleSelect: SelectRangeEventHandler = (range) => {
+    setDate(range)
+  }
+  
+  const handleFilter = () => {
+    if (!date?.from || !date?.to) {
+      toast({ title: "Vui lòng chọn khoảng thời gian" });
+      return;
+    }
+  
+    const fromDate = new Date(date.from);
+    const toDate = new Date(date.to);
+  
+    const newFilteredData = monitoringStations.filter((station) => {
+      const stationDate = parse(station.time, "HH:mm, MMM d, yyyy", new Date());
+  
+      return (
+        !isNaN(stationDate.getTime()) &&
+        stationDate >= fromDate &&
+        stationDate <= toDate &&
+        (selectedStation ? station.station === selectedStation : true) &&
+        (selectedStatus ? station.status === selectedStatus : true) &&
+        (selectedWQI ? station.metrics[9] === selectedWQI : true)
+      );
+    });
+  
+    setFilteredData(newFilteredData);
+    setCurrentPage(1);
   };
-
+const handleResetFilter = () => {
+  setFilteredData(monitoringStations); // Reset về toàn bộ dữ liệu
+  setDate(undefined); 
+  setSelectedStation(null);
+  setSelectedStatus(null);
+  setSelectedWQI(null);
+  setCurrentPage(1); 
+};
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between py-4 border-b">
         <h1 className="text-2xl font-bold">Tất cả</h1>
         <div className="flex items-center space-x-4">
-          <div className="flex items-center border px-3 py-2 rounded-md">
-            <Search className="w-5 h-5 text-gray-500 mr-2" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm"
-              className="outline-none text-sm placeholder-gray-400"
-            />
-          </div>
-          <div className="flex items-center border px-3 py-2 rounded-md">
-            <Calendar className="w-5 h-5 text-gray-500 mr-2" />
-            <span className="text-sm text-gray-600">{currentDate}</span>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date"
+                variant={"outline"}
+                className={cn("w-[300px] justify-start text-left font-normal", !date && "text-muted-foreground")}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date?.from ? (
+                  date.to ? (
+                    <>
+                      {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(date.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar initialFocus mode="range" selected={date} onSelect={handleSelect} numberOfMonths={2} />
+            </PopoverContent>
+          </Popover>
+          <Button onClick={handleFilter} className="bg-blue-600 hover:bg-blue-700 text-white">Lọc</Button>
+          <Button variant="outline" onClick={handleResetFilter} className="bg-red-300 text-red-600 hover:bg-red-200 border border-red-400">Hủy lọc</Button>
         </div>
       </header>
-
       <Table className="w-full">
         <TableHeader>
           <TableRow>
-            <TableHead>Trạm Quan Trắc</TableHead>
+            <TableHead>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center space-x-1">
+                  <span>Trạm Quan Trắc</span> <ChevronDown size={14} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setSelectedStation(null)}>Tất cả</DropdownMenuItem>
+                  {uniqueStations.map((station) => (
+                    <DropdownMenuItem key={station} onClick={() => setSelectedStation(station)}>
+                      {station}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableHead>
             <TableHead>Chi tiết</TableHead>
             <TableHead>Ngày gần nhất</TableHead>
             <TableHead>PH</TableHead>
@@ -131,8 +213,36 @@ export default function Realtimedata() {
             <TableHead>TSS</TableHead>
             <TableHead>COD</TableHead>
             <TableHead>VS</TableHead>
-            <TableHead>WQI</TableHead>
-            <TableHead>Trạng thái</TableHead>
+            <TableHead>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center space-x-1">
+                  <span>WQI</span> <ChevronDown size={14} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setSelectedWQI(null)}>Tất cả</DropdownMenuItem>
+                  {uniqueWQI.map((wqi) => (
+                    <DropdownMenuItem key={wqi} onClick={() => setSelectedWQI(wqi)}>
+                      {wqi}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableHead>
+            <TableHead>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center space-x-1">
+                  <span>Trạng thái</span> <ChevronDown size={14} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setSelectedStatus(null)}>Tất cả</DropdownMenuItem>
+                  {uniqueStatuses.map((status) => (
+                    <DropdownMenuItem key={status} onClick={() => setSelectedStatus(status)}>
+                      {status}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableHead>
             <TableHead>Khuyến cáo</TableHead>
           </TableRow>
         </TableHeader>
@@ -141,21 +251,21 @@ export default function Realtimedata() {
             <TableRow key={index}>
               <TableCell>{station.station}</TableCell>
               <TableCell>
-              <Button className="px-4 py-1 text-white bg-blue-700 hover:bg-blue-600 border border-black-600">
-                Xem
-              </Button>
+                <Button className="px-4 py-1 text-white bg-blue-700 hover:bg-blue-600 border border-black-600">
+                  Xem
+                </Button>
               </TableCell>
               <TableCell>{station.time}</TableCell>
-              {station.metrics.map((metric, idx) => (
-                <TableCell key={idx}>{metric}</TableCell>
+              {station.metrics.map((value, i) => (
+                <TableCell key={i}>{value}</TableCell>
               ))}
               <TableCell
                 className={
                   station.status === "Nguy hiểm"
                     ? "text-red-600 font-bold"
                     : station.status === "Rất tốt"
-                    ? "text-green-600 font-bold"
-                    : "text-yellow-600 font-bold"
+                      ? "text-green-600 font-bold"
+                      : "text-yellow-600 font-bold"
                 }
               >
                 {station.status}
@@ -165,14 +275,9 @@ export default function Realtimedata() {
           ))}
         </TableBody>
       </Table>
-
       <footer className="mt-6 flex justify-center items-center">
         {totalPages >= 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
         )}
         <div className="flex items-center ml-4">
           <label className="mr-2">Items per page:</label>
@@ -189,5 +294,6 @@ export default function Realtimedata() {
         </div>
       </footer>
     </div>
-  );
+  )
 }
+
