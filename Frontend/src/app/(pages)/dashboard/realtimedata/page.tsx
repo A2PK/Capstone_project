@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { parse } from "date-fns"
+import { getStatusTextColor } from "@/lib/utils";
 const monitoringStations = [
   {
     station: "Phú Giềng",
@@ -172,7 +173,7 @@ const handleResetFilter = () => {
                     format(date.from, "LLL dd, y")
                   )
                 ) : (
-                  <span>Pick a date</span>
+                  <span>Chọn khoảng thời gian</span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -260,13 +261,7 @@ const handleResetFilter = () => {
                 <TableCell key={i}>{value}</TableCell>
               ))}
               <TableCell
-                className={
-                  station.status === "Nguy hiểm"
-                    ? "text-red-600 font-bold"
-                    : station.status === "Rất tốt"
-                      ? "text-green-600 font-bold"
-                      : "text-yellow-600 font-bold"
-                }
+                className={getStatusTextColor(station.status)}
               >
                 {station.status}
               </TableCell>

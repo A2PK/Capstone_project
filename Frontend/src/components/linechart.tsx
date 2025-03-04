@@ -4,8 +4,11 @@ import { useMemo, useState, useEffect } from "react";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false, loading: () => <p>Loading chart...</p> });
-
-const Chartline = () => {
+interface ChartlineProps {
+  trend: number[];
+  prediction: number[];
+}
+const Chartline: React.FC<ChartlineProps> = ({ trend, prediction }) => {
   const [predictMode, setPredictMode] = useState(false);
   const [predictRange, setPredictRange] = useState<number>(1);
   const [isClient, setIsClient] = useState(false);
@@ -14,26 +17,20 @@ const Chartline = () => {
     setIsClient(true);
   }, []);
 
-  // Fake data for historical and predicted values
-  const fakeHistoricalData = Array.from({ length: 20 }, (_, i) => ({
-    x: new Date(2024, 0, i + 1).getTime(),
-    y: Math.floor(Math.random() * 50) + 50,
-  }));
-
-  const fakePredictionData = Array.from({ length: 10 }, (_, i) => ({
-    x: new Date(2024, 0, i + 21).getTime(),
-    y: Math.floor(Math.random() * 50) + 50,
-  }));
-
-  // Ensure chart data structure is correct
   const historicalData = {
     name: "Historical",
-    data: fakeHistoricalData,
+    data: trend.map((value, index) => ({
+      x: new Date(2024, 0, index + 1).getTime(),
+      y: value,
+    })),
   };
 
   const predictionData = {
     name: "Prediction",
-    data: fakePredictionData,
+    data: prediction.map((value, index) => ({
+      x: new Date(2024, 0, trend.length + index + 1).getTime(),
+      y: value,
+    })),
   };
 
   const chartData = useMemo(() => {
@@ -49,14 +46,14 @@ const Chartline = () => {
       });
     }
     return data;
-  }, [predictMode, predictRange]);
+  }, [predictMode, predictRange, trend, prediction]);
 
   return (
     <div className="rounded-lg dark:shadow-dark-md shadow-md bg-white dark:bg-darkgray p-6 relative w-full break-words">
       <div className="flex justify-between items-center">
-        <h5 className="card-title">Water Monitoring</h5>
+        <h5 className="card-title">Chỉ số chất lượng nước WQI</h5>
         <div className="flex justify-end items-center gap-5">
-          <label htmlFor="predict-mode">Prediction Mode</label>
+          <label htmlFor="predict-mode">Chế độ dự đoán</label>
           <Switch
             checked={predictMode}
             onCheckedChange={() => setPredictMode((prev) => !prev)}
@@ -64,12 +61,12 @@ const Chartline = () => {
             className="data-[state=unchecked]:bg-gray-300 data-[state=checked]:bg-blue-500"
           />
           <Select disabled={!predictMode} onValueChange={(value) => setPredictRange(parseInt(value))}>
-            <SelectTrigger className="h-8 w-32 text-sm"> {/* Adjust size here */}
-              <SelectValue placeholder = "Week 1" />
+            <SelectTrigger className="h-8 w-32 text-sm">
+              <SelectValue placeholder="Ngày 1" />
             </SelectTrigger>
-            <SelectContent className="w-32 text-sm"> {/* Adjust size here */}
+            <SelectContent className="w-32 text-sm">
               {Array.from({ length: 10 }, (_, i) => (
-                <SelectItem key={i + 1} value={(i + 1).toString()} className="text-sm">{`${i + 1} Week${i + 1 > 1 ? "s" : ""}`}</SelectItem>
+                <SelectItem key={i + 1} value={(i + 1).toString()} className="text-sm">{`${i + 1} Ngày`}</SelectItem>
               ))}
             </SelectContent>
           </Select>

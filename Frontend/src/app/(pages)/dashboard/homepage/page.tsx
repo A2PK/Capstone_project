@@ -48,7 +48,7 @@ if (typeof window !== "undefined") {
   const { Icon, divIcon, point } = require("leaflet");
 
   customIcon = new Icon({
-    iconUrl: "/placeholder.png",
+    iconUrl: "/red_one.png",
     iconSize: [38, 38]
   });
 
