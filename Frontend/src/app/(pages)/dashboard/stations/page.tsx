@@ -3,7 +3,6 @@
 import { Pagination } from "@/components/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import "leaflet/dist/leaflet.css";
-import { Calendar, Search } from "lucide-react";
 import StationDetails from "@/components/stationsDetails";
 import dynamic from "next/dynamic";
 import { useState } from "react";
@@ -87,7 +86,7 @@ export default function StationsPage() {
   const getMonthLabels = () => {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const now = new Date().getMonth(); // Get current month index (0-based)
-  
+
     return [
       months[(now - 3 + 12) % 12],
       months[(now - 2 + 12) % 12],
@@ -105,12 +104,12 @@ export default function StationsPage() {
 
   return (
     <div className="flex flex-1 overflow-hidden"> {/* Sidebar-aware container */}
-  {/* Main Content */}
-  <div className="flex flex-col flex-grow overflow-hidden space-y-4 p-4">
-    {/* Header */}
-    <header className="flex justify-between items-center border-b pb-2">
-      <h1 className="text-2xl font-bold">Trạm Quan Trắc</h1>
-      {/* <div className="flex space-x-2">
+      {/* Main Content */}
+      <div className="flex flex-col flex-grow overflow-hidden space-y-4 p-4">
+        {/* Header */}
+        <header className="flex justify-between items-center border-b pb-2">
+          <h1 className="text-2xl font-bold">Trạm Quan Trắc</h1>
+          {/* <div className="flex space-x-2">
         <div className="flex items-center border px-3 py-1 rounded-md">
           <Search className="w-4 h-4 text-gray-500 mr-2" />
           <input type="text" placeholder="Tìm kiếm" className="outline-none text-sm" />
@@ -120,106 +119,109 @@ export default function StationsPage() {
           <span className="text-sm">Tháng 9 năm 2024</span>
         </div>
       </div> */}
-    </header>
+        </header>
 
-    {/* Map & Table */}
-    <div className="flex flex-grow gap-4 min-h-[60vh] overflow-hidden">
-      {/* Map Section */}
-      <div className="flex-grow min-w-0"> {/* Fills remaining space */}
-        <MapContainer
-          center={[10.535, 106.413]}
-          zoom={10}
-          style={{ height: "100%", width: "100%", borderRadius: "1.5rem" }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {createClusterCustomIcon && (
-            <MarkerClusterGroup iconCreateFunction={createClusterCustomIcon}>
-              {stations.map((station, index) => (
-  <Marker
-    key={index}
-    position={[station.lat, station.lng]}
-    icon={selectedStation.name === station.name ? blueIcon : redIcon}
-    eventHandlers={{ click: () => setSelectedStation(station) }}
-  >
-    <Popup>
-      <div className="p-2 rounded-lg bg-white max-w-xs min-w-[200px] border">
-        <h3 className="text-lg font-bold">{station.name}</h3>
-        <p>WQI: <span className="font-bold text-blue-500">{station.wqi}</span></p>
-        <p className={`${
-          station.status === "Nguy hiểm" ? "text-red-500"
-          : station.status === "Tốt" ? "text-green-800"
-          : "text-blue-500"
-        }`}>
-          Trạng thái: {station.status}
-        </p>
-        <p className="text-xs text-gray-500">{station.time}</p>
-      </div>
-    </Popup>
-  </Marker>
-))}
-            </MarkerClusterGroup>
-          )}
-        </MapContainer>
-      </div>
-
-      {/* Table Section */}
-      <div className="w-full md:w-1/3 max-w-sm overflow-auto p-2 min-w-[250px]">
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHead>Trạm</TableHead>
-        <TableHead>WQI</TableHead>
-        <TableHead>Trạng thái</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      {stations
-        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-        .map((station, index) => {
-          const isSelected = selectedStation.name === station.name;
-          return (
-            <TableRow
-              key={index}
-              onClick={() => setSelectedStation(station)}
-              className={`cursor-pointer transition-colors 
-                ${isSelected ? "bg-blue-200" : "hover:bg-gray-100"}`}
-              style={isSelected ? { pointerEvents: "none" } : {}}
+        {/* Map & Table */}
+        <div className="flex flex-grow gap-4 min-h-[60vh] overflow-hidden">
+          {/* Map Section */}
+          <div className="flex-grow min-w-0"> {/* Fills remaining space */}
+            <MapContainer
+              center={[10.535, 106.413]}
+              zoom={10}
+              style={{ height: "100%", width: "100%", borderRadius: "1.5rem" }}
             >
-              <TableCell className="font-medium">{station.name}</TableCell>
-              <TableCell>{station.wqi}</TableCell>
-              <TableCell
-                className={getStatusTextColor(station.status)}
-              >
-                {station.status}
-              </TableCell>
-            </TableRow>
-          );
-        })}
-    </TableBody>
-  </Table>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {createClusterCustomIcon && (
+                <MarkerClusterGroup iconCreateFunction={createClusterCustomIcon}>
+                  {stations.map((station, index) => (
+                    <Marker
+                      key={index}
+                      position={[station.lat, station.lng]}
+                      icon={selectedStation.name === station.name ? blueIcon : redIcon}
+                      eventHandlers={{
+                        click: () => setSelectedStation(station),
+                        mouseover: (e) => e.target.openPopup(), // Mở popup khi hover
+                        mouseout: (e) => e.target.closePopup(), // Đóng popup khi rời chuột
+                      }}
+                    >
+                      <Popup>
+                        <div className="p-2 rounded-lg bg-white max-w-xs min-w-[200px] border">
+                          <h3 className="text-lg font-bold">{station.name}</h3>
+                          <p>WQI: <span className="font-bold text-blue-500">{station.wqi}</span></p>
+                          <p className={`${station.status === "Nguy hiểm" ? "text-red-500"
+                              : station.status === "Tốt" ? "text-green-800"
+                                : "text-blue-500"
+                            }`}>
+                            Trạng thái: {station.status}
+                          </p>
+                          <p className="text-xs text-gray-500">{station.time}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MarkerClusterGroup>
+              )}
+            </MapContainer>
+          </div>
 
-  {/* Thêm margin-top để phân trang không bị sát với bảng */}
-  <div className="mt-3">
-    <Pagination
-      currentPage={currentPage}
-      totalPages={Math.ceil(stations.length / itemsPerPage)}
-      onPageChange={handlePageChange}
-    />
-  </div>
-</div>
+          {/* Table Section */}
+          <div className="w-full md:w-1/3 max-w-sm overflow-auto p-2 min-w-[250px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Trạm</TableHead>
+                  <TableHead>WQI</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stations
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((station, index) => {
+                    const isSelected = selectedStation.name === station.name;
+                    return (
+                      <TableRow
+                        key={index}
+                        onClick={() => setSelectedStation(station)}
+                        className={`cursor-pointer transition-colors 
+                ${isSelected ? "bg-blue-200" : "hover:bg-gray-100"}`}
+                        style={isSelected ? { pointerEvents: "none" } : {}}
+                      >
+                        <TableCell className="font-medium">{station.name}</TableCell>
+                        <TableCell>{station.wqi}</TableCell>
+                        <TableCell
+                          className={getStatusTextColor(station.status)}
+                        >
+                          {station.status}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+              </TableBody>
+            </Table>
 
+            {/* Thêm margin-top để phân trang không bị sát với bảng */}
+            <div className="mt-3">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(stations.length / itemsPerPage)}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </div>
+
+        </div>
+
+        {/* Detail Section */}
+        <div className="flex flex-col items-center">
+          {selectedStation && <StationDetails selectedStation={selectedStation} />}
+        </div>
+        <Chartline trend={selectedStation.trend} prediction={selectedStation.prediction} />
+
+      </div>
     </div>
-
-    {/* Detail Section */}
-    <div className="flex flex-col items-center">
-      {selectedStation && <StationDetails selectedStation={selectedStation} />}
-    </div>
-    <Chartline trend={selectedStation.trend} prediction={selectedStation.prediction} />
-
-  </div>
-</div>
   );
 }

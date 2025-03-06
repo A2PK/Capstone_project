@@ -2,10 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Pagination } from "@/components/pagination"; 
+import { Pagination } from "@/components/pagination";
 import { useEffect, useState } from "react";
 import { FilterIcon } from "lucide-react";
-
+import Link from "next/link";
+import ReportPublisher from "@/components/report-publisher"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 interface NewsItem {
   title: string;
   description: string;
@@ -13,14 +15,14 @@ interface NewsItem {
   imageUrl: string;
 }
 
-const ITEMS_PER_PAGE = 6; 
+const ITEMS_PER_PAGE = 6;
 
 const NewsPage = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [filteredNews, setFilteredNews] = useState<NewsItem[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const fetchNews = async () => {
     const data: NewsItem[] = [
       {
@@ -71,7 +73,7 @@ const NewsPage = () => {
         date: "4 Nov 2024",
         imageUrl: "https://i.ibb.co/fM2bq9V/z6267544864718-caf04a0ab4ae130a41a82852880185d9.jpg",
       },
-      
+
 
     ];
 
@@ -86,10 +88,6 @@ const NewsPage = () => {
     );
     setFilteredNews(filtered);
     setCurrentPage(1); // Reset to the first page on search
-  };
-
-  const handlePublish = () => {
-    alert("Publish new content!");
   };
 
   const handlePageChange = (page: number) => {
@@ -114,7 +112,7 @@ const NewsPage = () => {
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-orange-500">Bản tin</h1>
         <div className="flex items-center space-x-2">
-          <Button onClick={handlePublish}>Đăng bản tin</Button>
+        <Button onClick={() => setIsModalOpen(true)}>Đăng bản tin</Button>
           <div className="relative">
             <Input
               type="text"
@@ -130,18 +128,25 @@ const NewsPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayedNews.map((item, index) => (
-          <Card key={index} className="hover:shadow-lg transition-shadow">
-            <img src={item.imageUrl} alt={item.title} className="w-full h-64 object-cover rounded-t-md" />
-            <CardHeader>
-              <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 mb-2">{item.description}</p>
-              <p className="text-xs text-gray-500">{item.date}</p>
-            </CardContent>
-          </Card>
+          <Link key={index} href="/dashboard/newsdetail" className="block h-full">
+            <Card className="hover:shadow-lg transition-shadow flex flex-col h-full">
+              <img
+                src={item.imageUrl}
+                alt={item.title}
+                className="w-full h-64 object-cover rounded-t-md"
+              />
+              <CardHeader className="flex-grow">
+                <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-2">{item.description}</p>
+                <p className="text-xs text-gray-500">{item.date}</p>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
+
 
       {totalPages > 1 && (
         <footer className="mt-6 flex justify-center">
@@ -152,6 +157,17 @@ const NewsPage = () => {
           />
         </footer>
       )}
+
+<Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+  <DialogContent className="max-w-6xl max-h-[98vh] overflow-y-auto">
+    <DialogHeader>
+    <DialogTitle className="text-center mb-4 text-4xl font-serif font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-100 dark:to-gray-300">
+  Đăng bản tin mới
+</DialogTitle>
+    </DialogHeader>
+    <ReportPublisher />
+  </DialogContent>
+</Dialog>
     </div>
   );
 };

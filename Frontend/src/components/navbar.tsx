@@ -71,15 +71,15 @@ export default function Navbar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-  <Link
-    href="/dashboard/profile"
-    className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-600 rounded-md transition-all duration-200 ease-in-out"
-  >
-    <User className="mr-2 h-4 w-4" />
-    My Profile
-  </Link>
-</DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link
+                      href="/dashboard/profile"
+                      className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-600 rounded-md transition-all duration-200 ease-in-out"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     {/* <form action={onLogoutSubmit}>
                       <Button type="submit" className="flex items-center">
@@ -88,13 +88,13 @@ export default function Navbar() {
                       </Button>
                     </form> */}
                     <Button
-    type="button" // Changed to "button" as "submit" is unnecessary here
-    onClick={handleLogout}
-    className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
-  >
-    <LogOut className="mr-2 h-4 w-4" />
-    Log out
-  </Button>
+                      type="button" // Changed to "button" as "submit" is unnecessary here
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </Button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -117,53 +117,53 @@ export default function Navbar() {
           </div>
         </div>
         {isMobileMenuOpen && (
-  <div className="sm:hidden bg-white shadow-md absolute top-16 right-0 w-full max-w-xs z-50 p-4">
-    <div className="flex space-x-4 py-2 px-4 items-center">
+          <div className="sm:hidden bg-white shadow-md absolute top-16 right-0 w-full max-w-xs z-50 p-4">
+            <div className="flex space-x-4 py-2 px-4 items-center">
 
-      <Button variant="ghost" className="flex items-center justify-center">
-        <Bell className="h-5 w-5 text-gray-500" />
-      </Button>
+              <Button variant="ghost" className="flex items-center justify-center">
+                <Bell className="h-5 w-5 text-gray-500" />
+              </Button>
 
-      <Button variant="ghost" className="flex items-center justify-center">
-        <Mail className="h-5 w-5 text-gray-500" />
-      </Button>
+              <Button variant="ghost" className="flex items-center justify-center">
+                <Mail className="h-5 w-5 text-gray-500" />
+              </Button>
 
-      {isLoggedIn && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center justify-center">
-              <Avatar className="mr-2">
-                <AvatarImage
-                  src="https://github.com/shadcn.png"
-                  alt="User Avatar"
-                />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-          <DropdownMenuItem>
-              <Link href="/dashboard/profile" className="flex items-center w-full">
-                <User className="mr-2 h-4 w-4" />
-                My Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-            <Button
-    type="button" // Changed to "button" as "submit" is unnecessary here
-    onClick={handleLogout}
-    className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
-  >
-    <LogOut className="mr-2 h-4 w-4" />
-    Log out
-  </Button>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </div>
-  </div>
-)}
+              {isLoggedIn && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center justify-center">
+                      <Avatar className="mr-2">
+                        <AvatarImage
+                          src="https://github.com/shadcn.png"
+                          alt="User Avatar"
+                        />
+                        <AvatarFallback>U</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>
+                      <Link href="/dashboard/profile" className="flex items-center w-full">
+                        <User className="mr-2 h-4 w-4" />
+                        My Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Button
+                        type="button" // Changed to "button" as "submit" is unnecessary here
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log out
+                      </Button>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+        )}
 
 
       </div>

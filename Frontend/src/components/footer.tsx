@@ -14,38 +14,37 @@ const AppFooter = () => {
             <Image src={logo} alt="Water Quality Monitoring Logo" width={150} />
           </div>
           <h2 className="text-xl font-semibold mt-4">
-            Water Quality Monitoring
+            Quan trắc chất lượng nước
           </h2>
           <p className="text-sm">
-            Empowering environmental research and data-driven solutions for
-            water quality management.
+          Nâng cao nghiên cứu môi trường và giải pháp dựa trên dữ liệu cho quản lý chất lượng nước.
           </p>
         </div>
 
         {/* Quick Links */}
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold">Quick Links</h2>
+          <h2 className="text-lg font-semibold">Đường Links</h2>
           <nav className="flex flex-col gap-2">
             <Link href="/" className="hover:underline">
-              Home
+              Trang chủ
             </Link>
             <Link href="/about" className="hover:underline">
-              About Us
+              Lược sử về chúng tôi
             </Link>
             <Link href="/features" className="hover:underline">
-              Features
+              Đặc điểm
             </Link>
             <Link href="/contact" className="hover:underline">
-              Contact
+              Liện hệ với
             </Link>
           </nav>
         </div>
 
         {/* Contact Information */}
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold">Contact</h2>
+          <h2 className="text-lg font-semibold">Liên hệ tại</h2>
           <address className="not-italic text-sm">
-            123 Waterway Drive, Eco City, Green State, 54321
+            12 Lê Lợi, Quận 1, TPHCM
             <br />
             Phone: +1 (800) 555-1234
             <br />

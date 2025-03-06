@@ -14,6 +14,12 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { cn } from "@/lib/utils"
 import { parse } from "date-fns"
 import { getStatusTextColor } from "@/lib/utils";
+import { DownloadIcon } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import "../../../fonts/times";
+import Link from "next/link"
 const monitoringStations = [
   {
     station: "Phú Giềng",
@@ -84,6 +90,7 @@ const ITEMS_PER_PAGE = 6 // Number of items per page
 export default function Realtimedata() {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [ITEMS_PER_PAGE, setItemAmount] = useState<number>(6)
+  const [isOpen, setIsOpen] = useState(false);
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
     to: addDays(new Date(), 7),
@@ -106,7 +113,7 @@ export default function Realtimedata() {
     )
   })
   const commonFilteredData = filteredStations.filter(station =>
-    filteredData.some(filtered => (filtered.time === station.time)&&(filtered.station === station.station))
+    filteredData.some(filtered => (filtered.time === station.time) && (filtered.station === station.station))
   );
   const totalPages = Math.ceil(commonFilteredData.length / ITEMS_PER_PAGE);
   const displayedStations = commonFilteredData.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -117,19 +124,19 @@ export default function Realtimedata() {
   const handleSelect: SelectRangeEventHandler = (range) => {
     setDate(range)
   }
-  
+
   const handleFilter = () => {
     if (!date?.from || !date?.to) {
       toast({ title: "Vui lòng chọn khoảng thời gian" });
       return;
     }
-  
+
     const fromDate = new Date(date.from);
     const toDate = new Date(date.to);
-  
+
     const newFilteredData = monitoringStations.filter((station) => {
       const stationDate = parse(station.time, "HH:mm, MMM d, yyyy", new Date());
-  
+
       return (
         !isNaN(stationDate.getTime()) &&
         stationDate >= fromDate &&
@@ -139,18 +146,90 @@ export default function Realtimedata() {
         (selectedWQI ? station.metrics[9] === selectedWQI : true)
       );
     });
-  
+
     setFilteredData(newFilteredData);
     setCurrentPage(1);
   };
-const handleResetFilter = () => {
-  setFilteredData(monitoringStations); // Reset về toàn bộ dữ liệu
-  setDate(undefined); 
-  setSelectedStation(null);
-  setSelectedStatus(null);
-  setSelectedWQI(null);
-  setCurrentPage(1); 
-};
+  const handleResetFilter = () => {
+    setFilteredData(monitoringStations); // Reset về toàn bộ dữ liệu
+    setDate(undefined);
+    setSelectedStation(null);
+    setSelectedStatus(null);
+    setSelectedWQI(null);
+    setCurrentPage(1);
+  };
+  const handleExportXLSX = () => {
+    const data = commonFilteredData.map((item) => ({
+      "Trạm": item.station,
+      "Thời gian": item.time,
+      "pH": item.metrics[0],
+      "EC": item.metrics[1],
+      "DO": item.metrics[2],
+      "NH4": item.metrics[3],
+      "NO2": item.metrics[4],
+      "PO4": item.metrics[5],
+      "TSS": item.metrics[6],
+      "COD": item.metrics[7],
+      "VS": item.metrics[8],
+      "WQI": item.metrics[9],
+      "Trạng thái": item.status,
+      "Khuyến nghị": item.recommendation,
+    }));
+  
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    XLSX.writeFile(wb, "du_lieu.xlsx");
+    setIsOpen(false);
+  };
+  
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("timr45w", "normal");
+  
+    // 1️⃣ Tạo body với dòng đầu tiên làm tiêu đề
+    const tableBody = [
+      ["Trạm", "Thời gian", "pH", "EC", "DO", "NH4", "NO2", "PO4", "TSS", "COD", "VS", "WQI", "Trạng thái", "Khuyến nghị"],
+      ...commonFilteredData.map((item) => [
+        item.station,
+        item.time,
+        item.metrics[0], // pH
+        item.metrics[1], // EC
+        item.metrics[2], // DO
+        item.metrics[3], // NH4
+        item.metrics[4], // NO2
+        item.metrics[5], // PO4
+        item.metrics[6], // TSS
+        item.metrics[7], // COD
+        item.metrics[8], // VS
+        item.metrics[9], // WQI
+        item.status,
+        item.recommendation,
+      ]),
+    ];
+  
+    // 2️⃣ Xuất bảng với dòng đầu tiên làm tiêu đề
+    autoTable(doc, {
+      startY: 20,
+      body: tableBody,
+      styles: { font: "timr45w", fontSize: 9 },
+      didParseCell: function (data) {
+        if (data.row.index === 0) { // Dòng đầu tiên làm tiêu đề
+          data.cell.styles.fontSize = 11;
+          // data.cell.styles.fontStyle = "bold";
+          data.cell.styles.fillColor = [41, 128, 185]; // Màu xanh
+          data.cell.styles.textColor = 255; // Chữ trắng
+        }
+      },
+    });
+  
+    doc.save("du_lieu.pdf");
+    setIsOpen(false);
+  };
+  
+  
+
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between py-4 border-b">
@@ -161,7 +240,10 @@ const handleResetFilter = () => {
               <Button
                 id="date"
                 variant={"outline"}
-                className={cn("w-[300px] justify-start text-left font-normal", !date && "text-muted-foreground")}
+                className={cn(
+                  "w-[300px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {date?.from ? (
@@ -183,6 +265,31 @@ const handleResetFilter = () => {
           </Popover>
           <Button onClick={handleFilter} className="bg-blue-600 hover:bg-blue-700 text-white">Lọc</Button>
           <Button variant="outline" onClick={handleResetFilter} className="bg-red-300 text-red-600 hover:bg-red-200 border border-red-400">Hủy lọc</Button>
+
+          {/* Export Button */}
+          <div className="relative">
+            <Button variant="outline" onClick={() => setIsOpen(!isOpen)}>
+              <DownloadIcon className="mr-2 h-4 w-4" />
+              Xuất
+            </Button>
+            {isOpen && (
+              <div className="absolute right-0 mt-2 bg-white border shadow-lg rounded-md w-28 z-50">
+                <button
+                  onClick={handleExportXLSX}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Xuất Excel
+                </button>
+                <button
+                  onClick={handleExportPDF}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Xuất PDF
+                </button>
+              </div>
+            )}
+          </div>
+
         </div>
       </header>
       <Table className="w-full">
@@ -252,9 +359,9 @@ const handleResetFilter = () => {
             <TableRow key={index}>
               <TableCell>{station.station}</TableCell>
               <TableCell>
-                <Button className="px-4 py-1 text-white bg-blue-700 hover:bg-blue-600 border border-black-600">
+              <Link href={`/dashboard/stations`}><Button className="px-4 py-1 text-white bg-blue-700 hover:bg-blue-600 border border-black-600">
                   Xem
-                </Button>
+                </Button></Link>
               </TableCell>
               <TableCell>{station.time}</TableCell>
               {station.metrics.map((value, i) => (
