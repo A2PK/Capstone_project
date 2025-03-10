@@ -8,4 +8,11 @@ export interface Station {
     time: string;
     trend: number[];
     prediction: number[];
+    feature: Indicator[];
   }
+
+interface Indicator {
+  name: string;
+  trend: number[];
+  prediction: number[];
+}

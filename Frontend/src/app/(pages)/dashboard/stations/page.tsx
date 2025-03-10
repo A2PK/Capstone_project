@@ -25,7 +25,10 @@ const stations: Station[] = [
     recommendation: "WQI nguy hiểm, cần lọc nước khẩn cấp",
     time: "12:32, Thg 9, 2024",
     trend: [20, 28, 35, 45, 38, 50, 42, 55, 48, 60, 52, 65, 58],
-    prediction: [60, 63, 67, 64, 70, 72, 75, 78, 80, 79, 82, 85, 88]
+    prediction: [60, 63, 67, 64, 70, 72, 75, 78, 80, 79, 82, 85, 88],
+    feature: [{ name: "PH", trend: [20, 28, 35, 45, 38, 50, 42, 55, 48, 60, 52, 65, 58], prediction: [60, 63, 67, 64, 70, 72, 75, 78, 80, 79, 82, 85, 88] },
+    { name: "NH4", trend: [20, 28, 35, 45, 38, 50, 42, 55, 48, 60, 52, 65, 58], prediction: [60, 63, 67, 64, 70, 72, 75, 78, 80, 79, 82, 85, 88] },
+    ]
   },
   {
     name: "Mỹ Tho",
@@ -36,7 +39,11 @@ const stations: Station[] = [
     recommendation: "WQI tốt, chú ý lọc nước",
     time: "12:32, Thg 9, 2024",
     trend: [65, 70, 68, 75, 72, 78, 76, 80, 82, 85, 88, 86, 90],
-    prediction: [90, 91, 93, 95, 97, 96, 98, 99, 100, 99, 100, 100, 100]
+    prediction: [90, 91, 93, 95, 97, 96, 98, 99, 100, 99, 100, 100, 100],
+    feature: [{ name: "PH", trend: [20, 28, 35, 45, 38, 50, 42, 55, 48, 60, 52, 65, 58], prediction: [60, 63, 67, 64, 70, 72, 75, 78, 80, 79, 82, 85, 88] },
+    { name: "NH4", trend: [20, 28, 35, 45, 38, 50, 42, 55, 48, 60, 52, 65, 58], prediction: [60, 63, 67, 64, 70, 72, 75, 78, 80, 79, 82, 85, 88] },
+    { name: "DO", trend: [20, 28, 35, 45, 38, 50, 42, 55, 48, 60, 52, 65, 58], prediction: [60, 63, 67, 64, 70, 72, 75, 78, 80, 79, 82, 85, 88] },
+    ]
   },
   {
     name: "Bến Tre",
@@ -47,7 +54,10 @@ const stations: Station[] = [
     recommendation: "WQI rất tốt, chú ý an toàn vệ sinh thực phẩm",
     time: "12:31, Thg 9, 2024",
     trend: [82, 85, 87, 89, 86, 90, 92, 88, 94, 95, 97, 96, 99],
-    prediction: [95, 96, 97, 98, 99, 99, 100, 100, 100, 100, 100, 100, 100]
+    prediction: [95, 96, 97, 98, 99, 99, 100, 100, 100, 100, 100, 100, 100],
+    feature: [{ name: "PH", trend: [20, 28, 35, 45, 38, 50, 42, 55, 48, 60, 52, 65, 58], prediction: [60, 63, 67, 64, 70, 72, 75, 78, 80, 79, 82, 85, 88] },
+    { name: "NH4", trend: [20, 28, 35, 45, 38, 50, 42, 55, 48, 60, 52, 65, 58], prediction: [60, 63, 67, 64, 70, 72, 75, 78, 80, 79, 82, 85, 88] },
+    ]
   }
 ];
 
@@ -100,6 +110,26 @@ export default function StationsPage() {
   const labels = getMonthLabels();
 
   const nowIndex = Math.floor(labels.length / 2); // Find the index of "Now" in the labels array
+  const defaultFeature =
+    selectedStation.trend && selectedStation.prediction
+      ? "WQI"
+      : selectedStation.feature.length > 0
+      ? selectedStation.feature[0].name
+      : null;
+
+  const [selectedFeature, setSelectedFeature] = useState<string | null>(
+    defaultFeature
+  );
+
+  const handleFeatureChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedFeature(event.target.value);
+  };
+  const selectedData =
+    selectedFeature === "WQI"
+      ? selectedStation.trend && selectedStation.prediction
+        ? { trend: selectedStation.trend, prediction: selectedStation.prediction }
+        : null
+      : selectedStation.feature.find((f) => f.name === selectedFeature);
 
 
   return (
@@ -152,8 +182,8 @@ export default function StationsPage() {
                           <h3 className="text-lg font-bold">{station.name}</h3>
                           <p>WQI: <span className="font-bold text-blue-500">{station.wqi}</span></p>
                           <p className={`${station.status === "Nguy hiểm" ? "text-red-500"
-                              : station.status === "Tốt" ? "text-green-800"
-                                : "text-blue-500"
+                            : station.status === "Tốt" ? "text-green-800"
+                              : "text-blue-500"
                             }`}>
                             Trạng thái: {station.status}
                           </p>
@@ -219,8 +249,51 @@ export default function StationsPage() {
         <div className="flex flex-col items-center">
           {selectedStation && <StationDetails selectedStation={selectedStation} />}
         </div>
-        <Chartline trend={selectedStation.trend} prediction={selectedStation.prediction} />
+        {/* <Chartline trend={selectedStation.trend} prediction={selectedStation.prediction} title="chất lượng nước WQI"/>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {selectedStation.feature.map((feature, idx) => (
+            <div key={idx} className="w-full">
+              {/* <h2 className="text-lg font-semibold text-center">{feature.name}</h2> */}
+              {/* <Chartline trend={feature.trend} prediction={feature.prediction} title={feature.name}/>
+            </div>
+          ))}
+        </div> */} 
+        <div>
+      {selectedStation.feature.length > 0 || selectedStation.trend ? (
+        <>
+          {/* Feature Selection Dropdown */}
+          <div className="flex justify-center mb-4">
+            <select
+              value={selectedFeature || ""}
+              onChange={handleFeatureChange}
+              className="border p-2 rounded-md"
+            >
+              {selectedStation.trend && selectedStation.prediction && (
+                <option value="WQI">Chất lượng nước WQI</option>
+              )}
+              {selectedStation.feature.map((feature, idx) => (
+                <option key={idx} value={feature.name}>
+                  Chỉ số {feature.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
+          {/* Display Selected Chart */}
+          {selectedData ? (
+            <Chartline
+              trend={selectedData.trend}
+              prediction={selectedData.prediction}
+              title={selectedFeature!}
+            />
+          ) : null}
+        </>
+      ) : (
+        <div className="flex justify-center items-center h-40 bg-gray-200 text-red-600 font-semibold rounded-lg">
+          There is no data for this station
+        </div>
+      )}
+    </div>
       </div>
     </div>
   );

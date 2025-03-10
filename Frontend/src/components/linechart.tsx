@@ -7,8 +7,9 @@ const Chart = dynamic(() => import("react-apexcharts"), { ssr: false, loading: (
 interface ChartlineProps {
   trend: number[];
   prediction: number[];
+  title: string;
 }
-const Chartline: React.FC<ChartlineProps> = ({ trend, prediction }) => {
+const Chartline: React.FC<ChartlineProps> = ({ trend, prediction, title }) => {
   const [predictMode, setPredictMode] = useState(false);
   const [predictRange, setPredictRange] = useState<number>(1);
   const [isClient, setIsClient] = useState(false);
@@ -51,7 +52,7 @@ const Chartline: React.FC<ChartlineProps> = ({ trend, prediction }) => {
   return (
     <div className="rounded-lg dark:shadow-dark-md shadow-md bg-white dark:bg-darkgray p-6 relative w-full break-words">
       <div className="flex justify-between items-center">
-        <h5 className="card-title">Chỉ số chất lượng nước WQI</h5>
+        <h5 className="card-title">Chỉ số {title}</h5>
         <div className="flex justify-end items-center gap-5">
           <label htmlFor="predict-mode">Chế độ dự đoán</label>
           <Switch

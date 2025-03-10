@@ -183,14 +183,33 @@ export default function Realtimedata() {
     setIsOpen(false);
   };
   
-
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    doc.setFont("timr45w", "normal");
+    const doc = new jsPDF({ orientation: "landscape" }); // ✅ Set landscape mode
+    doc.setFont("timr45w", "normal"); // ✅ Ensure correct font is set
   
-    // 1️⃣ Tạo body với dòng đầu tiên làm tiêu đề
+    const pageWidth = doc.internal.pageSize.width; // Get landscape page width
+
+    doc.setFontSize(14);
+    doc.text("VIỆN NCNTTS II", 15, 15);
+    doc.text("TRUNG TÂM QUAN TRẮC MÔI TRƯỜNG", 15, 22);
+    doc.text("VÀ BỆNH THỦY SẢN NAM BỘ", 15, 29);
+    
+    // ✅ Align Right Text (CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM)
+    doc.setFontSize(12);
+    doc.text("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", pageWidth - 15, 15, { align: "right" });
+    doc.text("Độc lập - Tự do - Hạnh phúc", pageWidth - 15, 22, { align: "right" });
+    
+    // ✅ Centered Titles
+    doc.setFontSize(16);
+    doc.text("BẢN TIN THÔNG BÁO", pageWidth / 2, 40, { align: "center" });
+    doc.text("KẾT QUẢ QUAN TRẮC CHẤT LƯỢNG NƯỚC", pageWidth / 2, 50, { align: "center" });
+  
+    // 2️⃣ Water Quality Data Table
     const tableBody = [
-      ["Trạm", "Thời gian", "pH", "EC", "DO", "NH4", "NO2", "PO4", "TSS", "COD", "VS", "WQI", "Trạng thái", "Khuyến nghị"],
+      [
+        "Trạm", "Thời gian", "pH", "EC", "DO", "NH4", "NO2",
+        "PO4", "TSS", "COD", "VS", "WQI", "Trạng thái", "Khuyến nghị"
+      ],
       ...commonFilteredData.map((item) => [
         item.station,
         item.time,
@@ -209,24 +228,94 @@ export default function Realtimedata() {
       ]),
     ];
   
-    // 2️⃣ Xuất bảng với dòng đầu tiên làm tiêu đề
     autoTable(doc, {
-      startY: 20,
-      body: tableBody,
+      startY: 60,
       styles: { font: "timr45w", fontSize: 9 },
+      body: tableBody,
+      theme: "striped",
       didParseCell: function (data) {
-        if (data.row.index === 0) { // Dòng đầu tiên làm tiêu đề
+        if (data.row.index === 0) { // Header row
           data.cell.styles.fontSize = 11;
-          // data.cell.styles.fontStyle = "bold";
-          data.cell.styles.fillColor = [41, 128, 185]; // Màu xanh
-          data.cell.styles.textColor = 255; // Chữ trắng
+          data.cell.styles.fillColor = [41, 128, 185]; // Blue background
+          data.cell.styles.textColor = 255; // White text
         }
       },
+      margin: { left: 10, right: 10 }, // ✅ Adjust for landscape layout
     });
   
-    doc.save("du_lieu.pdf");
+    // ✅ Get the last Y position from the table
+    const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY : 70;
+  
+    // 3️⃣ Evaluation & Recommendations
+    doc.setFontSize(12);
+    doc.text("III. ĐÁNH GIÁ CHẤT LƯỢNG NƯỚC", 15, finalY + 10);
+    doc.setFontSize(10);
+    doc.text(
+      "Hầu hết các điểm quan trắc có chỉ số chất lượng nước phân loại ở mức rất tốt và tốt.\n" +
+      "Một số điểm có chất lượng nước trung bình hoặc ô nhiễm hữu cơ, cần xử lý diệt khuẩn định kỳ.",
+      15,
+      finalY + 20
+    );
+  
+    doc.setFontSize(12);
+    doc.text("IV. KHUYẾN CÁO", 15, finalY + 40);
+    doc.setFontSize(10);
+    doc.text(
+      "- Không sử dụng nước trực tiếp cho nuôi trồng thủy sản tại các điểm có chỉ số ô nhiễm cao.\n" +
+      "- Cần theo dõi mật độ Aeromonas và Coliform để có biện pháp xử lý phù hợp.",
+      15,
+      finalY + 50
+    );
+  
+    // 4️⃣ Save PDF
+    doc.save("ket_qua_quan_trac_nuoc.pdf");
     setIsOpen(false);
   };
+  
+  
+  // const handleExportPDF = () => {
+  //   const doc = new jsPDF();
+  //   doc.setFont("timr45w", "normal");
+  
+  //   // 1️⃣ Tạo body với dòng đầu tiên làm tiêu đề
+  //   const tableBody = [
+  //     ["Trạm", "Thời gian", "pH", "EC", "DO", "NH4", "NO2", "PO4", "TSS", "COD", "VS", "WQI", "Trạng thái", "Khuyến nghị"],
+  //     ...commonFilteredData.map((item) => [
+  //       item.station,
+  //       item.time,
+  //       item.metrics[0], // pH
+  //       item.metrics[1], // EC
+  //       item.metrics[2], // DO
+  //       item.metrics[3], // NH4
+  //       item.metrics[4], // NO2
+  //       item.metrics[5], // PO4
+  //       item.metrics[6], // TSS
+  //       item.metrics[7], // COD
+  //       item.metrics[8], // VS
+  //       item.metrics[9], // WQI
+  //       item.status,
+  //       item.recommendation,
+  //     ]),
+  //   ];
+  
+  //   // 2️⃣ Xuất bảng với dòng đầu tiên làm tiêu đề
+  //   autoTable(doc, {
+  //     startY: 20,
+  //     body: tableBody,
+  //     styles: { font: "timr45w", fontSize: 9 },
+  //     didParseCell: function (data) {
+  //       if (data.row.index === 0) { // Dòng đầu tiên làm tiêu đề
+  //         data.cell.styles.fontSize = 11;
+  //         // data.cell.styles.fontStyle = "bold";
+  //         data.cell.styles.fillColor = [41, 128, 185]; // Màu xanh
+  //         data.cell.styles.textColor = 255; // Chữ trắng
+  //       }
+  //     },
+  //   });
+  
+  //   doc.save("du_lieu.pdf");
+  //   setIsOpen(false);
+  // };
   
   
 
