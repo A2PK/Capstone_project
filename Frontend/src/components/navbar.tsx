@@ -22,6 +22,7 @@ export default function Navbar() {
   const router = useRouter();
   let isLoggedIn = true;
   const handleLogout = () => {
+    localStorage.removeItem("loginrole");
     router.push("/auth/login"); // Redirect to the login page
   };
   // const onLogoutSubmit = async (_: FormData) => {
@@ -73,7 +74,7 @@ export default function Navbar() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>
                     <Link
-                      href="/dashboard/profile"
+                      href="/profile"
                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-600 rounded-md transition-all duration-200 ease-in-out"
                     >
                       <User className="mr-2 h-4 w-4" />

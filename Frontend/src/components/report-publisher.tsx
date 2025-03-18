@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, AlertTriangle, BookOpen, CheckCircle, FileText, Info, Upload } from "lucide-react"
+import { AlertCircle, AlertTriangle, BookOpen, CheckCircle, FileText, File, Info, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type BadgeType = "important" | "danger" | "urgent"
@@ -20,6 +20,8 @@ interface ReportData {
   description: string
   badgeType: BadgeType | null
   backCoverImage: string | null
+  pdfFile: File | null
+  pdfFileName: string | null
 }
 
 export default function ReportPublisher() {
@@ -28,6 +30,8 @@ export default function ReportPublisher() {
     description: "",
     badgeType: null,
     backCoverImage: null,
+    pdfFile: null,
+    pdfFileName: null
   })
   const [isPublished, setIsPublished] = useState(false)
 
@@ -46,6 +50,17 @@ export default function ReportPublisher() {
       }
 
       reader.readAsDataURL(file)
+    }
+  }
+
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setReportData({
+        ...reportData,
+        pdfFile: file,
+        pdfFileName: file.name
+      })
     }
   }
 
@@ -191,6 +206,39 @@ export default function ReportPublisher() {
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="pdf-file"
+                    className="text-sm font-medium uppercase tracking-wide text-gray-700 dark:text-gray-300"
+                  >
+                    Tệp PDF báo cáo
+                  </Label>
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-6 text-center hover:border-amber-500 dark:hover:border-amber-400 transition-colors duration-200">
+                    <File className="h-8 w-8 mx-auto text-gray-400 dark:text-gray-500 mb-2" />
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Tải lên tệp PDF báo cáo</p>
+                    <Input
+                      id="pdf-file"
+                      type="file"
+                      accept=".pdf"
+                      onChange={handlePdfUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-2 border-amber-500 text-amber-700 hover:bg-amber-50 dark:border-amber-400 dark:text-amber-300 dark:hover:bg-gray-800"
+                      onClick={() => document.getElementById("pdf-file")?.click()}
+                    >
+                      Chọn tệp PDF
+                    </Button>
+                    {reportData.pdfFileName && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center justify-center">
+                        <CheckCircle className="h-4 w-4 mr-1" /> Đã tải lên: {reportData.pdfFileName}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                   <Button
                     type="button"
@@ -198,7 +246,7 @@ export default function ReportPublisher() {
                     onClick={handlePublish}
                     disabled={!reportData.title || !reportData.description}
                   >
-                    {isPublished ? "Published Successfully" : "Publish Expert Report"}
+                    {isPublished ? "Đã xuất bản thành công" : "Xuất bản báo cáo"}
                   </Button>
                 </div>
               </form>
@@ -235,7 +283,6 @@ export default function ReportPublisher() {
                   <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
                     <span>
                     Ngày {new Date().toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" }).replace(",", "")}
-
                     </span>
                     <span className="mx-2">•</span>
                     <span>
@@ -254,6 +301,18 @@ export default function ReportPublisher() {
                       "Nội dung mô tả báo cáo sẽ hiển thị ở đây."}
                   </p>
                 </div>
+
+                {/* PDF file indicator */}
+                {reportData.pdfFileName && (
+                  <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center">
+                      <File className="h-5 w-5 text-red-500 mr-2" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Tệp PDF đính kèm: {reportData.pdfFileName}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Decorative footer */}
                 <div className="mt-8 pt-1 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 flex justify-between items-center">
@@ -301,4 +360,3 @@ export default function ReportPublisher() {
     </div>
   )
 }
-

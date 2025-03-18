@@ -9,7 +9,7 @@ import Image from "next/image";
 
 import water from "/public/songnuoc.jpg";
 import logowqm from "/public/wqm.jpg";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
@@ -39,8 +39,17 @@ export default function LoginPage() {
         title: "Login Successful",
         description: "Welcome back!",
       });
-      router.push("/dashboard/homepage"); // Redirect to dashboard
-    } else {
+      localStorage.setItem("loginrole","officer");
+      router.push("/"); // Redirect to dashboarddashboard/homepage
+    } else if (email && password && email === "admin@gmail.com" && password === "123456") {
+      toast({
+        variant: "success",
+        title: "Login Successful",
+        description: "Welcome back Admin!",
+      });
+      localStorage.setItem("loginrole","admin");
+      router.push("/"); // Redirect to dashboarddashboard/homepage
+    }  else {
       toast({
         title: "Login Failed",
         description: "Please check your email and password.",
@@ -68,7 +77,7 @@ export default function LoginPage() {
         <div className="w-full max-w-xs sm:max-w-sm md:max-w-lg">
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <Image
+            <Link href={"/"}><Image
               src={logowqm}
               alt="WQM Logo"
               width={150}
@@ -76,6 +85,7 @@ export default function LoginPage() {
               className="h-16"
               priority
             />
+            </Link>
           </div>
 
           {/* Login Form */}

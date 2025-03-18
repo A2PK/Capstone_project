@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Home, Newspaper, Monitor, Database, ChevronLeft, ChevronRight } from "lucide-react"
+import { Home, Newspaper, Monitor, Database, ChevronLeft, Inbox ,ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function Sidebar() {
@@ -21,7 +21,7 @@ export default function Sidebar() {
         {/* Sidebar Header */}
         <div className="flex justify-between items-center text-gray-800">
           {/* If not collapsed, show the title */}
-          {!isCollapsed && <span className="text-xl font-bold">Dashboard</span>}
+          {!isCollapsed && <span className="text-xl font-bold">Bảng điều khiển</span>}
           <Button
             variant="ghost"
             size="icon"
@@ -36,32 +36,39 @@ export default function Sidebar() {
         {/* Sidebar Items */}
         <div className="mt-4 space-y-4">
           <Link
-            href="/dashboard/homepage"
+            href="/dashboardofficer/homepage"
             className={`flex items-center text-gray-800 py-2 px-3 rounded-md hover:bg-blue-100 ${isCollapsed ? "justify-center" : "pl-2"}`}
           >
             <Home className={`mr-3 ${isCollapsed && "hidden"}`} />
             {!isCollapsed && "Trang chủ"}
           </Link>
           <Link
-            href="/dashboard/newspaper"
+            href="/dashboardofficer/newspaper"
             className={`flex items-center text-gray-800 py-2 px-3 rounded-md hover:bg-blue-100 ${isCollapsed ? "justify-center" : "pl-2"}`}
           >
             <Newspaper className={`mr-3 ${isCollapsed && "hidden"}`} />
             {!isCollapsed && "Bản tin"}
           </Link>
           <Link
-            href="/dashboard/stations"
+            href="/dashboardofficer/stations"
             className={`flex items-center text-gray-800 py-2 px-3 rounded-md hover:bg-blue-100 ${isCollapsed ? "justify-center" : "pl-2"}`}
           >
             <Monitor className={`mr-3 ${isCollapsed && "hidden"}`} />
             {!isCollapsed && "Trạm quan trắc"}
           </Link>
           <Link
-            href="/dashboard/realtimedata"
+            href="/dashboardofficer/realtimedata"
             className={`flex items-center text-gray-800 py-2 px-3 rounded-md hover:bg-blue-100 ${isCollapsed ? "justify-center" : "pl-2"}`}
           >
             <Database className={`mr-3 ${isCollapsed && "hidden"}`} />
             {!isCollapsed && "Dữ liệu thực"}
+          </Link>
+          <Link
+            href="/dashboardofficer/request"
+            className={`flex items-center text-gray-800 py-2 px-3 rounded-md hover:bg-blue-100 ${isCollapsed ? "justify-center" : "pl-2"}`}
+          >
+            <Inbox  className={`mr-3 ${isCollapsed && "hidden"}`} />
+            {!isCollapsed && "Yêu cầu"}
           </Link>
         </div>
       </div>
