@@ -1,14 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Viewer, Worker } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css"; // Import default layout styles
+import PageLoader from "@/components/pageloader";
 
 const NewsPage = () => {
+  const [isLoading, setIsLoading] = useState(true);
+    useEffect(() => {
+            // Simulate loading delay (e.g., fetching data)
+            const timeout = setTimeout(() => {
+              setIsLoading(false);
+            }, 1000); // 1.5s delay
+            return () => clearTimeout(timeout);
+          }, []);
+        
   const [isDeleted, setIsDeleted] = useState(false);
   const isAuthenticated = true; // Simulated authentication state
 
@@ -17,7 +27,7 @@ const NewsPage = () => {
   };
 
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-
+  if (isLoading) return <PageLoader message="Đang tải trang bản tin..." />;
   return (
     <div className="h-screen flex flex-col bg-white mb-4">
       {/* Breadcrumb + Delete Button */}

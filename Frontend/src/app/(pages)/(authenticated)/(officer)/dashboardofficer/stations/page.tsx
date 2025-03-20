@@ -5,10 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import "leaflet/dist/leaflet.css";
 import StationDetails from "@/components/stationsDetails";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Chartline from "@/components/linechart";
 import { Station } from "@/types/station";
 import { getStatusTextColor } from "@/lib/utils";
+import PageLoader from "@/components/pageloader";
 const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), { ssr: false });
@@ -240,6 +241,15 @@ if (typeof window !== "undefined") {
 }
 
 export default function StationsPage() {
+  const [isLoading, setIsLoading] = useState(true);
+      useEffect(() => {
+              // Simulate loading delay (e.g., fetching data)
+              const timeout = setTimeout(() => {
+                setIsLoading(false);
+              }, 1000); // 1.5s delay
+              return () => clearTimeout(timeout);
+            }, []);
+          
   const [selectedStation, setSelectedStation] = useState(stations[0]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -284,7 +294,7 @@ export default function StationsPage() {
         : null
       : selectedStation.feature.find((f) => f.name === selectedFeature);
 
-
+      if (isLoading) return <PageLoader message="Đang tải trạm quan trắc..." />;
   return (
     <div className="flex flex-1 overflow-hidden"> {/* Sidebar-aware container */}
       {/* Main Content */}
@@ -292,16 +302,6 @@ export default function StationsPage() {
         {/* Header */}
         <header className="flex justify-between items-center border-b pb-2">
           <h1 className="text-2xl font-bold">Trạm Quan Trắc</h1>
-          {/* <div className="flex space-x-2">
-        <div className="flex items-center border px-3 py-1 rounded-md">
-          <Search className="w-4 h-4 text-gray-500 mr-2" />
-          <input type="text" placeholder="Tìm kiếm" className="outline-none text-sm" />
-        </div>
-        <div className="flex items-center border px-3 py-1 rounded-md">
-          <Calendar className="w-4 h-4 text-gray-500 mr-2" />
-          <span className="text-sm">Tháng 9 năm 2024</span>
-        </div>
-      </div> */}
         </header>
 
         {/* Map & Table */}

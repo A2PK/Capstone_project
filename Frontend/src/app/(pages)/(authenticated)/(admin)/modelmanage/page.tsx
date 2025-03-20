@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import PageLoader from "@/components/pageloader"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -16,12 +16,12 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { ArrowLeft, RefreshCw } from "lucide-react"
+import { RefreshCw } from "lucide-react"
 
 export default function ModelManagement() {
     const [isRetraining, setIsRetraining] = useState(false)
     const [activeTab, setActiveTab] = useState("overview")
-
+    const [isLoading, setIsLoading] = useState(true);
     const handleRetrain = () => {
         setIsRetraining(true)
         // Simulate retraining process
@@ -29,7 +29,14 @@ export default function ModelManagement() {
             setIsRetraining(false)
         }, 30000)
     }
-
+    useEffect(() => {
+        // Simulate loading delay (e.g., fetching data)
+        const timeout = setTimeout(() => {
+          setIsLoading(false);
+        }, 1000); // 1.5s delay
+        return () => clearTimeout(timeout);
+      }, []);
+    if (isLoading) return <PageLoader message="Đang tải trang quản lý mô hình..." />;
     return (
         <div className="flex min-h-screen flex-col">
 

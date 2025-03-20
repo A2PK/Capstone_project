@@ -2,8 +2,8 @@
 import { Pagination } from "@/components/pagination"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useState } from "react"
-import { addDays, format } from "date-fns"
+import { useEffect, useState } from "react"
+import { format } from "date-fns"
 import type { DateRange, SelectRangeEventHandler } from "react-day-picker"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
@@ -18,8 +18,9 @@ import { DownloadIcon } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
-import "../../../../../fonts/times";
+import "../../../../fonts/times";
 import Link from "next/link"
+import PageLoader from "@/components/pageloader"
 const monitoringStations = [
   {
     station: "Phú Giềng",
@@ -88,6 +89,15 @@ const monitoringStations = [
 const ITEMS_PER_PAGE = 6 // Number of items per page
 
 export default function Realtimedata() {
+  const [isLoading, setIsLoading] = useState(true);
+      useEffect(() => {
+              // Simulate loading delay (e.g., fetching data)
+              const timeout = setTimeout(() => {
+                setIsLoading(false);
+              }, 1000); // 1.5s delay
+              return () => clearTimeout(timeout);
+            }, []);
+          
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [ITEMS_PER_PAGE, setItemAmount] = useState<number>(6)
   const [isOpen, setIsOpen] = useState(false);
@@ -272,9 +282,7 @@ export default function Realtimedata() {
     setIsOpen(false);
   };
 
-  
-  
-
+  if (isLoading) return <PageLoader message="Đang tải trang dữ liệu theo thời gian thực..." />;
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between py-4 border-b">
@@ -404,7 +412,7 @@ export default function Realtimedata() {
             <TableRow key={index}>
               <TableCell>{station.station}</TableCell>
               <TableCell>
-              <Link href={`/dashboardofficer/stations`}><Button className="px-4 py-1 text-white bg-blue-700 hover:bg-blue-600 border border-black-600">
+              <Link href={`/stationsadmin`}><Button className="px-4 py-1 text-white bg-blue-700 hover:bg-blue-600 border border-black-600">
                   Xem
                 </Button></Link>
               </TableCell>

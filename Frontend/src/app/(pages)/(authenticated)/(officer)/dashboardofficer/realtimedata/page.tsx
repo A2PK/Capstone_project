@@ -2,8 +2,8 @@
 import { Pagination } from "@/components/pagination"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useState } from "react"
-import { addDays, format } from "date-fns"
+import { useEffect, useState } from "react"
+import { format } from "date-fns"
 import type { DateRange, SelectRangeEventHandler } from "react-day-picker"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
@@ -20,6 +20,7 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import "../../../../../fonts/times";
 import Link from "next/link"
+import PageLoader from "@/components/pageloader"
 const monitoringStations = [
   {
     station: "Phú Giềng",
@@ -88,6 +89,14 @@ const monitoringStations = [
 const ITEMS_PER_PAGE = 6 // Number of items per page
 
 export default function Realtimedata() {
+  const [isLoading, setIsLoading] = useState(true);
+      useEffect(() => {
+              // Simulate loading delay (e.g., fetching data)
+              const timeout = setTimeout(() => {
+                setIsLoading(false);
+              }, 1000); // 1.5s delay
+              return () => clearTimeout(timeout);
+            }, []);
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [ITEMS_PER_PAGE, setItemAmount] = useState<number>(6)
   const [isOpen, setIsOpen] = useState(false);
@@ -272,53 +281,7 @@ export default function Realtimedata() {
     setIsOpen(false);
   };
   
-  
-  // const handleExportPDF = () => {
-  //   const doc = new jsPDF();
-  //   doc.setFont("timr45w", "normal");
-  
-  //   // 1️⃣ Tạo body với dòng đầu tiên làm tiêu đề
-  //   const tableBody = [
-  //     ["Trạm", "Thời gian", "pH", "EC", "DO", "NH4", "NO2", "PO4", "TSS", "COD", "VS", "WQI", "Trạng thái", "Khuyến nghị"],
-  //     ...commonFilteredData.map((item) => [
-  //       item.station,
-  //       item.time,
-  //       item.metrics[0], // pH
-  //       item.metrics[1], // EC
-  //       item.metrics[2], // DO
-  //       item.metrics[3], // NH4
-  //       item.metrics[4], // NO2
-  //       item.metrics[5], // PO4
-  //       item.metrics[6], // TSS
-  //       item.metrics[7], // COD
-  //       item.metrics[8], // VS
-  //       item.metrics[9], // WQI
-  //       item.status,
-  //       item.recommendation,
-  //     ]),
-  //   ];
-  
-  //   // 2️⃣ Xuất bảng với dòng đầu tiên làm tiêu đề
-  //   autoTable(doc, {
-  //     startY: 20,
-  //     body: tableBody,
-  //     styles: { font: "timr45w", fontSize: 9 },
-  //     didParseCell: function (data) {
-  //       if (data.row.index === 0) { // Dòng đầu tiên làm tiêu đề
-  //         data.cell.styles.fontSize = 11;
-  //         // data.cell.styles.fontStyle = "bold";
-  //         data.cell.styles.fillColor = [41, 128, 185]; // Màu xanh
-  //         data.cell.styles.textColor = 255; // Chữ trắng
-  //       }
-  //     },
-  //   });
-  
-  //   doc.save("du_lieu.pdf");
-  //   setIsOpen(false);
-  // };
-  
-  
-
+  if (isLoading) return <PageLoader message="Đang tải trang dữ liệu theo thời gian thực..." />;
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between py-4 border-b">

@@ -8,6 +8,7 @@ import { FilterIcon } from "lucide-react";
 import Link from "next/link";
 import ReportPublisher from "@/components/report-publisher"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import PageLoader from "@/components/pageloader";
 interface NewsItem {
   title: string;
   description: string;
@@ -18,6 +19,15 @@ interface NewsItem {
 const ITEMS_PER_PAGE = 6;
 
 const NewsPage = () => {
+  const [isLoading, setIsLoading] = useState(true);
+      useEffect(() => {
+              // Simulate loading delay (e.g., fetching data)
+              const timeout = setTimeout(() => {
+                setIsLoading(false);
+              }, 1000); // 1.5s delay
+              return () => clearTimeout(timeout);
+            }, []);
+          
   const [news, setNews] = useState<NewsItem[]>([]);
   const [filteredNews, setFilteredNews] = useState<NewsItem[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -106,7 +116,7 @@ const NewsPage = () => {
   useEffect(() => {
     fetchNews();
   }, []);
-
+  if (isLoading) return <PageLoader message="Đang tải trang bản tin..." />;
   return (
     <div className="container mx-auto px-4 py-6">
       <header className="flex items-center justify-between mb-6">

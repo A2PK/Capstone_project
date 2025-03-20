@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast"
 import { UserCircle, Upload } from "lucide-react"
 
 export default function EditProfilePage() {
+  
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [profileImage, setProfileImage] = useState<string | null>(null)

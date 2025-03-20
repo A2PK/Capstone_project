@@ -78,7 +78,7 @@ export default function Navbar() {
                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-600 rounded-md transition-all duration-200 ease-in-out"
                     >
                       <User className="mr-2 h-4 w-4" />
-                      My Profile
+                      Thông tin
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
@@ -94,7 +94,7 @@ export default function Navbar() {
                       className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      Log out
+                      Đăng xuất
                     </Button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -146,7 +146,7 @@ export default function Navbar() {
                     <DropdownMenuItem>
                       <Link href="/dashboard/profile" className="flex items-center w-full">
                         <User className="mr-2 h-4 w-4" />
-                        My Profile
+                        Thông tin
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
@@ -156,7 +156,7 @@ export default function Navbar() {
                         className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
                       >
                         <LogOut className="mr-2 h-4 w-4" />
-                        Log out
+                        Đăng xuất
                       </Button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>

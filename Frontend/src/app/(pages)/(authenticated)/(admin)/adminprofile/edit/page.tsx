@@ -37,10 +37,11 @@ export default function EditProfilePage() {
     setTimeout(() => {
       setIsLoading(false)
       toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+        variant: "success",
+        title: "Cập nhật thành công",
+        description: "Thông tin cá nhân của bạn đã được thay đổi",
       })
-      router.push("/profile")
+      router.push("/adminprofile")
     }, 1500)
   }
 
@@ -48,14 +49,13 @@ export default function EditProfilePage() {
     <div className="container mx-auto py-10">
       <Card>
         <CardHeader>
-          <CardTitle>Edit Profile</CardTitle>
-          <CardDescription>Update your profile information and how others see you on the platform.</CardDescription>
+          <CardTitle>Thay đổi thông tin cá nhân</CardTitle>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6">
             <div className="flex flex-col items-center space-y-4">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={profileImage || "/placeholder.svg?height=96&width=96"} alt="Profile picture" />
+                <AvatarImage src={profileImage || "https://github.com/shadcn.png"} alt="Profile picture" />
                 <AvatarFallback>
                   <UserCircle className="h-24 w-24" />
                 </AvatarFallback>
@@ -64,13 +64,13 @@ export default function EditProfilePage() {
                 <Label htmlFor="picture" className="cursor-pointer">
                   <div className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
                     <Upload className="h-4 w-4" />
-                    Upload Photo
+                    Tải ảnh Avatar
                   </div>
                   <Input id="picture" type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                 </Label>
                 {profileImage && (
                   <Button type="button" variant="outline" onClick={() => setProfileImage(null)}>
-                    Remove
+                    Huỷ bỏ
                   </Button>
                 )}
               </div>
@@ -78,55 +78,51 @@ export default function EditProfilePage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First name</Label>
-                <Input id="firstName" defaultValue="Alex" />
+                <Label htmlFor="firstName">Tên</Label>
+                <Input id="firstName" defaultValue="Tien" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last name</Label>
-                <Input id="lastName" defaultValue="Johnson" />
+                <Label htmlFor="lastName">Họ</Label>
+                <Input id="lastName" defaultValue="Nguyen" />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input id="username" defaultValue="alexjohnson" />
+              <Input id="username" defaultValue="vina" />
               <p className="text-sm text-muted-foreground">
-                This is your public display name. It can be your real name or a pseudonym.
+                Nickname hay biệt danh của bạn
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue="alex.johnson@example.com" />
+              <Input id="email" type="email" defaultValue="user@gmail.com" />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="bio">Tiểu sử</Label>
               <Textarea
                 id="bio"
                 placeholder="Tell us a little about yourself"
-                defaultValue="Product designer based in San Francisco with a passion for creating intuitive and beautiful user experiences."
+                defaultValue="Quan chức cấp thấp"
                 className="min-h-[120px] resize-y"
               />
-              <p className="text-sm text-muted-foreground">Brief description for your profile. URLs are hyperlinked.</p>
+              <p className="text-sm text-muted-foreground">Quan chức cấp thấp</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" defaultValue="San Francisco, CA" />
+              <Label htmlFor="location">Địa điểm sống</Label>
+              <Input id="location" defaultValue="Vịnh thừa thiên" />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input id="website" type="url" defaultValue="https://alexjohnson.design" />
-            </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button type="button" variant="outline" onClick={() => router.push("/profile")}>
-              Cancel
+            <Button type="button" variant="outline" onClick={() => router.push("/adminprofile")}>
+              Huỷ bỏ
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save Changes"}
+              {isLoading ? "Đang lưu..." : "Lưu thay đổi"}
             </Button>
           </CardFooter>
         </form>

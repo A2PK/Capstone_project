@@ -1,16 +1,28 @@
-"use client"
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 
 export default function RootPage() {
-  // return redirect("auth/login");
-  if (localStorage.getItem("loginrole")){
-  let role = localStorage.getItem("loginrole");
-  if (role) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const role = localStorage.getItem("loginrole");
+
     if (role === "officer") {
-    return redirect("/dashboardofficer/homepage");
-  } else if (role === "admin") {
-    return redirect("/homead");
-  }
-  }}
-  return redirect("/homeguest");
+      router.replace("/dashboardofficer/homepage");
+    } else if (role === "admin") {
+      router.replace("/homead");
+    } else {
+      router.replace("/homeguest");
+    }
+  }, [router]);
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen space-y-4 bg-gray-50">
+      <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+    </div>
+  );
 }

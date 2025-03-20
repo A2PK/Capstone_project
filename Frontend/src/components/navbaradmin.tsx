@@ -23,7 +23,7 @@ export default function Navbar() {
   let isLoggedIn = true;
   const handleLogout = () => {
     localStorage.removeItem("loginrole");
-    router.push("/auth/login"); // Redirect to the login page
+    router.push("/auth/login");
   };
   // const onLogoutSubmit = async (_: FormData) => {
   //   "use server";
@@ -42,9 +42,6 @@ export default function Navbar() {
               width={90}
               height={40}
             />
-            {/* <span className="ml-2 text-xl font-bold text-blue-600">
-              WQM
-            </span> */}
           </div>
 
           {/* Desktop Icons and User Section */}
@@ -74,27 +71,21 @@ export default function Navbar() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>
                     <Link
-                      href="/dashboard/profile"
+                      href="/adminprofile"
                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-600 rounded-md transition-all duration-200 ease-in-out"
                     >
                       <User className="mr-2 h-4 w-4" />
-                      My Profile
+                      Thông tin
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    {/* <form action={onLogoutSubmit}>
-                      <Button type="submit" className="flex items-center">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Log out
-                      </Button>
-                    </form> */}
                     <Button
-                      type="button" // Changed to "button" as "submit" is unnecessary here
+                      type="button" 
                       onClick={handleLogout}
                       className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      Log out
+                      Đăng xuất
                     </Button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -144,9 +135,9 @@ export default function Navbar() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem>
-                      <Link href="/dashboard/profile" className="flex items-center w-full">
+                      <Link href="/adminprofile" className="flex items-center w-full">
                         <User className="mr-2 h-4 w-4" />
-                        My Profile
+                        Thông tin
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
@@ -156,7 +147,7 @@ export default function Navbar() {
                         className="flex items-center w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out"
                       >
                         <LogOut className="mr-2 h-4 w-4" />
-                        Log out
+                        Đăng xuất
                       </Button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>

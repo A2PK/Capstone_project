@@ -2,7 +2,6 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, Activity, Clock, MapPin, BarChart } from "lucide-react"
 import { Station } from "@/types/station"
-import { getStatusTextColor } from "@/lib/utils";
 interface StationDetailsProps {
   selectedStation: Station | null
 }

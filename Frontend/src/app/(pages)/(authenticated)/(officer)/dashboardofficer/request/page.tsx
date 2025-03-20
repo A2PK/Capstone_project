@@ -116,7 +116,7 @@ export default function RequestsPage() {
           </Badge>
         )
       default:
-        return <Badge variant="outline">Unknown</Badge>
+        return <Badge variant="outline">Không xác định</Badge>
     }
   }
 
@@ -131,91 +131,117 @@ export default function RequestsPage() {
 
   return (
     <div className="container mx-auto py-1">
-  <div className="flex justify-between items-center mb-6">
-    <h1 className="text-3xl font-bold">Yêu Cầu Của Tôi</h1>
-    <Button asChild>
-      <Link href="/dashboardofficer/request/new">Tạo Yêu Cầu Mới</Link>
-    </Button>
-  </div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Yêu cầu của tôi</h1>
+        <Button asChild>
+          <Link href="/dashboardofficer/request/new">Yêu cầu mới</Link>
+        </Button>
+      </div>
 
-  {requests.length === 0 ? (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-      <h2 className="text-xl font-semibold mb-2">Không tìm thấy yêu cầu nào</h2>
-      <p className="text-muted-foreground mb-6">Bạn chưa gửi yêu cầu nào.</p>
-      <Button asChild>
-        <Link href="/requests/new">Tạo Yêu Cầu Đầu Tiên</Link>
-      </Button>
-    </div>
-  ) : (
-    <div className="grid gap-6">
-      {requests.map((request) => (
-        <Card key={request.id}>
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-start">
-              <CardTitle>{request.subject}</CardTitle>
-              {getStatusBadge(request.status)}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Gửi vào ngày {new Date(request.date).toLocaleDateString()}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4">{request.message}</p>
-
-            {request.files && request.files.length > 0 && (
-              <div className="mb-4">
-                <p className="text-sm font-medium mb-2">Tệp đính kèm:</p>
-                <div className="flex flex-wrap gap-2">
-                  {request.files.map((file, index) => (
-                    <div key={index} className="flex items-center gap-1 text-sm bg-muted px-2 py-1 rounded">
-                      <FileText className="h-4 w-4" />
-                      <span>{file}</span>
-                    </div>
-                  ))}
+      {requests.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Không có yêu cầu được tìm thấy.</h2>
+          <p className="text-muted-foreground mb-6">Bạn chưa tạo yêu cầu nào.</p>
+          <Button asChild>
+            <Link href="/request/new">Tạo yêu cầu đầu tiên của bạn</Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-6">
+          {requests.map((request) => (
+            <Card key={request.id} className="border-l-4 border-l-primary">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl">{request.subject}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Mã yêu cầu: <span className="font-mono">{request.id}</span>
+                    </p>
+                  </div>
+                  {getStatusBadge(request.status)}
                 </div>
-              </div>
-            )}
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold text-muted-foreground">Ngày yêu cầu:</h4>
+                      <p>
+                        {new Date(request.date).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold text-muted-foreground">Tình trạng:</h4>
+                      <p className="capitalize"> {request.status}</p>
+                    </div>
+                  </div>
 
-            {request.status === "pending" && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm">
-                    Hủy Yêu Cầu
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Hủy Yêu Cầu</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Bạn có chắc chắn muốn hủy yêu cầu này không? Hành động này không thể hoàn tác.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Không, giữ lại</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => handleCancelRequest(request.id)}
-                      disabled={cancellingId === request.id}
-                    >
-                      {cancellingId === request.id ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Đang hủy...
-                        </>
-                      ) : (
-                        "Có, hủy yêu cầu"
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+                  <div className="space-y-1 pt-2 border-t">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Mô tả yêu cầu:</h4>
+                    <p className="text-base">{request.message}</p>
+                  </div>
+
+                  {request.files && request.files.length > 0 && (
+                    <div className="space-y-1 pt-2 border-t">
+                      <h4 className="text-sm font-semibold text-muted-foreground">File đính kèm:</h4>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {request.files.map((file, index) => (
+                          <div key={index} className="flex items-center gap-2 text-sm bg-muted px-3 py-2 rounded-md">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <span>{file}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {request.status === "pending" && (
+                    <div className="pt-4 border-t mt-4">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            Huỷ yêu cầu
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Huỷ yêu cầu</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Bạn có thật sự muốn huỷ yêu cầu này. Hành động huỷ sẽ không được hoàn tác.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Không huỷ</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleCancelRequest(request.id)}
+                              disabled={cancellingId === request.id}
+                            >
+                              {cancellingId === request.id ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Đang huỷ...
+                                </>
+                              ) : (
+                                "Đồng ý huỷ"
+                              )}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
-  )}
-</div>
 
   )
 }

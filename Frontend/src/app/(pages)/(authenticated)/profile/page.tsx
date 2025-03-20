@@ -1,14 +1,25 @@
+"use client"
+import PageLoader from "@/components/pageloader"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserCircle, Mail, MapPin, Briefcase, Calendar, LogOut } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
 export default function ProfilePage() {
+  const [isLoading, setIsLoading] = useState(true);
+      useEffect(() => {
+              // Simulate loading delay (e.g., fetching data)
+              const timeout = setTimeout(() => {
+                setIsLoading(false);
+              }, 1000); // 1.5s delay
+              return () => clearTimeout(timeout);
+            }, []);
+          if (isLoading) return <PageLoader message="Đang tải trang thông tin cá nhân..." />;
   return (
     <div className="container mx-auto py-10">
       <div className="flex flex-col gap-8 md:flex-row">

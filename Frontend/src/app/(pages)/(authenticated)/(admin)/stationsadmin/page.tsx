@@ -5,10 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import "leaflet/dist/leaflet.css";
 import StationDetails from "@/components/stationsDetails";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Chartline from "@/components/linechart";
 import { Station } from "@/types/station";
 import { getStatusTextColor } from "@/lib/utils";
+import PageLoader from "@/components/pageloader";
 const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), { ssr: false });
@@ -241,6 +242,16 @@ if (typeof window !== "undefined") {
 
 export default function StationsPage() {
   const [selectedStation, setSelectedStation] = useState(stations[0]);
+  const [isLoading, setIsLoading] = useState(true);
+      useEffect(() => {
+              // Simulate loading delay (e.g., fetching data)
+              const timeout = setTimeout(() => {
+                setIsLoading(false);
+              }, 1000); // 1.5s delay
+              return () => clearTimeout(timeout);
+            }, []);
+          
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -284,7 +295,7 @@ export default function StationsPage() {
         : null
       : selectedStation.feature.find((f) => f.name === selectedFeature);
 
-
+      if (isLoading) return <PageLoader message="Đang tải trang trạm quan trắc..." />;
   return (
     <div className="flex flex-1 overflow-hidden"> {/* Sidebar-aware container */}
       {/* Main Content */}

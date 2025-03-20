@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import logo from "/public/wqm.jpg";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Mail, Menu, X } from "lucide-react";
-import Link from "next/link";
+import {Menu, X } from "lucide-react";
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -31,17 +30,11 @@ export default function Navbar() {
 
           {/* Desktop Icons + Login */}
           <div className="hidden sm:flex items-center space-x-4">
-            {/* <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5 text-gray-500" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Mail className="h-5 w-5 text-gray-500" />
-            </Button> */}
             <Button
               onClick={handleLogin}
               className="bg-blue-600 text-white hover:bg-blue-700"
             >
-              Login
+              Đăng nhập
             </Button>
           </div>
 
@@ -65,21 +58,11 @@ export default function Navbar() {
         {isMobileMenuOpen && (
           <div className="sm:hidden bg-white shadow-md absolute top-16 right-0 w-full max-w-xs z-50 p-4">
             <div className="flex flex-col space-y-4 py-2 px-4">
-              {/* <Button variant="ghost" className="flex items-center justify-start">
-                <Bell className="h-5 w-5 text-gray-500 mr-2" />
-                Notifications
-              </Button>
-
-              <Button variant="ghost" className="flex items-center justify-start">
-                <Mail className="h-5 w-5 text-gray-500 mr-2" />
-                Messages
-              </Button> */}
-
               <Button
                 onClick={handleLogin}
                 className="bg-blue-600 text-white hover:bg-blue-700 w-full"
               >
-                Login
+                Đăng nhập
               </Button>
             </div>
           </div>

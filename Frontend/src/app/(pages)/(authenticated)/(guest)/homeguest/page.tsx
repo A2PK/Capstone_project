@@ -1,12 +1,13 @@
 "use client";
 
-import { useState} from "react";
+import { useEffect, useState} from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import "leaflet/dist/leaflet.css";
 import { MapPin, Droplet, AlertTriangle, ArrowRight } from "lucide-react";
+import PageLoader from "@/components/pageloader";
 
 const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
@@ -17,7 +18,22 @@ const MarkerClusterGroup = dynamic(() => import("react-leaflet-cluster"), { ssr:
 const stations = [
   { name: "Tân An", lat: 10.535, lng: 106.413, wqi: 35, status: "Nguy hiểm", recommendation: "WQI nguy hiểm, cần lọc nước khẩn cấp", time: "12:32, Thg 9, 2024" },
   { name: "Mỹ Tho", lat: 10.36, lng: 106.365, wqi: 80, status: "Tốt", recommendation: "WQI tốt, chú ý lọc nước", time: "12:32, Thg 9, 2024" },
-  { name: "Bến Tre", lat: 10.241, lng: 106.375, wqi: 90, status: "Rất tốt", recommendation: "WQI rất tốt, chú ý an toàn vệ sinh thực phẩm", time: "12:31, Thg 9, 2024" }
+  { name: "Bến Tre", lat: 10.241, lng: 106.375, wqi: 90, status: "Rất tốt", recommendation: "WQI rất tốt, chú ý an toàn vệ sinh thực phẩm", time: "12:31, Thg 9, 2024" },
+  { name: "Vĩnh Long", lat: 10.253, lng: 105.972, wqi: 75, status: "Tốt", recommendation: "WQI tốt, có thể sử dụng nước sinh hoạt", time: "12:29, Thg 9, 2024" },
+  { name: "Cần Thơ",
+    lat: 10.033,
+    lng: 105.783,
+    wqi: 88,
+    status: "Rất tốt",
+    recommendation: "WQI rất tốt, đảm bảo an toàn sử dụng",
+    time: "10:18, Thg 3, 2025" },
+    { name: "Trà Vinh",
+      lat: 9.934,
+      lng: 106.342,
+      wqi: 62,
+      status: "Trung bình",
+      recommendation: "WQI trung bình, cần giám sát thêm",
+      time: "10:18, Thg 3, 2025" }
 ];
 
 const articles = [
@@ -66,16 +82,25 @@ if (typeof window !== "undefined") {
 }
 
 export default function StationsPage() {
+  const [isLoading, setIsLoading] = useState(true);
+      useEffect(() => {
+              // Simulate loading delay (e.g., fetching data)
+              const timeout = setTimeout(() => {
+                setIsLoading(false);
+              }, 1000); // 1.5s delay
+              return () => clearTimeout(timeout);
+            }, []);
+          
   const [selectedStation, setSelectedStation] = useState(stations[0]);
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
-
+if (isLoading) return <PageLoader message="Đang tải trang chủ..." />;
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
       <section>
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Bài viết liên quan</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {articles.map((article, index) => (
-            <Link key={index} href="/newsguest" className="block h-full">
+            <Link key={index} href="/newsguestdetail" className="block h-full">
               <Card className="hover:shadow-lg transition-shadow flex flex-col h-full">
                 <img
                   src={article.imageUrl}
