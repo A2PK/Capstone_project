@@ -2,66 +2,95 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import logo from "/public/atlogo.png";
+import logo from "/public/atlogo.png"; // Đảm bảo đường dẫn logo đúng
+import { MapPin, Phone, Mail, Facebook, Twitter, Linkedin, Github } from 'lucide-react'; // Import các icon cần thiết
 
 const AppFooter = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-gray-800 text-gray-200">
-      <div className="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-3">
-        {/* Logo and Application Name */}
-        <div className="flex flex-col items-center text-center md:items-start md:text-left">
-          <div className="flex justify-center items-center">
-            <Image src={logo} alt="Water Quality Monitoring Logo" width={150} />
-          </div>
-          <h2 className="text-xl font-semibold mt-4">
-            Quan trắc chất lượng nước
-          </h2>
-          <p className="text-sm">
-          Nâng cao nghiên cứu môi trường và giải pháp dựa trên dữ liệu cho quản lý chất lượng nước.
+    <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 px-4"> {/* Màu nền tối hơn, padding lớn hơn */}
+      <div className="container mx-auto grid gap-10 md:gap-12 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8"> {/* Responsive grid, 4 cột trên màn lớn */}
+
+        {/* 1. Logo và Mô tả */}
+        <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
+          <Link href="/" className="inline-block mb-4">
+            {/* Giảm kích thước logo một chút cho phù hợp với footer */}
+            <Image src={logo} alt="Water Quality Monitoring Logo" width={120} quality={90} />
+          </Link>
+          <p className="text-sm leading-relaxed">
+            Nâng cao nghiên cứu môi trường và giải pháp dựa trên dữ liệu cho quản lý chất lượng nước.
           </p>
         </div>
 
-        {/* Quick Links */}
-        <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold">Đường Links</h2>
-          <nav className="flex flex-col gap-2">
-            <Link href="/" className="hover:underline">
-              Trang chủ
-            </Link>
-            <Link href="/about" className="hover:underline">
-              Lược sử về chúng tôi
-            </Link>
-            <Link href="/features" className="hover:underline">
-              Đặc điểm
-            </Link>
-            <Link href="/contact" className="hover:underline">
-              Liện hệ với
-            </Link>
+        {/* 2. Liên kết nhanh */}
+        <div className="flex flex-col items-center sm:items-start gap-3">
+          <h3 className="font-semibold text-white uppercase tracking-wider text-sm mb-2"> {/* Tiêu đề cột rõ ràng hơn */}
+            Khám phá
+          </h3>
+          <nav className="flex flex-col items-center sm:items-start gap-2">
+            <Link href="/" className="hover:text-white transition-colors duration-200">Trang chủ</Link>
+            <Link href="/about" className="hover:text-white transition-colors duration-200">Về chúng tôi</Link>
+            <Link href="/features" className="hover:text-white transition-colors duration-200">Tính năng</Link>
+            <Link href="/contact" className="hover:text-white transition-colors duration-200">Liên hệ</Link>
           </nav>
         </div>
 
-        {/* Contact Information */}
-        <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold">Liên hệ tại</h2>
-          <address className="not-italic text-sm">
-            12 Lê Lợi, Quận 1, TPHCM
-            <br />
-            Phone: +1 (800) 555-1234
-            <br />
-            Email:{" "}
-            <a
-              href="mailto:info@watermonitoring.com"
-              className="hover:underline text-blue-400"
-            >
-              info@watermonitoring.com
-            </a>
+        {/* 3. Thông tin Liên hệ */}
+        <div className="flex flex-col items-center sm:items-start gap-3">
+          <h3 className="font-semibold text-white uppercase tracking-wider text-sm mb-2">
+            Liên hệ
+          </h3>
+          <address className="not-italic text-sm flex flex-col items-center sm:items-start gap-3">
+            <div className="flex items-center gap-2">
+              <MapPin size={16} className="text-slate-400 flex-shrink-0" />
+              <span>12 Lê Lợi, Quận 1, TPHCM</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone size={16} className="text-slate-400 flex-shrink-0" />
+              {/* Thay đổi số điện thoại nếu cần */}
+              <a href="tel:+18005551234" className="hover:text-white transition-colors duration-200">+1 (800) 555-1234</a>
+            </div>
+            <div className="flex items-center gap-2">
+              <Mail size={16} className="text-slate-400 flex-shrink-0" />
+              <a
+                href="mailto:info@watermonitoring.com"
+                className="hover:text-white transition-colors duration-200" // Thống nhất màu hover
+              >
+                info@watermonitoring.com
+              </a>
+            </div>
           </address>
         </div>
+
+        {/* 4. Mạng xã hội */}
+        <div className="flex flex-col items-center sm:items-start gap-3">
+           <h3 className="font-semibold text-white uppercase tracking-wider text-sm mb-2">
+            Theo dõi chúng tôi
+          </h3>
+          <div className="flex gap-4">
+             {/* Thay đổi href thành link MXH thực tế của bạn */}
+            <Link href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-slate-400 hover:text-white transition-colors duration-200">
+              <Facebook size={20} />
+            </Link>
+            <Link href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="text-slate-400 hover:text-white transition-colors duration-200">
+              <Twitter size={20} />
+            </Link>
+            <Link href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-slate-400 hover:text-white transition-colors duration-200">
+              <Linkedin size={20} />
+            </Link>
+             <Link href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="Github" className="text-slate-400 hover:text-white transition-colors duration-200">
+              <Github size={20} />
+            </Link>
+          </div>
+        </div>
+
       </div>
-      <div className="border-t border-gray-700 py-4">
-        <p className="text-center text-xs text-gray-500">
-          &copy; {new Date().getFullYear()} Water Quality Monitoring. All
-          rights reserved.
+
+      {/* Dòng Copyright */}
+      <div className="border-t border-slate-800 pt-6 mt-8"> {/* Đường kẻ phân cách tinh tế hơn */}
+        <p className="text-center text-xs text-slate-500"> {/* Chữ copyright rõ hơn chút */}
+          &copy; {currentYear} Water Quality Monitoring. Đã đăng ký Bản quyền.
         </p>
       </div>
     </footer>

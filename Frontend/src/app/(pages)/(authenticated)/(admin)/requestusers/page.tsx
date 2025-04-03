@@ -253,69 +253,86 @@ export default function AdminRequestsPage() {
 
       {/* File Preview Dialog */}
       <Dialog open={fileDialogOpen} onOpenChange={(open) => {
-  if (!isAddingToDatabase && !addToDatabaseAlertOpen) {
-    setFileDialogOpen(open);
-  }
-}}>
-        <DialogContent className="w-screen h-screen max-w-full max-h-full p-1 gap-0">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle>{previewingFile}</DialogTitle>
+        // Logic kiểm tra state giữ nguyên
+         if (!isAddingToDatabase && !addToDatabaseAlertOpen) {
+           setFileDialogOpen(open);
+         }
+      }}>
+        {/* --- Thay đổi DialogContent --- */}
+        <DialogContent className="w-screen h-screen max-w-full max-h-full p-4 flex flex-col"> {/* Tăng padding và dùng flex column */}
+          <DialogHeader className="flex-shrink-0 pb-2 border-b"> {/* Thêm border dưới header */}
+            <DialogTitle>Xem trước file: {previewingFile}</DialogTitle>
+             {/* Có thể thêm DialogDescription nếu muốn */}
           </DialogHeader>
 
-          <div className="flex-grow overflow-auto mt-4 relative">
+          {/* --- Container cho bảng với overflow --- */}
+          <div className="flex-grow overflow-auto mt-4 relative border rounded-md"> {/* Thêm border ở đây */}
             {fileContentLoading ? (
-              <div className="flex flex-col items-center justify-center py-8">
+              <div className="flex flex-col items-center justify-center h-full"> {/* Căn giữa loading */}
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
                 <p>Đang tải dữ liệu file...</p>
               </div>
             ) : selectedFileContent.length > 0 ? (
-              <div className="border rounded-md h-full">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-100 sticky top-0">
-                    <tr>
-                      {Object.keys(selectedFileContent[0]).map((key) => (
-                        <th key={key} className="px-4 py-2 border">{key}</th>
+              // --- Bảng hiển thị dữ liệu ---
+              // `table-fixed` có thể hữu ích nếu bạn muốn set width cột cụ thể,
+              // nhưng `whitespace-nowrap` thường đủ cho việc giãn cột tự động.
+              // `border-collapse` cho đường kẻ đẹp hơn.
+              <table className="min-w-full text-sm border-collapse">
+                <thead className="bg-slate-100 sticky top-0 z-10"> {/* Đổi màu nền thead, thêm z-index */}
+                  <tr>
+                    {Object.keys(selectedFileContent[0]).map((key) => (
+                      <th
+                        key={key}
+                        // --- THÊM whitespace-nowrap VÀ STYLING CHO TH ---
+                        className="px-4 py-2 border border-slate-300 font-medium text-slate-700 text-left whitespace-nowrap bg-slate-100"
+                      >
+                        {key}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedFileContent.map((row, idx) => (
+                    // --- Thêm hiệu ứng hover và zebra striping cho hàng ---
+                    <tr key={idx} className="hover:bg-slate-50 even:bg-white odd:bg-slate-50/50">
+                      {Object.keys(row).map((key) => (
+                        <td
+                          key={key}
+                           // --- THÊM whitespace-nowrap VÀO TD ---
+                          className="px-4 py-2 border border-slate-200 whitespace-nowrap text-slate-600"
+                        >
+                          {/* Đảm bảo giá trị là string để hiển thị */}
+                          {String(row[key])}
+                        </td>
                       ))}
                     </tr>
-                  </thead>
-                  <tbody>
-                    {selectedFileContent.map((row, idx) => (
-                      <tr key={idx}>
-                        {Object.keys(row).map((key) => (
-                          <td key={key} className="px-4 py-2 border">{row[key]}</td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             ) : (
-              <div className="text-center py-8 text-red-500">
+               // --- Phần báo lỗi giữ nguyên ---
+              <div className="flex flex-col items-center justify-center h-full text-red-600"> {/* Căn giữa lỗi */}
                 <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-                <p>Không thể đọc dữ liệu từ file.</p>
+                <p>Không thể đọc hoặc không có dữ liệu từ file.</p>
               </div>
             )}
-
-            {/* Success indicator */}
-            {/* {addSuccess && (
-              <div className="absolute top-4 right-4 bg-green-100 text-green-800 px-4 py-2 rounded-md flex items-center shadow-md animate-in fade-in duration-300">
-                <Check className="h-5 w-5 mr-2" />
-                <span>Đã thêm dữ liệu thành công!</span>
-              </div>
-            )} */}
+             {/* Success indicator có thể đặt lại ở đây nếu cần */}
           </div>
 
-          <DialogFooter className="flex-shrink-0 border-t pt-4 mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+          {/* --- DialogFooter giữ nguyên cấu trúc nhưng điều chỉnh styling --- */}
+          <DialogFooter className="flex-shrink-0 border-t border-slate-200 pt-4 mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:justify-end sm:space-x-2">
             <Button
-              variant="default"
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+              variant="default" // Có thể dùng màu primary của bạn
+              className="w-full sm:w-auto" // Bỏ màu cứng, dùng variant
               onClick={() => setAddToDatabaseAlertOpen(true)}
               disabled={fileContentLoading || isAddingToDatabase || selectedFileContent.length === 0 || addSuccess}
             >
               {isAddingToDatabase ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Đang xử lý...</>
+              ) : addSuccess ? ( // Thêm trạng thái sau khi thành công
+                 <><Check className="h-4 w-4 mr-2" /> Đã thêm</>
               ) : (
-                <><Database className="h-4 w-4 mr-2" /> Thêm vào kho dữ liệu</>
+                 <><Database className="h-4 w-4 mr-2" /> Thêm vào kho dữ liệu</>
               )}
             </Button>
             <DialogClose asChild>

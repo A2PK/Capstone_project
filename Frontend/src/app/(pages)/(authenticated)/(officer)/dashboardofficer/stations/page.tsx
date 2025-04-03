@@ -307,7 +307,7 @@ export default function StationsPage() {
         {/* Map & Table */}
         <div className="flex flex-grow gap-4 min-h-[60vh] overflow-hidden">
           {/* Map Section */}
-          <div className="flex-grow min-w-0"> {/* Fills remaining space */}
+          <div className="flex-grow min-w-0 relative z-10"> {/* Fills remaining space */}
             <MapContainer
               center={[10.535, 106.413]}
               zoom={10}
