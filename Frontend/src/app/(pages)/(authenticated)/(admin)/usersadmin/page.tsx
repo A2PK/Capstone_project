@@ -66,8 +66,8 @@ interface User {
 const mockUsers: User[] = [
   { id: "usr_001", name: "Admin Chính", email: "admin@example.com", role: "admin", status: "active", lastLogin: "2025-04-03 15:30", avatar: "https://randomuser.me/api/portraits/men/1.jpg" },
   { id: "usr_002", name: "Quản lý A", email: "manager.a@example.com", role: "manager", status: "active", lastLogin: "2025-04-03 09:15", avatar: "https://randomuser.me/api/portraits/women/2.jpg" },
-  { id: "usr_003", name: "Người xem B", email: "viewer.b@example.com", role: "viewer", status: "active", lastLogin: "2025-04-02 11:00" },
-  { id: "usr_004", name: "Người xem C (Inactive)", email: "viewer.c@example.com", role: "viewer", status: "inactive", avatar: "https://randomuser.me/api/portraits/men/3.jpg" },
+  // { id: "usr_003", name: "Người xem B", email: "viewer.b@example.com", role: "viewer", status: "active", lastLogin: "2025-04-02 11:00" },
+  // { id: "usr_004", name: "Người xem C (Inactive)", email: "viewer.c@example.com", role: "viewer", status: "inactive", avatar: "https://randomuser.me/api/portraits/men/3.jpg" },
   { id: "usr_005", name: "Quản lý B (Inactive)", email: "manager.b@example.com", role: "manager", status: "inactive", lastLogin: "2025-03-20 18:00", avatar: "https://randomuser.me/api/portraits/women/4.jpg" },
 ];
 
@@ -225,7 +225,7 @@ export default function UsersAdminPage() {
   const renderRoleBadge = (role: UserRole) => {
     const roleMap: Record<UserRole, { text: string; className: string; icon: React.ReactNode }> = {
       admin: { text: "Quản trị viên", className: "border-red-500/50 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300", icon: <ShieldAlert className="mr-1 h-3 w-3" /> },
-      manager: { text: "Quản lý", className: "border-blue-500/50 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300", icon: <UserCog className="mr-1 h-3 w-3" /> },
+      manager: { text: "Viên chức", className: "border-blue-500/50 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300", icon: <UserCog className="mr-1 h-3 w-3" /> },
       viewer: { text: "Người xem", className: "border-gray-500/50 bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300", icon: <User className="mr-1 h-3 w-3" /> },
     };
     const { text, className, icon } = roleMap[role];

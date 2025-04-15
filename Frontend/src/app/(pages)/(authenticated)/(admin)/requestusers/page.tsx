@@ -1,10 +1,11 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect,useRef  } from "react"
 import { Request } from "@/types/request"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AlertCircle, FileText, Loader2, Eye, X, Database, Check } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { AlertCircle, FileText, Loader2, Eye, X, Database, Check,Upload  } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,7 @@ const MOCK_REQUESTS: Request[] = [
 ]
 
 export default function AdminRequestsPage() {
+  const uploadInputRef = useRef<HTMLInputElement | null>(null)
   const { toast } = useToast();
   const [requests, setRequests] = useState<Request[]>([])
   const [loading, setLoading] = useState(true)
@@ -185,9 +187,52 @@ export default function AdminRequestsPage() {
 
   }
 
+  const handleTemplateUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const arrayBuffer = e.target?.result
+        if (arrayBuffer) {
+          const workbook = XLSX.read(arrayBuffer, { type: "array" })
+          const firstSheet = workbook.SheetNames[0]
+          const worksheet = workbook.Sheets[firstSheet]
+          const data = XLSX.utils.sheet_to_json(worksheet, { defval: "" })
+  
+          toast({
+            title: "Tải file mẫu thành công",
+            description: `Đã tải lên ${file.name} với ${data.length} dòng`,
+            variant: "success"
+          })
+  
+          console.log("Dữ liệu mẫu:", data)
+        }
+      }
+      reader.readAsArrayBuffer(file)
+    }
+  }
   return (
     <div className="container mx-auto py-1">
-      <h1 className="text-3xl font-bold mb-6">Quản lý yêu cầu người dùng</h1>
+      <div className="flex items-center justify-between mb-6">
+  <h1 className="text-3xl font-bold">Quản lý yêu cầu người dùng</h1>
+  
+  <div className="flex items-center gap-2">
+    <input
+      ref={uploadInputRef}
+      type="file"
+      accept=".xlsx,.csv"
+      className="hidden"
+      onChange={handleTemplateUpload}
+    />
+    <Button
+      variant="outline"
+      onClick={() => uploadInputRef.current?.click()}
+    >
+      <Upload className="w-4 h-4 mr-2" />
+      Upload file mẫu
+    </Button>
+  </div>
+</div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center min-h-[50vh]">

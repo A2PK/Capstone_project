@@ -41,7 +41,7 @@
     "jspdf-autotable": "^5.0.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.445.0",
-    "next": "14.2.13",
+    "next": "14.2.26",
     "pdfjs-dist": "^3.11.174",
     "qs": "^6.13.0",
     "react": "^18",
