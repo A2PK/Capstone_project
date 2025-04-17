@@ -1,0 +1,904 @@
+syntax = "proto3";
+
+package waterquality;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "proto/core/common.proto"; // Import core definitions
+// Add imports for annotations
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "golang-microservices-boilerplate/proto/waterquality";
+
+// Add OpenAPI definition options for the Water Quality Service
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Water Quality Service API";
+    version: "1.0";
+    description: "API for managing water quality monitoring data.";
+  };
+  schemes: [HTTP, HTTPS];
+  consumes: ["application/json"];
+  produces: ["application/json"];
+  // Add security definition (e.g., for JWT Bearer token)
+  security_definitions: {
+    security: {
+      key: "BearerAuth";
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+        description: "JWT Bearer token (e.g., 'Bearer ey...')";
+      }
+    }
+  };
+  // Apply the security globally, can be overridden per-method if needed
+  security: {
+    security_requirement: {
+      key: "BearerAuth";
+      value: {}; // Empty value means scopes aren't used here
+    }
+  }
+};
+
+// --- Enums for DataPointFeature --- (Moved from Indicator)
+
+enum ObservationType {
+  OBSERVATION_TYPE_UNSPECIFIED = 0; // Default value
+  OBSERVATION_TYPE_ACTUAL = 1;
+  OBSERVATION_TYPE_INTERPOLATION = 2;
+  OBSERVATION_TYPE_PREDICTED = 3;
+  OBSERVATION_TYPE_REALTIME_MONITORING = 4;
+}
+
+enum IndicatorPurpose {
+  INDICATOR_PURPOSE_UNSPECIFIED = 0; // Default value
+  INDICATOR_PURPOSE_PREDICTION = 1;
+  INDICATOR_PURPOSE_DISPLAY = 2;
+  INDICATOR_PURPOSE_ANALYSIS = 3;
+}
+
+// --- Station ---
+
+message Station {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Station";
+      description: "Represents a water quality monitoring station.";
+      required: ["id", "created_at", "updated_at", "name", "latitude", "longitude", "country"];
+    }
+  };
+  // Base fields inline
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Unique identifier for the station (UUID format).";
+    example: "\"a1b2c3d4-e5f6-7890-1234-567890abcdef\"";
+  }];
+  google.protobuf.Timestamp created_at = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the station was created.";
+    example: "\"2023-01-15T10:30:00Z\"";
+  }];
+  google.protobuf.Timestamp updated_at = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the station was last updated.";
+    example: "\"2023-01-16T11:00:00Z\"";
+  }];
+  optional google.protobuf.Timestamp deleted_at = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the station was soft-deleted. Null if not deleted.";
+    example: "\"2023-01-17T12:00:00Z\"";
+  }];
+  // Station specific fields
+  string name = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Name of the monitoring station.";
+    example: "\"River Thames Station 1\"";
+  }];
+  double latitude = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Latitude coordinate of the station.";
+    example: "51.5074";
+  }];
+  double longitude = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Longitude coordinate of the station.";
+    example: "-0.1278";
+  }];
+  string country = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Country where the station is located.";
+    example: "\"United Kingdom\"";
+  }];
+  string location = 9 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Additional location details.";
+    example: "\"Central London\"";
+  }];
+}
+
+message StationInput {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Station Input";
+      description: "Data required to create a new monitoring station.";
+      required: ["name", "latitude", "longitude", "country"];
+    }
+  };
+  // No base fields needed for input typically
+  string name = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Name of the monitoring station.";
+    example: "\"River Thames Station 1\"";
+  }];
+  double latitude = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Latitude coordinate of the station (decimal degrees).";
+    example: "51.5074";
+  }];
+  double longitude = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Longitude coordinate of the station (decimal degrees).";
+    example: "-0.1278";
+  }];
+  string country = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Country where the station is located.";
+    example: "\"United Kingdom\"";
+  }];
+  string location = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Additional location details (city, region, water body name).";
+    example: "\"Central London\"";
+  }];
+}
+
+message CreateStationsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Create Stations Request";
+      description: "Request to create one or more new monitoring stations.";
+      required: ["stations"];
+    }
+  };
+  repeated StationInput stations = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of stations to create.";
+  }];
+}
+
+message CreateStationsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Create Stations Response";
+      description: "Contains details of the newly created monitoring stations.";
+    }
+  };
+  repeated Station stations = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of created stations with system-generated fields populated.";
+  }];
+}
+
+message UpdateStationsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Update Stations Request";
+      description: "Request to update one or more existing monitoring stations.";
+      required: ["stations"];
+    }
+  };
+  repeated Station stations = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of stations with updated fields. Each must include ID.";
+  }];
+}
+
+message UpdateStationsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Update Stations Response";
+      description: "Contains details of the updated monitoring stations.";
+    }
+  };
+  repeated Station stations = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of updated stations.";
+  }];
+}
+
+message DeleteRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Delete Request";
+      description: "Request to delete one or more entities by their IDs.";
+      required: ["ids"];
+    }
+  };
+  repeated string ids = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of entity UUIDs to delete.";
+    example: "[\"a1b2c3d4-e5f6-7890-1234-567890abcdef\", \"b2c3d4e5-f6a7-8901-2345-67890abcdef0\"]";
+  }];
+  bool hard_delete = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "If true, performs a permanent (hard) delete. If false or omitted, performs a soft delete.";
+    default: "false";
+    example: "false";
+  }];
+}
+
+message DeleteResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Delete Response";
+      description: "Contains information about the deletion operation.";
+      required: ["affected_count"];
+    }
+  };
+  int64 affected_count = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Number of entities that were successfully deleted.";
+    example: "2";
+  }];
+}
+
+message ListStationsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List Stations Request";
+      description: "Request to list monitoring stations with filtering and pagination options.";
+    }
+  };
+  core.FilterOptions options = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Filtering, pagination, and sorting options.";
+  }];
+}
+
+message ListStationsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List Stations Response";
+      description: "Contains a paginated list of monitoring stations.";
+      required: ["stations", "pagination"];
+    }
+  };
+  repeated Station stations = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of stations matching the filter criteria.";
+  }];
+  core.PaginationInfo pagination = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Pagination information including total count and current page.";
+  }];
+}
+
+// --- DataPoint Feature (New Message) ---
+
+// Represents a single feature/measurement within a DataPoint
+message DataPointFeature {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Data Point Feature";
+      description: "Represents a single water quality measurement/feature within a DataPoint.";
+      required: ["name", "purpose", "source"];
+    }
+  };
+  string name = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Name of the feature (e.g., pH, DO, Temperature, Recommendations).";
+    example: "\"pH\"";
+  }];
+  optional double value = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Numerical value of the feature measurement. Null if textual_value is used.";
+    example: "7.4";
+  }];
+  optional string textual_value = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Textual value for non-numeric features (e.g., recommendations, quality status). Null if value is used.";
+    example: "\"Slightly alkaline\"";
+  }];
+  IndicatorPurpose purpose = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Purpose of this feature (prediction, display, analysis).";
+    example: "\"INDICATOR_PURPOSE_ANALYSIS\"";
+  }];
+  string source = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Source of this specific feature measurement (e.g., sensor ID, calculation method). Inherits from DataPoint source if empty.";
+    example: "\"lab-test-batch-123\"";
+  }];
+  // No base entity fields (ID, CreatedAt etc.) as this is embedded
+}
+
+// Input version of DataPointFeature
+message DataPointFeatureInput {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Data Point Feature Input";
+      description: "Data required to define a feature within a DataPointInput.";
+      required: ["name", "purpose", "source"];
+    }
+  };
+  string name = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Name of the feature.";
+    example: "\"pH\"";
+  }];
+  optional double value = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Numerical value.";
+    example: "7.4";
+  }];
+  optional string textual_value = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Textual value.";
+    example: "\"Normal\"";
+  }];
+  IndicatorPurpose purpose = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Purpose (prediction, display, analysis).";
+    example: "\"INDICATOR_PURPOSE_ANALYSIS\"";
+  }];
+  string source = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Source of the feature measurement.";
+    example: "\"lab-test-batch-123\"";
+  }];
+}
+
+// --- DataPoint --- (Updated Features)
+
+message DataPoint {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Data Point";
+      description: "Represents a single water quality data collection event at a monitoring station.";
+      required: ["id", "created_at", "updated_at", "monitoring_time", "station_id", "source", "observation_type", "data_source_schema_id"];
+    }
+  };
+  // Base fields inline
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Unique identifier for the data point (UUID format).";
+    example: "\"a1b2c3d4-e5f6-7890-1234-567890abcdef\"";
+  }];
+  google.protobuf.Timestamp created_at = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the data point was created.";
+    example: "\"2023-01-15T10:30:00Z\"";
+  }];
+  google.protobuf.Timestamp updated_at = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the data point was last updated.";
+    example: "\"2023-01-16T11:00:00Z\"";
+  }];
+  optional google.protobuf.Timestamp deleted_at = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the data point was soft-deleted. Null if not deleted.";
+    example: "\"2023-01-17T12:00:00Z\"";
+  }];
+  // DataPoint specific fields
+  google.protobuf.Timestamp monitoring_time = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the water quality measurements were taken.";
+    example: "\"2023-01-14T08:45:00Z\"";
+  }];
+  optional double wqi = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Water Quality Index - a calculated value representing overall water quality.";
+    example: "78.5";
+  }];
+  string station_id = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Reference to the monitoring station UUID where the data was collected.";
+    example: "\"b2c3d4e5-f6a7-8901-2345-67890abcdef0\"";
+  }];
+  string source = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Source of the data (e.g., filename, API endpoint, sensor ID).";
+    example: "\"manual-entry\"";
+  }];
+  ObservationType observation_type = 9 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Type of observation (actual, interpolation, predicted, realtime_monitoring).";
+    example: "\"OBSERVATION_TYPE_ACTUAL\"";
+  }];
+  string data_source_schema_id = 10 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Reference to the DataSourceSchema UUID used to process this data point.";
+    example: "\"d4e5f6a7-b8c9-0123-4567-890abcdef012\"";
+  }];
+  // Updated features field
+  repeated DataPointFeature features = 11 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of specific water quality measurements/features associated with this data point.";
+  }];
+}
+
+message DataPointInput { // Updated Features
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Data Point Input";
+      description: "Data required to create a new data point with optional feature indicators.";
+      required: ["monitoring_time", "station_id", "source", "observation_type", "data_source_schema_id"];
+    }
+  };
+  google.protobuf.Timestamp monitoring_time = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the water quality measurements were taken.";
+    example: "\"2023-01-14T08:45:00Z\"";
+  }];
+  optional double wqi = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Water Quality Index - a calculated value representing overall water quality.";
+    example: "78.5";
+  }];
+  string station_id = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Reference to the monitoring station UUID where the data was collected.";
+    example: "\"b2c3d4e5-f6a7-8901-2345-67890abcdef0\"";
+  }];
+  string source = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Source of the data (e.g., filename, API endpoint, sensor ID).";
+    example: "\"manual-entry\"";
+  }];
+  ObservationType observation_type = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Type of observation.";
+    example: "\"OBSERVATION_TYPE_ACTUAL\"";
+  }];
+  string data_source_schema_id = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Reference to the DataSourceSchema UUID.";
+    example: "\"d4e5f6a7-b8c9-0123-4567-890abcdef012\"";
+  }];
+  // Updated features field
+  repeated DataPointFeatureInput features = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Collection of individual water quality measurements/features associated with this data point.";
+  }];
+}
+
+message CreateDataPointsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Create Data Points Request";
+      description: "Request to create one or more new data points.";
+      required: ["data_points"];
+    }
+  };
+  repeated DataPointInput data_points = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of data points to create.";
+  }];
+}
+
+message CreateDataPointsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Create Data Points Response";
+      description: "Contains details of the newly created data points.";
+    }
+  };
+  repeated DataPoint data_points = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of created data points with system-generated fields populated.";
+  }];
+}
+
+message UpdateDataPointsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Update Data Points Request";
+      description: "Request to update one or more existing data points.";
+      required: ["data_points"];
+    }
+  };
+  repeated DataPoint data_points = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of data points with updated fields. Each must include ID.";
+  }];
+}
+
+message UpdateDataPointsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Update Data Points Response";
+      description: "Contains details of the updated data points.";
+    }
+  };
+  repeated DataPoint data_points = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of updated data points.";
+  }];
+}
+
+message ListDataPointsByStationRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List Data Points By Station Request";
+      description: "Request to list data points for a specific station with filtering and pagination options.";
+      required: ["station_id"];
+    }
+  };
+  string station_id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "UUID of the station to list data points for.";
+    example: "\"b2c3d4e5-f6a7-8901-2345-67890abcdef0\"";
+  }];
+  core.FilterOptions options = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Filtering, pagination, and sorting options.";
+  }];
+}
+
+message ListDataPointsByStationResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List Data Points By Station Response";
+      description: "Contains a paginated list of data points for a specific station.";
+      required: ["data_points", "pagination"];
+    }
+  };
+  repeated DataPoint data_points = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of data points matching the filter criteria.";
+  }];
+  core.PaginationInfo pagination = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Pagination information including total count and current page.";
+  }];
+}
+
+// --- File Upload ---
+
+// New UploadRequest message for streaming, with flat fields inside a oneof
+message UploadRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Upload Request (Streaming, Flat Oneof)";
+      description: "A single message in the upload stream, containing either a metadata field or a data chunk.";
+    }
+  };
+  oneof payload { 
+    string filename = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      description: "Name of the file being uploaded (sent usually as the first message)." ;
+      example: "\"water_quality_jan2023.csv\"";
+    }];
+    string file_type = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      description: "Type of the file (sent usually after filename)." ;
+      example: "\"csv\"";
+    }];
+    bytes data_chunk = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      description: "Chunk of binary file data (sent in subsequent messages).";
+      format: "byte";
+    }];
+    // Optional: Consider adding data_source_schema_id here if needed
+    // string data_source_schema_id = 4 [(...)] 
+  }
+}
+
+message UploadDataResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Upload Data Response";
+      description: "Response after processing an uploaded file.";
+      required: ["message", "records_processed", "records_failed"];
+    }
+  };
+  string message = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Summary message about the upload processing.";
+    example: "\"Upload successful, processed 125 records.\"";
+  }];
+  int64 records_processed = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Number of records successfully processed.";
+    example: "125";
+  }];
+  int64 records_failed = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Number of records that failed to process.";
+    example: "3";
+  }];
+  string data_source_schema_id = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "ID of schema used or created during processing.";
+    example: "\"d4e5f6a7-b8c9-0123-4567-890abcdef012\"";
+  }];
+  repeated string errors = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of errors encountered during processing.";
+    example: "[\"Row 15: Invalid pH value\", \"Row 23: Missing station reference\"]";
+  }];
+}
+
+// --- DataSourceSchema ---
+
+message DataSourceSchema {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Data Source Schema";
+      description: "Defines the structure and mapping of an external data source.";
+      required: ["id", "created_at", "updated_at", "name", "source_type", "schema_definition"];
+    }
+  };
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Unique identifier for the schema (UUID format).";
+    example: "\"d4e5f6a7-b8c9-0123-4567-890abcdef012\"";
+  }];
+  google.protobuf.Timestamp created_at = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the schema was created.";
+    example: "\"2023-01-15T10:30:00Z\"";
+  }];
+  google.protobuf.Timestamp updated_at = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the schema was last updated.";
+    example: "\"2023-01-16T11:00:00Z\"";
+  }];
+  optional google.protobuf.Timestamp deleted_at = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the schema was soft-deleted. Null if not deleted.";
+    example: "\"2023-01-17T12:00:00Z\"";
+  }];
+  string name = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Name of the data source schema.";
+    example: "\"Ministry of Environment Monthly Reports\"";
+  }];
+  string source_identifier = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Unique identifier for the source (e.g., URL, file pattern, API endpoint).";
+    example: "\"moe_monthly_*.csv\"";
+  }];
+  string source_type = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Type of the data source (csv, json, excel, api, manual).";
+    example: "\"csv\"";
+  }];
+  string description = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Detailed description of the data source and its contents.";
+    example: "\"Monthly water quality reports from the Ministry of Environment monitoring stations.\"";
+  }];
+  google.protobuf.Struct schema_definition = 9 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "JSON structure defining the fields and their mappings to entities. Represents []FieldDefinition from Go entity.";
+    example: "{\"fields\": [{\"source_name\": \"Station ID\", \"data_type\": \"string\", \"target_entity\": \"Station\", \"target_field\": \"Name\"}, {\"source_name\": \"pH\", \"data_type\": \"float\", \"target_entity\": \"Indicator\", \"purpose\": \"display\"}]}";
+  }];
+}
+
+message DataSourceSchemaInput {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Data Source Schema Input";
+      description: "Data required to create a new data source schema definition.";
+      required: ["name", "source_type", "schema_definition"];
+    }
+  };
+  string name = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Name of the data source schema.";
+    example: "\"Ministry of Environment Monthly Reports\"";
+  }];
+  string source_identifier = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Unique identifier for the source (e.g., URL, file pattern, API endpoint).";
+    example: "\"moe_monthly_*.csv\"";
+  }];
+  string source_type = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Type of the data source (csv, json, excel, api, manual).";
+    example: "\"csv\"";
+  }];
+  string description = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Detailed description of the data source and its contents.";
+    example: "\"Monthly water quality reports from the Ministry of Environment monitoring stations.\"";
+  }];
+  google.protobuf.Struct schema_definition = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "JSON structure defining the fields and their mappings to entities.";
+    example: "{\"fields\": [{\"source_name\": \"Station ID\", \"data_type\": \"string\", \"target_entity\": \"Station\", \"target_field\": \"Name\"}, {\"source_name\": \"pH\", \"data_type\": \"float\", \"target_entity\": \"Indicator\", \"purpose\": \"display\"}]}";
+  }];
+}
+
+message CreateDataSourceSchemaRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Create Data Source Schema Request";
+      description: "Request to create a new data source schema definition.";
+      required: ["schema"];
+    }
+  };
+  DataSourceSchemaInput schema = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Schema definition to create.";
+  }];
+}
+
+message CreateDataSourceSchemaResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Create Data Source Schema Response";
+      description: "Contains the newly created data source schema.";
+      required: ["schema"];
+    }
+  };
+  DataSourceSchema schema = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Created schema with system-generated fields populated.";
+  }];
+}
+
+message UpdateDataSourceSchemaRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Update Data Source Schema Request";
+      description: "Request to update an existing data source schema definition.";
+      required: ["schema"];
+    }
+  };
+  DataSourceSchema schema = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Schema with updated fields. Must include ID.";
+  }];
+}
+
+message UpdateDataSourceSchemaResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Update Data Source Schema Response";
+      description: "Contains the updated data source schema.";
+      required: ["schema"];
+    }
+  };
+  DataSourceSchema schema = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Updated schema.";
+  }];
+}
+
+message GetDataSourceSchemaRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Get Data Source Schema Request";
+      description: "Request to retrieve a specific data source schema by ID.";
+      required: ["id"];
+    }
+  };
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "UUID of the schema to retrieve.";
+    example: "\"d4e5f6a7-b8c9-0123-4567-890abcdef012\"";
+  }];
+}
+
+message GetDataSourceSchemaResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Get Data Source Schema Response";
+      description: "Contains the requested data source schema.";
+      required: ["schema"];
+    }
+  };
+  DataSourceSchema schema = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "The retrieved schema.";
+  }];
+}
+
+message ListDataSourceSchemasRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List Data Source Schemas Request";
+      description: "Request to list data source schemas with filtering and pagination options.";
+    }
+  };
+  core.FilterOptions options = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Filtering, pagination, and sorting options.";
+  }];
+}
+
+message ListDataSourceSchemasResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List Data Source Schemas Response";
+      description: "Contains a paginated list of data source schemas.";
+      required: ["schemas", "pagination"];
+    }
+  };
+  repeated DataSourceSchema schemas = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of schemas matching the filter criteria.";
+  }];
+  core.PaginationInfo pagination = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Pagination information including total count and current page.";
+  }];
+}
+
+// --- Service Definition ---
+
+service WaterQualityService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "Operations related to water quality monitoring";
+  };
+
+  // Station RPCs
+  rpc CreateStations(CreateStationsRequest) returns (CreateStationsResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/water-quality/stations";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Create Stations";
+      description: "Creates one or more new monitoring stations.";
+      tags: ["Stations"];
+    };
+  }
+  
+  rpc UpdateStations(UpdateStationsRequest) returns (UpdateStationsResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/water-quality/stations";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Update Stations";
+      description: "Updates one or more existing monitoring stations.";
+      tags: ["Stations"];
+    };
+  }
+  
+  rpc DeleteStations(DeleteRequest) returns (DeleteResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/water-quality/stations/delete";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Delete Stations";
+      description: "Deletes one or more monitoring stations. Can be soft or hard delete.";
+      tags: ["Stations"];
+    };
+  }
+  
+  rpc ListStations(ListStationsRequest) returns (ListStationsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/water-quality/stations";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "List Stations";
+      description: "Retrieves a paginated list of monitoring stations with filtering options.";
+      tags: ["Stations"];
+    };
+  }
+
+  // DataPoint RPCs
+  rpc CreateDataPoints(CreateDataPointsRequest) returns (CreateDataPointsResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/water-quality/data-points";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Create Data Points";
+      description: "Creates one or more new data points with their associated indicators.";
+      tags: ["Data Points"];
+    };
+  }
+  
+  rpc UpdateDataPoints(UpdateDataPointsRequest) returns (UpdateDataPointsResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/water-quality/data-points";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Update Data Points";
+      description: "Updates one or more existing data points.";
+      tags: ["Data Points"];
+    };
+  }
+  
+  rpc DeleteDataPoints(DeleteRequest) returns (DeleteResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/water-quality/data-points/delete";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Delete Data Points";
+      description: "Deletes one or more data points. Can be soft or hard delete.";
+      tags: ["Data Points"];
+    };
+  }
+  
+  rpc ListDataPointsByStation(ListDataPointsByStationRequest) returns (ListDataPointsByStationResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/water-quality/stations/{station_id}/data-points";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "List Data Points by Station";
+      description: "Retrieves a paginated list of data points for a specific station.";
+      tags: ["Data Points"];
+    };
+  }
+
+  // File Upload RPC
+  rpc UploadData(stream UploadRequest) returns (UploadDataResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/water-quality/upload";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Upload Data";
+      description: "Streams a data file for processing and importing water quality data.";
+      tags: ["Data Import"];
+    };
+  }
+
+  // DataSourceSchema RPCs
+  rpc CreateDataSourceSchema(CreateDataSourceSchemaRequest) returns (CreateDataSourceSchemaResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/water-quality/schemas";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Create Data Source Schema";
+      description: "Creates a new data source schema definition.";
+      tags: ["Data Source Schemas"];
+    };
+  }
+  
+  rpc UpdateDataSourceSchema(UpdateDataSourceSchemaRequest) returns (UpdateDataSourceSchemaResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/water-quality/schemas/{schema.id}";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Update Data Source Schema";
+      description: "Updates an existing data source schema definition.";
+      tags: ["Data Source Schemas"];
+    };
+  }
+  
+  rpc GetDataSourceSchema(GetDataSourceSchemaRequest) returns (GetDataSourceSchemaResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/water-quality/schemas/{id}";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get Data Source Schema";
+      description: "Retrieves a specific data source schema by ID.";
+      tags: ["Data Source Schemas"];
+    };
+  }
+  
+  rpc ListDataSourceSchemas(ListDataSourceSchemasRequest) returns (ListDataSourceSchemasResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/water-quality/schemas";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "List Data Source Schemas";
+      description: "Retrieves a paginated list of data source schemas with filtering options.";
+      tags: ["Data Source Schemas"];
+    };
+  }
+} 

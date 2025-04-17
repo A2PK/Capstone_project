@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: water-quality-service
+  namespace: ride-sharing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: water-quality-service
+  template:
+    metadata:
+      labels:
+        app: water-quality-service
+    spec:
+      # Commenting out the nodeSelector to allow scheduling on any node
+      # nodeSelector:
+      #   app: water-quality-service
+      containers:
+      - name: water-quality-service
+        image: water-quality-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: water-quality-service
+  namespace: ride-sharing
+  labels:
+    app.kubernetes.io/component: grpc-service
+spec:
+  selector:
+    app: water-quality-service
+  ports:
+  - name: grpc
+    port: 9090
+    targetPort: 9090
+  type: ClusterIP 
