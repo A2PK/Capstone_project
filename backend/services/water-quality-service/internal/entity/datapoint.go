@@ -47,7 +47,7 @@ type DataPointFeature struct {
 type DataPoint struct {
 	core_entity.BaseEntity
 	MonitoringTime     time.Time          `json:"monitoring_time,omitempty" gorm:"not null;index;uniqueIndex:idx_datapoint_time_station_source"`
-	WQI                *float64           `json:"wqi,omitempty" gorm:"type:decimal(10,4)"` // Water Quality Index (use pointer for nullability)
+	WQI                *float64           `json:"wqi,omitempty" gorm:"type:decimal(10,4);uniqueIndex:idx_datapoint_time_station_source"` // Water Quality Index (use pointer for nullability)
 	StationID          uuid.UUID          `json:"station_id,omitempty" gorm:"type:uuid;not null;index;uniqueIndex:idx_datapoint_time_station_source"`
 	Source             string             `json:"source,omitempty" gorm:"type:varchar(255);index;uniqueIndex:idx_datapoint_time_station_source"`
 	ObservationType    ObservationType    `json:"observation_type,omitempty" gorm:"type:varchar(50);not null;index;check:chk_observation_type,observation_type IN ('actual', 'interpolation', 'predicted', 'realtime-monitoring')"` // Renamed type, kept json tag

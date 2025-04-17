@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -38,22 +39,31 @@ func NewGormDataPointRepository(db *gorm.DB) DataPointRepository {
 }
 
 // Create overrides the base repository's Create method to handle unique constraint violations gracefully.
-// If a data point with the same MonitoringTime, StationID, and Source already exists,
+// If a data point with the same MonitoringTime, StationID, Source, and WQI already exists,
 // this method retrieves the existing data point's ID and timestamps, updates the input pointer,
 // and returns nil error.
 // NOTE: This error checking is specific to PostgreSQL (pgconn.PgError, code 23505).
-func (r *gormDataPointRepository) Create(ctx context.Context, dataPoint *entity.DataPoint) error { // Return type changed back to error
+func (r *gormDataPointRepository) Create(ctx context.Context, dataPoint *entity.DataPoint) error {
 	err := r.DB.WithContext(ctx).Create(dataPoint).Error
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // 23505 is unique_violation for PostgreSQL
-			// Duplicate found. Query for the existing record to get its ID and timestamps.
+			// Duplicate found based on idx_datapoint_time_station_source (which now includes WQI).
+			// Query for the existing record.
 			var existingDataPoint entity.DataPoint
-			findErr := r.DB.WithContext(ctx).
-				Select("id", "created_at", "updated_at"). // Select only necessary fields
+			query := r.DB.WithContext(ctx).
+				Select("id", "created_at", "updated_at").
 				Where("monitoring_time = ? AND station_id = ? AND source = ?",
-					dataPoint.MonitoringTime, dataPoint.StationID, dataPoint.Source).
-				First(&existingDataPoint).Error
+					dataPoint.MonitoringTime, dataPoint.StationID, dataPoint.Source)
+
+			// Add WQI condition, handling NULL
+			if dataPoint.WQI == nil {
+				query = query.Where("wqi IS NULL")
+			} else {
+				query = query.Where("wqi = ?", *dataPoint.WQI)
+			}
+
+			findErr := query.First(&existingDataPoint).Error
 
 			if findErr != nil {
 				// Handle error during the find operation
@@ -73,11 +83,12 @@ func (r *gormDataPointRepository) Create(ctx context.Context, dataPoint *entity.
 }
 
 // CreateMany overrides the base repository's CreateMany method to ensure idempotency
-// using ON CONFLICT DO NOTHING. It attempts to insert all data points. If a data point
-// already exists (based on the unique constraint idx_datapoint_time_station_source),
-// the insertion for that specific data point is skipped. Afterwards, it queries and
-// returns all data points matching the unique keys of the input slice.
-// NOTE: This approach uses one batch insert (with conflict handling) and one select query.
+// using ON CONFLICT DO NOTHING based on the idx_datapoint_time_station_source constraint.
+// It attempts to insert all data points. If a data point already exists
+// (based on MonitoringTime, StationID, Source, WQI), the insertion is skipped.
+// Afterwards, it queries and returns all data points matching the unique keys of the input slice.
+// NOTE: Standard unique constraints treat NULLs as distinct. This may not prevent duplicates
+// if multiple input records have the same time/station/source but NULL WQI.
 func (r *gormDataPointRepository) CreateMany(ctx context.Context, dataPoints []*entity.DataPoint) ([]*entity.DataPoint, error) {
 	if len(dataPoints) == 0 {
 		return []*entity.DataPoint{}, nil
@@ -86,13 +97,18 @@ func (r *gormDataPointRepository) CreateMany(ctx context.Context, dataPoints []*
 	// Attempt to insert all data points, ignoring conflicts on the unique index
 	err := r.DB.WithContext(ctx).
 		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "monitoring_time"}, {Name: "station_id"}, {Name: "source"}},
+			Columns: []clause.Column{ // Updated conflict columns
+				{Name: "monitoring_time"},
+				{Name: "station_id"},
+				{Name: "source"},
+				{Name: "wqi"},
+			},
 			DoNothing: true,
 		}).
 		Create(&dataPoints).Error
 
-	// Check for errors other than constraint violations (which are handled by DoNothing)
 	if err != nil {
+		// Handle non-conflict errors during batch create
 		return nil, fmt.Errorf("error during batch create data points: %w", err)
 	}
 
@@ -100,29 +116,33 @@ func (r *gormDataPointRepository) CreateMany(ctx context.Context, dataPoints []*
 	// to get both the newly inserted and pre-existing ones with their IDs.
 	query := r.DB.WithContext(ctx)
 	if len(dataPoints) > 0 {
-		// Start with the first condition using Where
-		firstDp := dataPoints[0]
-		query = query.Where("monitoring_time = ? AND station_id = ? AND source = ?", firstDp.MonitoringTime, firstDp.StationID, firstDp.Source)
-
-		// Add subsequent conditions using Or
-		for i := 1; i < len(dataPoints); i++ {
-			dp := dataPoints[i]
-			query = query.Or("monitoring_time = ? AND station_id = ? AND source = ?", dp.MonitoringTime, dp.StationID, dp.Source)
+		// Build the WHERE clause with OR conditions for each data point's unique key combination
+		var conditions []string
+		var args []interface{}
+		for _, dp := range dataPoints {
+			cond := "(monitoring_time = ? AND station_id = ? AND source = ? AND "
+			args = append(args, dp.MonitoringTime, dp.StationID, dp.Source)
+			if dp.WQI == nil {
+				cond += "wqi IS NULL)"
+			} else {
+				cond += "wqi = ?)"
+				args = append(args, *dp.WQI)
+			}
+			conditions = append(conditions, cond)
 		}
+		query = query.Where(strings.Join(conditions, " OR "), args...)
+
 	} else {
-		// If there were no input data points, return an empty slice immediately
 		return []*entity.DataPoint{}, nil
 	}
 
 	var resultDataPoints []*entity.DataPoint
-	// Find the matching data points
-	findErr := query.Find(&resultDataPoints).Error // Removed .Preload("Features") for debugging, add back if needed
+	findErr := query.Find(&resultDataPoints).Error
 	if findErr != nil {
 		return nil, fmt.Errorf("failed to retrieve data points after batch create: %w", findErr)
 	}
 
 	// All data points processed successfully (inserted or ignored), and then retrieved.
-	// Note: Features are NOT preloaded in this version. If needed, they must be loaded separately.
 	return resultDataPoints, nil
 }
 
@@ -168,7 +188,7 @@ func (r *gormDataPointRepository) FindByStationID(ctx context.Context, stationID
 
 	// Add Preload for Features before finding the results
 	// GORM handles finding into a slice of pointers
-	result := query.Preload("Features").Find(&dataPoints)
+	result := query.Find(&dataPoints)
 
 	if result.Error != nil {
 		return nil, result.Error // Handle potential errors, e.g., logging
