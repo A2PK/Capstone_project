@@ -18,8 +18,17 @@ spec:
   rules:
   - http:
       paths:
+      # Add rule for ai-service
+      - path: /ai-models
+        pathType: Prefix # Route /ai-models and everything under it
+        backend:
+          service:
+            name: ai-service # Name of the AI K8s Service
+            port:
+              number: 8000 # Port the AI K8s Service listens on
+      # Existing rule for the api-gateway
       - path: /
-        pathType: Prefix # Route all paths starting with / to the gateway
+        pathType: Prefix # Route all other paths starting with / to the gateway
         backend:
           service:
             name: api-gateway

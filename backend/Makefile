@@ -35,11 +35,13 @@ remove-image:
 	docker rmi api-gateway:latest
 	docker rmi user-service:latest
 	docker rmi water-quality-service:latest
+	docker rmi ai-service:latest
 
 build-image:
 	docker build -t api-gateway:latest -f services/api-gateway/Dockerfile .
 	docker build -t user-service:latest -f services/user-service/Dockerfile .
 	docker build -t water-quality-service:latest -f services/water-quality-service/Dockerfile .
+	docker build -t ai-service:latest -f services/ai-service/Dockerfile .
 
 image:	remove-image	build-image
 
@@ -47,12 +49,14 @@ load-image:
 	kind load docker-image api-gateway:latest --name ride-sharing-cluster
 	kind load docker-image user-service:latest --name ride-sharing-cluster
 	kind load docker-image water-quality-service:latest --name ride-sharing-cluster
+	kind load docker-image ai-service:latest --name ride-sharing-cluster
 
 apply-config:
 	kubectl apply -f k8s/common/ # Apply Namespace and RBAC
 	kubectl apply -f k8s/api-gateway/ # Apply ConfigMap, Deployment, Service, Ingress
 	kubectl apply -f k8s/user-service/ # Apply ConfigMap, Deployment, Service
 	kubectl apply -f k8s/water-quality-service/ # Apply ConfigMap, Deployment, Service
+	kubectl apply -f k8s/ai-service/ # Apply ConfigMap, Deployment, Service
 
 .PHONY: describe-api
 describe-api:
@@ -64,6 +68,9 @@ describe-user:
 
 .PHONY: describe-water-quality
 	kubectl describe pod -n ride-sharing -l app=water-quality-service
+.PHONY: describe-ai
+describe-ai:
+	kubectl describe pod -n ride-sharing -l app=ai-service
 
 .PHONY: api-logs
 api-logs:
@@ -77,13 +84,22 @@ user-logs:
 water-quality-logs:
 	kubectl logs -n ride-sharing -l app=water-quality-service --tail=100
 
+.PHONY: ai-logs
+ai-logs:
+	kubectl logs -n ride-sharing -l app=ai-service --tail=100
+
+
 .PHONY: restart-deployments
 restart-deployments:
 	kubectl rollout restart deployment -n ride-sharing api-gateway
 	kubectl rollout restart deployment -n ride-sharing user-service
 	kubectl rollout restart deployment -n ride-sharing water-quality-service
+	kubectl rollout restart deployment -n ride-sharing ai-service
 forward-api:
 	kubectl port-forward -n ride-sharing service/api-gateway 8081:8081
+
+forward-ai:
+	kubectl port-forward -n ride-sharing service/ai-service 8000:8000
 
 proto-gen:
 	buf generate
@@ -91,7 +107,22 @@ proto-gen:
 clear-docker-cache:
 	docker builder prune -f
 
-# move-out:
-# 	cp -r golang-microservices-boilerplate /mnt/c/Users/ASUS/Downloads
-# move-in:
-# 	cp -r /mnt/c/Users/ASUS/Downloads/golang-microservices-boilerplate .
+tag-image:
+	docker tag api-gateway:latest ghcr.io/nct2309/api-gateway:latest
+	docker tag user-service:latest ghcr.io/nct2309/user-service:latest
+	docker tag water-quality-service:latest ghcr.io/nct2309/water-quality-service:latest
+	docker tag ai-service:latest ghcr.io/nct2309/ai-service:latest
+
+push-image:
+	docker push ghcr.io/nct2309/api-gateway:latest
+	docker push ghcr.io/nct2309/user-service:latest
+	docker push ghcr.io/nct2309/water-quality-service:latest
+	docker push ghcr.io/nct2309/ai-service:latest
+
+get-pods:
+	kubectl get pods -n ride-sharing
+
+get-services:
+	kubectl get services -n ride-sharing
+
+

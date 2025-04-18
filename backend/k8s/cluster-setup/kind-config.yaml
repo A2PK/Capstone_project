@@ -10,6 +10,9 @@ nodes:
   - containerPort: 9090
     hostPort: 9090
     protocol: TCP  # Assuming all services use this port, adjust if needed
+  - containerPort: 8000
+    hostPort: 8000
+    protocol: TCP
 # - role: worker
 #   labels:
 #     service: api-gateway

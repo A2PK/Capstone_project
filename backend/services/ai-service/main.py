@@ -26,7 +26,10 @@ def convert_np(obj):
     else:
         return obj
 
-app = FastAPI()
+app = FastAPI(
+    docs_url="/ai-models/swagger",
+)
+
 import sys
 print (sys.version)
 
@@ -56,7 +59,12 @@ class TrainParams(BaseModel):
     model_dir: Optional[str] = "saved_models"
 
 
-@app.post("/predict")
+router = APIRouter(
+    prefix="/ai-models",
+    tags=["AI Models"]
+)
+
+@router.post("/predict")
 async def predict(
     file: UploadFile = File(...),
     elements_list: List[str] = Form(...),
@@ -85,7 +93,7 @@ async def predict(
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-@app.post("/train")
+@router.post("/train")
 async def train(
     file: UploadFile = File(...),
     elements_list: List[str] = Form(...),  

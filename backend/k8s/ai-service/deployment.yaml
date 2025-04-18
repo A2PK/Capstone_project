@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-service
+  namespace: ride-sharing
+  labels:
+    app: ai-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-service
+  template:
+    metadata:
+      labels:
+        app: ai-service
+    spec:
+      containers:
+      - name: ai-service
+        image: ai-service:latest # <-- IMPORTANT: Replace with your actual image URI
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000 # Port the Python service listens on
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-service # Internal DNS name for the service
+  namespace: ride-sharing # Added namespace
+  labels:
+    app: ai-service
+spec:
+  selector:
+    app: ai-service # Selects pods with the label 'app: ai-service'
+  ports:
+    - protocol: TCP
+      port: 8000 # Port the service listens on (internal cluster communication)
+      targetPort: 8000 # Port the container listens on
+  type: ClusterIP # Exposes the service on a cluster-internal IP 
+ 

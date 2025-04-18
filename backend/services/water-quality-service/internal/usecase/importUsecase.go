@@ -322,7 +322,7 @@ func (s *importService) inferSchemaFromHeaders(headers []string) []entity.FieldD
 		} else if contains(lowerHeader, []string{"district", "huyện"}) {
 			fieldDef.TargetEntity = entity.TargetEntityStation
 			fieldDef.TargetField = "District"
-		} else if contains(lowerHeader, []string{"time", "date", "monitoring_time", "timestamp", "ngày quan trắc", "monitoringdate"}) {
+		} else if contains(lowerHeader, []string{"time", "date", "monitoring_time", "timestamp", "ngày quan trắc", "monitoringdate", "ngày"}) {
 			fieldDef.TargetEntity = entity.TargetEntityDataPoint
 			fieldDef.TargetField = "MonitoringTime"
 			fieldDef.DataType = entity.DataTypeDateTime
