@@ -498,7 +498,7 @@ func (s *importService) processRecordBatch(ctx context.Context, records [][]stri
 			failedCount++
 			continue
 		}
-		stationKey := fmt.Sprintf("%s|%.6f|%.6f", station.Name, station.Latitude, station.Longitude)
+		stationKey := fmt.Sprintf("%.6f|%.6f", station.Latitude, station.Longitude)
 		if _, found := stationsMap[stationKey]; !found {
 			stationsMap[stationKey] = station
 		}
@@ -537,7 +537,7 @@ func (s *importService) processRecordBatch(ctx context.Context, records [][]stri
 			return 0, int64(len(records) - 1), processingErrors
 		}
 		for _, station := range createdOrFoundStations {
-			key := fmt.Sprintf("%s|%.6f|%.6f", station.Name, station.Latitude, station.Longitude)
+			key := fmt.Sprintf("%.6f|%.6f", station.Latitude, station.Longitude)
 			stationKeyToID[key] = station.ID
 		}
 		s.logger.Info("Batch processed stations (created or found)", "count", len(createdOrFoundStations))
@@ -666,12 +666,15 @@ func (s *importService) extractStation(fieldDefs []entity.FieldDefinition, row, 
 			station.Longitude = lon
 			foundLon = true
 		case "Coordinates":
-			value = strings.ReplaceAll(value, "\n", " ")
-			value = strings.ReplaceAll(value, ",", " ")
-			parts := strings.Fields(value)
+			// Handle formats like "lat,decimal\nlon,decimal" or "lat.decimal\nlon.decimal"
+			// Replace newline with a space, then comma with period for parsing
+			coordStr := strings.ReplaceAll(value, "\n", " ")
+			coordStr = strings.ReplaceAll(coordStr, ",", ".")
+			parts := strings.Fields(coordStr) // Split by whitespace
 			if len(parts) >= 2 {
-				latStr := strings.ReplaceAll(parts[0], ",", ".")
-				lonStr := strings.ReplaceAll(parts[1], ",", ".")
+				// Assume first part is latitude, second is longitude
+				latStr := parts[0]
+				lonStr := parts[1]
 				parsedLat, errLat := strconv.ParseFloat(latStr, 64)
 				parsedLon, errLon := strconv.ParseFloat(lonStr, 64)
 				if errLat == nil && errLon == nil {
@@ -680,10 +683,18 @@ func (s *importService) extractStation(fieldDefs []entity.FieldDefinition, row, 
 					foundLat = true
 					foundLon = true
 				} else {
-					return nil, fmt.Errorf("invalid coordinate value '%s' for field '%s': lat_err=%v, lon_err=%v", value, fieldDef.SourceName, errLat, errLon)
+					// Construct a more informative error message
+					errors := []string{}
+					if errLat != nil {
+						errors = append(errors, fmt.Sprintf("latitude parse error: %v", errLat))
+					}
+					if errLon != nil {
+						errors = append(errors, fmt.Sprintf("longitude parse error: %v", errLon))
+					}
+					return nil, fmt.Errorf("invalid coordinate value '%s' (processed as '%s') for field '%s': %s", value, coordStr, fieldDef.SourceName, strings.Join(errors, "; "))
 				}
 			} else {
-				return nil, fmt.Errorf("invalid coordinate format '%s' for field '%s': expected two numbers", value, fieldDef.SourceName)
+				return nil, fmt.Errorf("invalid coordinate format '%s' (processed as '%s') for field '%s': expected two numeric parts after processing", value, coordStr, fieldDef.SourceName)
 			}
 		case "Country":
 			station.Country = value
@@ -777,6 +788,12 @@ func (s *importService) extractDataPoint(fieldDefs []entity.FieldDefinition, row
 			dataPoint.Source = value
 			// case "DataSourceSchemaID": // Should be set globally
 		}
+	}
+
+	// Ensure a default ObservationType if none was provided or extracted
+	if dataPoint.ObservationType == "" {
+		s.logger.Warn("Observation type was empty or missing, defaulting to 'actual'", "stationID", dataPoint.StationID, "time", dataPoint.MonitoringTime, "source", source)
+		dataPoint.ObservationType = entity.Actual
 	}
 
 	if !foundTime {
@@ -934,9 +951,14 @@ func parseAndSetFeatureValue(feature *entity.DataPointFeature, valueStr string, 
 		}
 	case entity.DataTypeBoolean:
 		lowerValue := strings.ToLower(valueStr)
-		isTrue := lowerValue == "true" || valueStr == "1" || lowerValue == "yes" || valueStr == "dương tính" || valueStr == "có" || valueStr == "positive"
-		isFalse := lowerValue == "false" || valueStr == "0" || lowerValue == "no" || valueStr == "âm tính" || valueStr == "không" || valueStr == "negative"
+		isTrue := lowerValue == "true" || valueStr == "1" || lowerValue == "yes" || lowerValue == "dương tính" || lowerValue == "có" || lowerValue == "positive"
+		isFalse := lowerValue == "false" || valueStr == "0" || lowerValue == "no" || lowerValue == "âm tính" || lowerValue == "không" || lowerValue == "negative"
 
+		// Always store original text
+		textVal := valueStr
+		feature.TextualValue = &textVal
+
+		// Only set numeric Value if it clearly matches true/false
 		if isTrue {
 			floatVal := 1.0
 			feature.Value = &floatVal
@@ -944,9 +966,7 @@ func parseAndSetFeatureValue(feature *entity.DataPointFeature, valueStr string, 
 			floatVal := 0.0
 			feature.Value = &floatVal
 		}
-		// Always store original text for booleans for context
-		textVal := valueStr
-		feature.TextualValue = &textVal
+		// If neither true nor false, we have already stored the text, so return nil (no error)
 
 	case entity.DataTypeString, entity.DataTypeText, entity.DataTypeUnknown, entity.DataTypeCoordinate, entity.DataTypeDate, entity.DataTypeDateTime:
 		textVal := valueStr

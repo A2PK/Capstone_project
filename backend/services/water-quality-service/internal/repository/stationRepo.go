@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn" // Import for PostgreSQL error checking
 	"gorm.io/gorm"
@@ -36,26 +37,26 @@ func NewGormStationRepository(db *gorm.DB) StationRepository {
 }
 
 // Create overrides the base repository's Create method to handle unique constraint violations gracefully.
-// If a station with the same Name, Latitude, and Longitude already exists (violating idx_name_lat_lon),
+// If a station with the same Latitude and Longitude already exists (violating idx_lat_lon),
 // this method retrieves the existing station's ID and timestamps, updates the input pointer,
 // and returns nil error.
 // NOTE: This error checking is specific to PostgreSQL (pgconn.PgError, code 23505).
-func (r *gormStationRepository) Create(ctx context.Context, station *entity.Station) error { // Return type changed back to error
+func (r *gormStationRepository) Create(ctx context.Context, station *entity.Station) error {
 	err := r.DB.WithContext(ctx).Create(station).Error
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // 23505 is unique_violation for PostgreSQL
-			// Duplicate found. Query for the existing record to get its ID and timestamps.
+			// Duplicate found based on idx_lat_lon. Query for the existing record.
 			var existingStation entity.Station
 			findErr := r.DB.WithContext(ctx).
 				Select("id", "created_at", "updated_at"). // Select only necessary fields
-				Where("name = ? AND latitude = ? AND longitude = ?",
-					station.Name, station.Latitude, station.Longitude).
+				Where("latitude = ? AND longitude = ?",   // Updated WHERE clause
+					station.Latitude, station.Longitude).
 				First(&existingStation).Error
 
 			if findErr != nil {
 				// Handle error during the find operation
-				return fmt.Errorf("failed to retrieve existing station after duplicate error: %w", findErr)
+				return fmt.Errorf("failed to retrieve existing station after duplicate lat/lon error: %w", findErr)
 			}
 			// Update the original pointer with the ID and timestamps from the existing record
 			station.ID = existingStation.ID
@@ -71,46 +72,41 @@ func (r *gormStationRepository) Create(ctx context.Context, station *entity.Stat
 }
 
 // CreateMany overrides the base repository's CreateMany method to ensure idempotency
-// using ON CONFLICT DO NOTHING. It attempts to insert all stations. If a station
-// already exists (based on the unique constraint idx_name_lat_lon), the insertion
+// using ON CONFLICT DO NOTHING based on the idx_lat_lon constraint. It attempts to insert
+// all stations. If a station already exists (based on Latitude and Longitude), the insertion
 // for that specific station is skipped. Afterwards, it queries and returns all
 // stations matching the unique keys of the input slice.
-// NOTE: This approach uses one batch insert (with conflict handling) and one select query.
 func (r *gormStationRepository) CreateMany(ctx context.Context, stations []*entity.Station) ([]*entity.Station, error) {
 	if len(stations) == 0 {
 		return []*entity.Station{}, nil
 	}
 
-	// Attempt to insert all stations, ignoring conflicts on the unique index
+	// Attempt to insert all stations, ignoring conflicts on the unique index idx_lat_lon
 	err := r.DB.WithContext(ctx).
 		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "name"}, {Name: "latitude"}, {Name: "longitude"}},
+			Columns:   []clause.Column{{Name: "latitude"}, {Name: "longitude"}}, // Updated conflict columns
 			DoNothing: true,
 		}).
 		Create(&stations).Error
 
-	// Check for errors other than constraint violations (which are handled by DoNothing)
 	if err != nil {
-		// Note: Depending on the GORM version and database driver, certain errors
-		// during batch operations might still be reported. Handle non-conflict errors.
+		// Handle non-conflict errors during batch create
 		return nil, fmt.Errorf("error during batch create stations: %w", err)
 	}
 
-	// Now, query for all stations matching the unique keys of the input slice
-	// to get both the newly inserted and pre-existing ones with their IDs.
+	// Now, query for all stations matching the unique keys (lat, lon) of the input slice.
 	query := r.DB.WithContext(ctx)
 	if len(stations) > 0 {
-		// Start with the first condition using Where
-		first := stations[0]
-		query = query.Where("name = ? AND latitude = ? AND longitude = ?", first.Name, first.Latitude, first.Longitude)
-
-		// Add subsequent conditions using Or
-		for i := 1; i < len(stations); i++ {
-			s := stations[i]
-			query = query.Or("name = ? AND latitude = ? AND longitude = ?", s.Name, s.Latitude, s.Longitude)
+		// Build the WHERE clause with OR conditions for each station's lat/lon pair
+		var conditions []string
+		var args []interface{}
+		for _, s := range stations {
+			conditions = append(conditions, "(latitude = ? AND longitude = ?)")
+			args = append(args, s.Latitude, s.Longitude)
 		}
+		query = query.Where(strings.Join(conditions, " OR "), args...)
+
 	} else {
-		// Should not happen based on the initial check, but good practice.
 		return []*entity.Station{}, nil
 	}
 
@@ -120,7 +116,6 @@ func (r *gormStationRepository) CreateMany(ctx context.Context, stations []*enti
 		return nil, fmt.Errorf("failed to retrieve stations after batch create: %w", findErr)
 	}
 
-	// All stations processed successfully (inserted or ignored), and then retrieved.
 	return resultStations, nil
 }
 
