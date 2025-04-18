@@ -61,7 +61,8 @@ async def predict(
     file: UploadFile = File(...),
     elements_list: List[str] = Form(...),
     date_column_name: str = Form(...),
-    place_id: int = Form(...),
+    place_column_name: str = Form(...),
+    place_id: str = Form(...),
     date_tag: str = Form(...),
     num_step: int = Form(4),
     freq_days: int = Form(7),
@@ -75,6 +76,7 @@ async def predict(
             freq_days=freq_days,
             elements_list=parsed_elements_list,
             date_column_name=date_column_name,
+            place_column_name = place_column_name,
             place_id=place_id,
             date_tag=date_tag,
             model_dir=model_dir
@@ -87,9 +89,10 @@ async def predict(
 async def train(
     file: UploadFile = File(...),
     elements_list: List[str] = Form(...),  
-    date_column_name: str = Form("Ngày quan trắc"),
+    date_column_name: str = Form(...),
+    place_column_name: str = Form(...),
     train_test_ratio: float = Form(0.7),
-    place_id: int = Form(1),
+    place_id: str = Form(...),
     date_tag: str = Form("170425"),
     model_dir: Optional[str] = Form("saved_models")
 ):
@@ -100,7 +103,7 @@ async def train(
         elements_list (List[str], optional): List of elements to train model, keep list for prediction.
         date_column_name (str, optional): name of the "date" column, default "Ngày quan trắc".
         train_test_ratio (float, optional): ratio to split train/test from 0.1->1, default 0.7, 1 does not return model test result.
-        place_id (int, optional): Place to train model Defaults to Form(1).
+        place_id (str, optional): UUID of station
         date_tag (str, optional): Date tag to keep track of model, recommend ddmmyy form. Default 170425.
         model_dir (Optional[str], optional): Folder to save models in server. Defaults Form("saved_models").
 
@@ -113,6 +116,7 @@ async def train(
             file=file,
             elements_list=parsed_elements_list,
             date_column_name=date_column_name,
+            place_column_name=place_column_name,
             train_test_ratio=train_test_ratio,
             place_id=place_id,
             date_tag=date_tag,

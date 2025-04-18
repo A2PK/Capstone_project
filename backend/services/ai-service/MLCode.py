@@ -20,13 +20,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def _create_lagged_features_predict(data, columnlist, num_lags):
-    df = data.copy()
-    for col in columnlist:
-        for lag in range(1, num_lags + 1):
-            df[f'{col}_lag_{lag}'] = df[col].shift(lag)
-    return df.dropna()
-
 def create_multivariate_lagged_features(data, columns, num_lags=12):
     data = data.copy()
     for col in columns:
@@ -37,7 +30,8 @@ def create_multivariate_lagged_features(data, columns, num_lags=12):
 def train_export_model (
     df: pd.DataFrame,
     columnlist: list,
-    PLACE_TO_TEST: int,
+    PLACE_TO_TEST,
+    place_column_name,
     NUM_LAGS: int,
     base_model,
     base_model_name: str, # also used to name model for export, keep short and precise
@@ -49,13 +43,19 @@ def train_export_model (
   df['date'] = pd.to_datetime(df['date'])
 
   # Filter data
-  df_location = df[df['Place'] == PLACE_TO_TEST].copy()
-  df_location.set_index('date', inplace=True)
+  try:
+    df_location = df[df[place_column_name] == PLACE_TO_TEST].copy()
+    df_location.set_index('date', inplace=True)
+  except KeyError as e:
+    raise KeyError(f"Column not found: {e}. Available columns: {df.columns.tolist()}")
+    
 
   # Preprocess: interpolate & fill
   for col in columnlist:
     df_location[col] = df_location[col].interpolate(method='linear')
-
+    
+  # raise Exception (df_location.columns)
+  
   #Validate train_split_ratio
   if (0.1>train_split_ratio or 1<train_split_ratio): raise Exception(f"Train split ratio is invalid")
   # Generate features
@@ -63,7 +63,7 @@ def train_export_model (
 
   # Prepare X and y (multi-output)
   X = df_features.drop(columns=columnlist).select_dtypes(include=[np.number])
-  # print (X.columns) X have lag of all features + Place,day,month,year. Cur = 12*9 + 4 = 112 columns
+  # raise Exception (X.columns) # X have lag of all features + Place,day,month,year. Cur = 12*9 + 4 = 112 columns
   Y = df_features[columnlist]
   X, Y = X.align(Y, join="inner", axis=0)
 
@@ -105,7 +105,8 @@ def train_export_model (
 def predict_future_steps(
     df: pd.DataFrame,
     freq_days: int,
-    place_to_test: int,
+    place_to_test,
+    place_column_name,
     element_column: list,  # e.g. ['pH', 'WQI', 'DO']
     n_steps: int,
     model_path: str,
@@ -113,7 +114,7 @@ def predict_future_steps(
 ):
     print(f"\n--- Predicting {n_steps} steps ahead for Place={place_to_test}, Elements={element_column} ---")
 
-    required_cols = ['date', 'Place'] + element_column
+    required_cols = ['date'] + element_column
     if not all(col in df.columns for col in required_cols):
         print(f"Error: DataFrame missing required columns: {required_cols}")
         return None
@@ -123,11 +124,13 @@ def predict_future_steps(
         return None
 
     df['date'] = pd.to_datetime(df['date'])
-    df_location = df[df['Place'] == place_to_test].copy()
+    df_location = df[df[place_column_name] == place_to_test].copy()
     df_location.set_index('date', inplace=True)
 
     for col in element_column:
         df_location[col] = df_location[col].interpolate(method='linear')
+        
+    # raise Exception(df_location.columns)
 
     df_predict_recursive = df_location.copy()
     current_last_date = df_predict_recursive.index[-1]
@@ -145,15 +148,15 @@ def predict_future_steps(
         print(f"\nStep {step+1}/{n_steps} - Predicting for {pred_date.strftime('%Y-%m-%d')}")
 
         # Create lagged features
-        df_with_lags = _create_lagged_features_predict(df_predict_recursive, element_column, num_lags)
-        last_features = df_with_lags.drop(columns=element_column).iloc[[-1]]
+        df_with_lags = create_multivariate_lagged_features(df_predict_recursive, element_column, num_lags)
+        last_features = df_with_lags.drop(columns=element_column).select_dtypes(include=[np.number]).iloc[[-1]]
 
         if last_features.isnull().values.any():
             last_features.fillna(method='ffill', inplace=True)
             last_features.fillna(method='bfill', inplace=True)
 
         # Predict and collect results
-        # print (last_features.shape)
+        print (last_features.columns)
         # print (last_features)
         predictions = model.predict(last_features)[0]
         # raise Exception (predictions)
@@ -168,7 +171,7 @@ def predict_future_steps(
         # Construct new row with predicted values for all elements
         new_row = pd.DataFrame({
           **{col: [pred_dict[col]] for col in element_column},
-          'Place': place_to_test,
+          place_column_name: place_to_test,
           'day': pred_date.day,
           'month': pred_date.month,
           'year': pred_date.year
