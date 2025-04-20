@@ -23,7 +23,7 @@ class ModelRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_name_and_version(self, name: str, version: str) -> Optional[AIModelSQL]:
+    async def get_by_name_and_version(self, name: str, version: str, station_id: UUID) -> Optional[AIModelSQL]:
         pass
 
     @abstractmethod
@@ -80,9 +80,9 @@ class SQLAlchemyModelRepository(ModelRepository):
             logger.error(f"Error retrieving model by ID {model_id}: {e}")
             raise
 
-    async def get_by_name_and_version(self, name: str, version: str) -> Optional[AIModelSQL]:
+    async def get_by_name_and_version(self, name: str, version: str, station_id: UUID) -> Optional[AIModelSQL]:
         try:
-            stmt = select(AIModelSQL).where(AIModelSQL.name == name, AIModelSQL.version == version)
+            stmt = select(AIModelSQL).where(AIModelSQL.name == name, AIModelSQL.version == version, AIModelSQL.station_id == station_id)
             result = await self.session.execute(stmt)
             return result.scalar_one_or_none()
         except NoResultFound:

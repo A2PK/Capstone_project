@@ -28,7 +28,7 @@ class ModelUseCase(ABC):
         pass
 
     @abstractmethod
-    async def get_model_by_name_and_version(self, name: str, version: str) -> Optional[AIModelPydantic]:
+    async def get_model_by_name_and_version(self, name: str, version: str, station_id: UUID) -> Optional[AIModelPydantic]:
         pass
 
     @abstractmethod
@@ -61,7 +61,7 @@ class AIModelService(ModelUseCase):
     async def create_model(self, model_create: AIModelCreate) -> AIModelPydantic:
         logger.info(f"Use case: Creating model {model_create.name} v{model_create.version}")
         # Basic validation example (more complex validation could go here)
-        existing = await self.repository.get_by_name_and_version(model_create.name, model_create.version)
+        existing = await self.repository.get_by_name_and_version(model_create.name, model_create.version, model_create.station_id)
         if existing:
             raise UseCaseError(f"Model with name '{model_create.name}' and version '{model_create.version}' already exists.")
 
@@ -89,9 +89,9 @@ class AIModelService(ModelUseCase):
             return None
         return AIModelPydantic.model_validate(model_sql)
 
-    async def get_model_by_name_and_version(self, name: str, version: str) -> Optional[AIModelPydantic]:
+    async def get_model_by_name_and_version(self, name: str, version: str, station_id: UUID) -> Optional[AIModelPydantic]:
         logger.info(f"Use case: Getting model by name '{name}' version '{version}'")
-        model_sql = await self.repository.get_by_name_and_version(name, version)
+        model_sql = await self.repository.get_by_name_and_version(name, version, station_id)
         if not model_sql:
             return None
         return AIModelPydantic.model_validate(model_sql)

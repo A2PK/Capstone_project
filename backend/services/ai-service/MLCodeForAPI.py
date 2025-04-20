@@ -31,7 +31,8 @@ def preprocessData(data, elements_list,place_column_name, date_column_name):
     data = data.sort_values(by='date')
     
     data = data.dropna(subset=elements_list)
-    data = data[(data['year'] == 2022) | (data['year'] == 2023)]
+    # Minh troll
+    # data = data[(data['year'] == 2022) | (data['year'] == 2023)]
     
     columnToKeep = elements_list + [place_column_name]+ ['date','day','month','year']
     available_columns = [col for col in columnToKeep if col in data.columns]
