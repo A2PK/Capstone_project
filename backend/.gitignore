@@ -60,7 +60,7 @@ build/
 # configmap.yaml in k8s subdirectories
 configmap.yaml
 
-*/__pycache__/*
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
