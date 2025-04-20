@@ -3,7 +3,7 @@ syntax = "proto3";
 package waterquality;
 
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
+// import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 import "proto/core/common.proto"; // Import core definitions
 // Add imports for annotations

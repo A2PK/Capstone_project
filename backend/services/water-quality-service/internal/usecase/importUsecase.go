@@ -298,7 +298,7 @@ func (s *importService) inferSchemaFromHeaders(headers []string) []entity.FieldD
 		lowerHeader := strings.ToLower(header)
 
 		// Station fields
-		if contains(lowerHeader, []string{"station", "location", "site", "điểm quan trắc", "monitoringlocationidentifier"}) {
+		if contains(lowerHeader, []string{"station", "location", "site", "điểm quan trắc", "monitoringlocationidentifier", "trạm"}) {
 			fieldDef.TargetEntity = entity.TargetEntityStation
 			fieldDef.TargetField = "Name"
 		} else if contains(lowerHeader, []string{"lat", "latitude", "vĩ độ", "latitudemeasure_wgs84"}) {
@@ -416,17 +416,20 @@ func (s *importService) processRecordBatch(ctx context.Context, records [][]stri
 	// This section might need adjustment based on how you definitively identify
 	// prediction vs analysis fields in your actual schema or input data.
 	predictionFields := map[string]bool{
-		"ph":                true,
-		"do":                true,
-		"conductivity":      true,
-		"độ dẫn":            true,
-		"n-no2":             true,
-		"n-nh4":             true,
-		"p-po4":             true,
-		"tss":               true,
-		"cod":               true,
-		"aeromonas tổng số": true,
+		"ph":    true,
+		"do":    true,
+		"ec":    true,
+		"n-no2": true,
+		"n-nh4": true,
+		"p-po4": true,
+		"tss":   true,
+		"cod":   true,
+		"ah":    true,
 	}
+	// "aeromonas tổng số": true,
+	// "conductivity":      true,
+	// "độ dẫn":            true,
+
 	displayFields := map[string]bool{
 		"khuyến cáo":           true,
 		"recommendations":      true,

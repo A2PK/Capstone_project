@@ -140,4 +140,4 @@ def trainWithMLModel(file, elements_list, date_column_name,place_column_name, pl
         else:
             logger.warning(f"No model path returned for {model_type_name}")
 
-    return model_result,eval_result
+    return model_result, eval_result, model_type_list

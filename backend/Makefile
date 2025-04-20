@@ -95,6 +95,7 @@ restart-deployments:
 	kubectl rollout restart deployment -n ride-sharing user-service
 	kubectl rollout restart deployment -n ride-sharing water-quality-service
 	kubectl rollout restart deployment -n ride-sharing ai-service
+	
 forward-api:
 	kubectl port-forward -n ride-sharing service/api-gateway 8081:8081
 
@@ -125,4 +126,5 @@ get-pods:
 get-services:
 	kubectl get services -n ride-sharing
 
-
+python-buf-gen:
+	poetry run python3 -m grpc_tools.protoc -I. -I ~/.cache/buf/v1/module/data/buf.build/googleapis/googleapis/61b203b9a9164be9a834f58c37be6f62/ -I ~/.cache/buf/v1/module/data/buf.build/grpc-ecosystem/grpc-gateway/4c5ba75caaf84e928b7137ae5c18c26a/ --python_out=./services/ai-service/ --pyi_out=./services/ai-service/ --grpc_python_out=./services/ai-service/ ./proto/core/common.proto ./proto/water-quality-service/water-quality.proto

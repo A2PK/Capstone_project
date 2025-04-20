@@ -19,7 +19,7 @@ spec:
   - http:
       paths:
       # Add rule for ai-service
-      - path: /ai-models
+      - path: /api/v2/
         pathType: Prefix # Route /ai-models and everything under it
         backend:
           service:
