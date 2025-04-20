@@ -76,6 +76,16 @@ class WaterQualityServiceStub(object):
                 request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationRequest.SerializeToString,
                 response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationResponse.FromString,
                 _registered_method=True)
+        self.ListDataPointsByStationPost = channel.unary_unary(
+                '/waterquality.WaterQualityService/ListDataPointsByStationPost',
+                request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationRequest.SerializeToString,
+                response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationResponse.FromString,
+                _registered_method=True)
+        self.ListAllDataPoints = channel.unary_unary(
+                '/waterquality.WaterQualityService/ListAllDataPoints',
+                request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsRequest.SerializeToString,
+                response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsResponse.FromString,
+                _registered_method=True)
         self.UploadData = channel.stream_unary(
                 '/waterquality.WaterQualityService/UploadData',
                 request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.UploadRequest.SerializeToString,
@@ -158,6 +168,19 @@ class WaterQualityServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListDataPointsByStationPost(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListAllDataPoints(self, request, context):
+        """--- Add ListAllDataPoints RPC ---
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def UploadData(self, request_iterator, context):
         """File Upload RPC
         """
@@ -232,6 +255,16 @@ def add_WaterQualityServiceServicer_to_server(servicer, server):
                     servicer.ListDataPointsByStation,
                     request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationRequest.FromString,
                     response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationResponse.SerializeToString,
+            ),
+            'ListDataPointsByStationPost': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListDataPointsByStationPost,
+                    request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationRequest.FromString,
+                    response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationResponse.SerializeToString,
+            ),
+            'ListAllDataPoints': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListAllDataPoints,
+                    request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsRequest.FromString,
+                    response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsResponse.SerializeToString,
             ),
             'UploadData': grpc.stream_unary_rpc_method_handler(
                     servicer.UploadData,
@@ -477,6 +510,60 @@ class WaterQualityService(object):
             '/waterquality.WaterQualityService/ListDataPointsByStation',
             proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationRequest.SerializeToString,
             proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListDataPointsByStationPost(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/waterquality.WaterQualityService/ListDataPointsByStationPost',
+            proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationRequest.SerializeToString,
+            proto_dot_water__quality__service_dot_water__quality__pb2.ListDataPointsByStationResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListAllDataPoints(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/waterquality.WaterQualityService/ListAllDataPoints',
+            proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsRequest.SerializeToString,
+            proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
 # import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
@@ -27,7 +30,7 @@ def create_multivariate_lagged_features(data, columns, num_lags=12):
             data[f'{col}_lag_{lag}'] = data[col].shift(lag)
     return data.dropna()
 
-def train_export_model (
+def train_export_model_ML (
     df: pd.DataFrame,
     columnlist: list,
     PLACE_TO_TEST,
@@ -35,6 +38,7 @@ def train_export_model (
     NUM_LAGS: int,
     base_model,
     base_model_name: str, # also used to name model for export, keep short and precise
+    date_tag,
     train_split_ratio: float = 0.7,
     model_dir: str = 'saved_models'
 ):
@@ -53,8 +57,6 @@ def train_export_model (
   # Preprocess: interpolate & fill
   for col in columnlist:
     df_location[col] = df_location[col].interpolate(method='linear')
-    
-  # raise Exception (df_location.columns)
   
   #Validate train_split_ratio
   if (0.1>train_split_ratio or 1<train_split_ratio): raise Exception(f"Train split ratio is invalid")
@@ -77,7 +79,7 @@ def train_export_model (
   multi_model.fit(X_train, Y_train)
 
   # Save model
-  model_path = f"{model_dir}/{base_model_name}_multitarget_place{PLACE_TO_TEST}_{datetime.date.today().strftime('%d%m%y')}.pkl"
+  model_path = f"{model_dir}/{base_model_name}_multitarget_place{PLACE_TO_TEST}_{date_tag}.pkl"
   joblib.dump(multi_model, model_path)
   print(f"Multivariate model saved to: {model_path}")
 
@@ -102,7 +104,7 @@ def train_export_model (
 
   return model_path,eval_dict
 
-def predict_future_steps(
+def predict_future_steps_ML(
     df: pd.DataFrame,
     freq_days: int,
     place_to_test,

@@ -236,6 +236,20 @@ class ListDataPointsByStationResponse(_message.Message):
     pagination: _common_pb2.PaginationInfo
     def __init__(self, data_points: _Optional[_Iterable[_Union[DataPoint, _Mapping]]] = ..., pagination: _Optional[_Union[_common_pb2.PaginationInfo, _Mapping]] = ...) -> None: ...
 
+class ListAllDataPointsRequest(_message.Message):
+    __slots__ = ("options",)
+    OPTIONS_FIELD_NUMBER: _ClassVar[int]
+    options: _common_pb2.FilterOptions
+    def __init__(self, options: _Optional[_Union[_common_pb2.FilterOptions, _Mapping]] = ...) -> None: ...
+
+class ListAllDataPointsResponse(_message.Message):
+    __slots__ = ("data_points", "pagination")
+    DATA_POINTS_FIELD_NUMBER: _ClassVar[int]
+    PAGINATION_FIELD_NUMBER: _ClassVar[int]
+    data_points: _containers.RepeatedCompositeFieldContainer[DataPoint]
+    pagination: _common_pb2.PaginationInfo
+    def __init__(self, data_points: _Optional[_Iterable[_Union[DataPoint, _Mapping]]] = ..., pagination: _Optional[_Union[_common_pb2.PaginationInfo, _Mapping]] = ...) -> None: ...
+
 class UploadRequest(_message.Message):
     __slots__ = ("filename", "file_type", "data_chunk")
     FILENAME_FIELD_NUMBER: _ClassVar[int]

@@ -1,3 +1,5 @@
+import DLModels.Config
+import DLModels.Gridtst
 from MLCode import *
 import logging
 
@@ -7,6 +9,21 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+def readCSVfile (file):
+    try:
+        if isinstance(file, str):
+            df = pd.read_csv(file)
+        else:
+            df = pd.read_csv(file.file)
+        
+    except Exception as e:
+        logger.error(f"Error reading CSV: {e}")
+        raise Exception (f"Error reading CSV: {e}")
+        # return None
+    return df
+
+model_type_list = ["rf", "xgb"]
 
 def preprocessData(data, elements_list,place_column_name, date_column_name):
     logger.info("Preprocessing data...")
@@ -22,7 +39,7 @@ def preprocessData(data, elements_list,place_column_name, date_column_name):
     
         
     data[elements_list] = data[elements_list].replace(',', '.', regex=True).apply(pd.to_numeric, errors='coerce')
-    data[date_column_name] = pd.to_datetime(data[date_column_name], errors='coerce')
+    data[date_column_name] = pd.to_datetime(data[date_column_name], errors='coerce', dayfirst=True)
     
     data['date'] = pd.to_datetime(data[date_column_name], dayfirst=True)
     data['year'] = data['date'].dt.year
@@ -31,8 +48,6 @@ def preprocessData(data, elements_list,place_column_name, date_column_name):
     data = data.sort_values(by='date')
     
     data = data.dropna(subset=elements_list)
-    # Minh troll
-    # data = data[(data['year'] == 2022) | (data['year'] == 2023)]
     
     columnToKeep = elements_list + [place_column_name]+ ['date','day','month','year']
     available_columns = [col for col in columnToKeep if col in data.columns]
@@ -40,15 +55,8 @@ def preprocessData(data, elements_list,place_column_name, date_column_name):
     logger.info("Preprocessing complete.")
     return data
 
-def predictWithMLModel(file, num_step, freq_days, elements_list, date_column_name,place_column_name, place_id, date_tag, model_dir="saved_models"):
+def predictWithMLModel(df, num_step, freq_days, elements_list, date_column_name,place_column_name, place_id, date_tag, model_dir="saved_models"):
     logger.info(f"Starting prediction for place {place_id} with model date tag {date_tag}")
-    try:
-        if isinstance(file, str):
-            df = pd.read_csv(file)
-        else:
-            df = pd.read_csv(file.file)
-    except Exception as e:
-        raise Exception(f"Error reading CSV: {e}")
 
     if elements_list is None:
         logger.error("Element list is None, unable to determine the elements")
@@ -62,7 +70,6 @@ def predictWithMLModel(file, num_step, freq_days, elements_list, date_column_nam
 
     df = preprocessData(df, elements_list,place_column_name, date_column_name)
 
-    model_type_list = ['rf', 'xgb']
     model_result = {}
     for model_type_name in model_type_list:
         filename = f"{model_type_name}_multitarget_place{place_id}_{date_tag}.pkl"
@@ -70,10 +77,10 @@ def predictWithMLModel(file, num_step, freq_days, elements_list, date_column_nam
 
         if not os.path.exists(model_path):
             logger.warning(f"Model {model_type_name} not found at {model_path}, skipping...")
-            continue
+            continue 
 
         logger.info(f"Running prediction with {model_type_name} model...")
-        results = predict_future_steps(
+        results = predict_future_steps_ML(
             df=df,
             freq_days=freq_days,
             place_to_test=place_id,
@@ -94,36 +101,17 @@ def predictWithMLModel(file, num_step, freq_days, elements_list, date_column_nam
     
     return model_result
 
-def trainWithMLModel(file, elements_list, date_column_name,place_column_name, place_id, date_tag, train_test_ratio= 0.7, model_dir='saved_models'):
-    NUM_LAGS = 12
+def trainWithMLModel(df, elements_list, date_column_name,place_column_name, place_id, date_tag, train_test_ratio= 0.7, model_dir='saved_models'):
     logger.info(f"Starting training for place {place_id} with date tag {date_tag}")
-    try:
-        if isinstance(file, str):
-            df = pd.read_csv(file,encoding='utf-8-sig')
-        else:
-            df = pd.read_csv(file.file,encoding='utf-8-sig')
-        
-    except Exception as e:
-        logger.error(f"Error reading CSV: {e}")
-        raise Exception (f"Error reading CSV: {e}")
-        # return None
-
-    if elements_list is None:
-        logger.error("Element list is None, unable to determine the elements")
-        raise Exception (f"Element list is None, unable to determine the elements:")
-    if date_column_name is None:
-        logger.error("Date column name is None, unable to determine the date column name")
-    if date_tag is None:
-        logger.error("Date tag is None, unable to determine the date tag")
-        return None
     
+    # df = readCSVfile (file)
     df.columns = df.columns.str.strip()
     df = preprocessData(df, elements_list,place_column_name, date_column_name)
     os.makedirs(model_dir, exist_ok=True)
-
-    model_type_list = ["rf", "xgb"]
+    
     model_result = {}
     eval_result = {}
+    NUM_LAGS = 12
     
     for model_type_name in model_type_list:
         logger.info(f"Training {model_type_name} model...")
@@ -132,7 +120,7 @@ def trainWithMLModel(file, elements_list, date_column_name,place_column_name, pl
         elif model_type_name == "xgb":
             base_model = XGBRegressor(n_estimators=100, max_depth=10, learning_rate=0.1, random_state=42, n_jobs=-1)
 
-        model_path,eval_dict = train_export_model(df, elements_list, place_id,place_column_name, NUM_LAGS, train_split_ratio=train_test_ratio, base_model=base_model, base_model_name=model_type_name, model_dir=model_dir)
+        model_path,eval_dict = train_export_model_ML(df, elements_list, place_id,place_column_name, NUM_LAGS,date_tag=date_tag, train_split_ratio=train_test_ratio, base_model=base_model, base_model_name=model_type_name, model_dir=model_dir)
         if model_path:
             model_result[model_type_name] = model_path
             eval_result[model_type_name] = eval_dict
@@ -141,4 +129,4 @@ def trainWithMLModel(file, elements_list, date_column_name,place_column_name, pl
         else:
             logger.warning(f"No model path returned for {model_type_name}")
 
-    return model_result, eval_result, model_type_list
+    return model_result,eval_result, model_type_list

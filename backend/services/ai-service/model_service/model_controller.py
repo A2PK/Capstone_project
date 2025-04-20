@@ -340,7 +340,9 @@ async def training_api(
         ('grpc.keepalive_time_ms', 10000)
     ]
     # Establish gRPC connection (consider managing the channel lifecycle more robustly in production)
-
+    # parsed_elements_list = [e.strip() for e in elements_list[0].split(",") if e.strip()]
+    if place_ids is not None:
+        place_ids = [e.strip() for e in place_ids[0].split(",") if e.strip()]
     GRPC_TARGET_ADDRESS = os.getenv("WATER_QUALITY_GRPC_ADDRESS")
     model_dir = "saved_models" # Hardcoded model directory
 
@@ -359,25 +361,33 @@ async def training_api(
                         logger.warning(f"Invalid UUID format for station ID: {station_id_str}. Skipping.")
                         continue
 
-                    # 1. Fetch data via gRPC
+                    # 1. Fetch data via gRPC using POST and filtering for ACTUAL
+                    # --- Prepare filters --- 
+                    filters = make_proto_value_map({
+                        "observation_type": "actual" # Filter for actual observations
+                    })
+                    filter_options = common_pb2.FilterOptions(
+                        limit=10000, # Keep large limit
+                        filters=filters
+                    )
                     request = water_quality_pb2.ListDataPointsByStationRequest(
                         station_id=station_id_str,
-                        # Add filter options if needed/implemented
-                        options=common_pb2.FilterOptions(limit=10000) # Example: Fetch up to 10k points
+                        options=filter_options
                     )
-                    logger.info(f"Calling ListDataPointsByStation for station: {station_id_str}")
-                    grpc_response = await stub.ListDataPointsByStation(request, timeout=60.0) # Increased timeout
-                    logger.info(f"Received {len(grpc_response.data_points)} data points for station {station_id_str}")
+                    logger.info(f"Calling ListDataPointsByStationPost for station: {station_id_str} with filters")
+                    # --- Make the POST call --- 
+                    grpc_response = await stub.ListDataPointsByStationPost(request, timeout=60.0) # Increased timeout
+                    logger.info(f"Received {len(grpc_response.data_points)} data points (filtered for actual) for station {station_id_str}")
 
                     if not grpc_response.data_points:
-                        logger.warning(f"No data points found for station {station_id_str}. Skipping training.")
+                        logger.warning(f"No ACTUAL data points found for station {station_id_str}. Skipping training.")
                         continue
 
-                    # 2. Convert data to DataFrame
+                    # 2. Convert data to DataFrame (Now only contains ACTUAL data points)
                     df, features_list, date_col, place_col = _convert_data_points_to_dataframe(grpc_response.data_points)
 
                     if df is None or not features_list or not date_col or not place_col:
-                        logger.warning(f"Could not process data into DataFrame for station {station_id_str}. Skipping.")
+                        logger.warning(f"Could not process ACTUAL data into DataFrame for station {station_id_str}. Skipping.")
                         continue
 
                     if df.empty:
@@ -498,6 +508,8 @@ async def predict_station_models(
     model_dir = "saved_models" # Hardcoded as per previous steps
     date_column_name = "monitoring_time" # Default
     place_column_name = "station_id" # Default
+    if place_ids is not None:
+        place_ids = [e.strip() for e in place_ids[0].split(",") if e.strip()]
     prediction_schema_id: Optional[str] = None
     if not model_types:
         model_types = ["rf", "xgb"]
@@ -549,11 +561,25 @@ async def predict_station_models(
                     prediction_features_list: Optional[List[str]] = None
                     input_data_available = False
                     try: # Inner try for data fetching/processing
-                        request = water_quality_pb2.ListDataPointsByStationRequest(station_id=station_id_str, options=common_pb2.FilterOptions(limit=10000))
-                        grpc_response = await stub.ListDataPointsByStation(request, timeout=60.0)
-                        actual_data_points = [dp for dp in grpc_response.data_points if dp.observation_type == water_quality_pb2.OBSERVATION_TYPE_ACTUAL]
-                        if actual_data_points:
-                            df, features, date_col, place_col = _convert_data_points_to_dataframe(actual_data_points)
+                        # --- Prepare filters --- 
+                        filters = make_proto_value_map({
+                            "observation_type": "actual" # Filter for actual observations
+                        })
+                        filter_options = common_pb2.FilterOptions(
+                            limit=10000, # Keep large limit
+                            filters=filters
+                        )
+                        request = water_quality_pb2.ListDataPointsByStationRequest(
+                            station_id=station_id_str,
+                            options=filter_options
+                        )
+                        logger.info(f"Prediction: Calling ListDataPointsByStationPost for {station_id_str} with filters")
+                        # --- Make the POST call --- 
+                        grpc_response = await stub.ListDataPointsByStationPost(request, timeout=60.0)
+                        # No need to filter locally anymore, gRPC call already did
+                        # actual_data_points = [dp for dp in grpc_response.data_points if dp.observation_type == water_quality_pb2.OBSERVATION_TYPE_ACTUAL]
+                        if grpc_response.data_points:
+                            df, features, date_col, place_col = _convert_data_points_to_dataframe(grpc_response.data_points)
                             if df is not None and not df.empty:
                                 data_df = df
                                 prediction_features_list = features 
@@ -855,3 +881,25 @@ async def get_or_create_prediction_schema(stub: water_quality_pb2_grpc.WaterQual
     except Exception as e:
         logger.error(f"Error finding/creating DataSourceSchema: {e}", exc_info=True)
         return None
+
+# Helper function to create a dictionary mapping strings to Protobuf Value objects
+def make_proto_value_map(d: dict) -> dict:
+    value_map = {}
+    for key, value in d.items():
+        # Create a google.protobuf.Value object for each value
+        pb_value = Struct(); # Use Struct temporarily to leverage its value conversion
+        pb_value.fields[key].string_value = str(value) # Simple string conversion for now
+        # TODO: Enhance this to handle different types (number, bool, etc.) if needed
+        # More robust way using Value() directly:
+        # from google.protobuf.struct_pb2 import Value
+        # pb_value = Value()
+        # if isinstance(value, str):
+        #     pb_value.string_value = value
+        # elif isinstance(value, (int, float)):
+        #     pb_value.number_value = value
+        # elif isinstance(value, bool):
+        #     pb_value.bool_value = value
+        # ... etc
+        # For this specific case ("observation_type": "actual"), string is sufficient
+        value_map[key] = pb_value.fields[key]
+    return value_map
