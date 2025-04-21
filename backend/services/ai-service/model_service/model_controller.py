@@ -25,8 +25,10 @@ from database import AsyncSession, get_db_session # Changed to absolute import
 from .model import AIModelPydantic, AIModelCreate, AIModelUpdate, BaseModel
 from .model_repo import ModelRepository, SQLAlchemyModelRepository
 from .model_usecase import ModelUseCase, AIModelService, NotFoundError, UseCaseError
-from MLCodeForAPI import trainWithMLModel, predictWithMLModel # Import from parent directory
+from MLCodeForAPI import trainWithMLModel, predictWithMLModel, readCSVfile
+from DLCodeForAPI import trainWithDLModel, predictWithDLModel
 import numpy as np # Added for convert_np function
+from wqi_calculation import calculate_WQI # Import WQI calculation function
 
 
 logger = logging.getLogger(__name__)
@@ -396,28 +398,42 @@ async def training_api(
 
                     logger.info(f"DataFrame created for station {station_id_str} with {len(df)} rows and features: {features_list}")
 
-                    # 3. Train Model using trainWithMLModel
-                    # Convert DataFrame to CSV in memory
-                    csv_buffer = io.StringIO()
-                    df.to_csv(csv_buffer, index=False)
-                    csv_content = csv_buffer.getvalue().encode('utf-8')
-                    csv_buffer.close()
-
-                    # Create a temporary file-like object for trainWithMLModel
-                    temp_file = TempUploadFile(content=csv_content, filename=f"{station_id_str}_data.csv")
 
                     logger.info(f"Starting model training for station {station_id_str}...")
                     # Train model - Assume trainWithMLModel returns dict for paths, list for types
-                    model_paths, eval_dict, model_type_list = trainWithMLModel(
-                        file=temp_file, # Use the wrapper
+                    # model_paths, eval_dict, model_type_list = trainWithMLModel(
+                    #     file=temp_file, # Use the wrapper
+                    #     elements_list=features_list,
+                    #     date_column_name=date_col,
+                    #     place_column_name=place_col,
+                    #     train_test_ratio=train_test_ratio,
+                    #     place_id=station_id_str, # Pass the specific station ID
+                    #     date_tag=date_tag,
+                    #     model_dir=model_dir # Use hardcoded dir
+                    # )
+                    model_path_DL, eval_dict_DL, model_type_list_DL = trainWithDLModel(
+                        df=df,
                         elements_list=features_list,
                         date_column_name=date_col,
                         place_column_name=place_col,
                         train_test_ratio=train_test_ratio,
-                        place_id=station_id_str, # Pass the specific station ID
+                        place_id=station_id_str,
                         date_tag=date_tag,
-                        model_dir=model_dir # Use hardcoded dir
+                        model_dir=model_dir
                     )
+                    model_path_ML, eval_dict_ML, model_type_list_ML = trainWithMLModel(
+                        df=df,
+                        elements_list=features_list,
+                        date_column_name=date_col,
+                        place_column_name=place_col,
+                        train_test_ratio=train_test_ratio,
+                        place_id=station_id_str,
+                        date_tag=date_tag,
+                        model_dir=model_dir
+                    )
+                    model_paths = {**model_path_DL, **model_path_ML}
+                    eval_dict = {**eval_dict_DL, **eval_dict_ML}
+                    model_type_list = model_type_list_DL + model_type_list_ML
                     logger.info(f"Training completed for station {station_id_str}. Model paths: {model_paths}, Types: {model_type_list}, Evaluation: {eval_dict}")
 
                     # --- Create Metadata for each trained model ---
@@ -492,7 +508,7 @@ async def predict_station_models(
     place_ids: Optional[List[str]] = Form(None, description="List of Station IDs (UUIDs) to predict for. If empty, predicts for all stations."),
     num_step: int = Form(7, ge=1, le=14),
     freq_days: int = Form(7, ge=1, le=14),
-    model_types: List[str] = Form(..., description="List of model types (e.g., 'xgb', 'rf') to use for prediction.")
+    model_types: List[str] = Form(..., description="List of model types ('xgb', 'rf', 'ETSformerPar', 'ETSformer') to use for prediction.")
 ):
     """
     Fetches data for specified stations (or all if none specified), finds newest models, 
@@ -512,7 +528,7 @@ async def predict_station_models(
         place_ids = [e.strip() for e in place_ids[0].split(",") if e.strip()]
     prediction_schema_id: Optional[str] = None
     if not model_types:
-        model_types = ["rf", "xgb"]
+        model_types = ["rf", "xgb", "ETSformerPar", "ETSformer"]
 
     # Parse model_types if provided as comma-separated string (Form sometimes does this)
     if isinstance(model_types, list) and len(model_types) == 1 and isinstance(model_types[0], str):
@@ -598,12 +614,8 @@ async def predict_station_models(
                         results.append(PredictionResult(station_id=station_uuid, error="No valid actual data available for prediction input.", schema_id_used=prediction_schema_id))
                         continue # Skip to next station
                     
-                    # Convert input DataFrame to CSV 
-                    csv_buffer = io.StringIO()
-                    data_df.to_csv(csv_buffer, index=False)
-                    temp_file = TempUploadFile(content=csv_buffer.getvalue().encode('utf-8'), filename=f"{station_id_str}_predict_data.csv")
-                    csv_buffer.close()
-
+                    # --- Predict --- 
+                    # 1. Find and run predictions for each requested model type
                     # 2. Find and run predictions for each requested model type
                     for model_type in model_types:
                         model_to_use = None
@@ -636,20 +648,36 @@ async def predict_station_models(
                                     # Use the parameters the model was trained on for the prediction call
                                     elements_for_prediction_call = model_to_use.parameter_list 
                                     
-                                    logger.info(f"Prediction: Calling predictWithMLModel for station {station_id_str} using model {model_id_for_result} ({model_name_for_result}) version {model_version_for_result} with elements: {elements_for_prediction_call}")
+                                    logger.info(f"Prediction: Calling predict for station {station_id_str} using model {model_id_for_result} ({model_name_for_result}) version {model_version_for_result} with elements: {elements_for_prediction_call}")
                                     
-                                    # Call the wrapper function from MLCodeForAPI
-                                    prediction_output_raw_dict = predictWithMLModel(
-                                        file=temp_file,
-                                        num_step=num_step,
-                                        freq_days=freq_days,
-                                        elements_list=elements_for_prediction_call, # Critical: Use model's params
-                                        date_column_name=date_column_name,
-                                        place_column_name=place_column_name,
-                                        place_id=station_id_str,
-                                        date_tag=model_to_use.version, # Use the specific model's version tag
-                                        model_dir=model_dir
-                                    )
+                                    prediction_output_raw_dict = {}
+                                    if model_to_use.name == "rf" or model_to_use.name == "xgb":
+                                        # Call the wrapper function from MLCodeForAPI
+                                        prediction_output_raw_dict_ML = predictWithMLModel(
+                                            df=data_df,
+                                            num_step=num_step,
+                                            freq_days=freq_days,
+                                            elements_list=elements_for_prediction_call, # Critical: Use model's params
+                                            date_column_name=date_column_name,
+                                            place_column_name=place_column_name,
+                                            place_id=station_id_str,
+                                            date_tag=model_to_use.version, # Use the specific model's version tag
+                                            model_dir=model_dir
+                                        )
+                                        prediction_output_raw_dict = prediction_output_raw_dict_ML
+                                    if model_to_use.name == "ETSformerPar" or model_to_use.name == "ETSformer":
+                                        prediction_output_raw_dict_DL = predictWithDLModel(
+                                            df=data_df,
+                                            num_step=num_step,
+                                            freq_days=freq_days,
+                                            elements_list=elements_for_prediction_call, # Critical: Use model's params
+                                            date_column_name=date_column_name,
+                                            place_column_name=place_column_name,
+                                            place_id=station_id_str,
+                                            date_tag=model_to_use.version, # Use the specific model's version tag
+                                            model_dir=model_dir
+                                        )
+                                        prediction_output_raw_dict = prediction_output_raw_dict_DL
                                     raw_prediction_output = convert_np(prediction_output_raw_dict) # Store converted raw output
                                     logger.info(f"Prediction: predictWithMLModel completed for {station_id_str}, type {model_type}")
 
@@ -684,7 +712,46 @@ async def predict_station_models(
                                                 if not isinstance(ts_dt, datetime): raise ValueError("TS not datetime")
                                                 if ts_dt.tzinfo is None: ts_dt = ts_dt.replace(tzinfo=timezone.utc)
                                                 pb_ts = Timestamp(); pb_ts.FromDatetime(ts_dt)
-                                            except Exception: continue
+                                            except Exception as ts_err:
+                                                logger.warning(f"Prediction: Skipping step due to timestamp error: {ts_err} for step: {predicted_step}")
+                                                continue
+                                            
+                                            # --- WQI Calculation --- 
+                                            calculated_wqi = None
+                                            # Define required features and mapping (assuming AH -> Aeromonas)
+                                            required_wqi_features = {
+                                                "pH": "ph", 
+                                                "DO": "DO", 
+                                                "EC": "EC", 
+                                                "N-NO2": "N_NO2", 
+                                                "N-NH4": "N_NH4", 
+                                                "P-PO4": "P_PO4", 
+                                                "TSS": "TSS", 
+                                                "COD": "COD", 
+                                                "AH": "Aeromonas" # Map input 'AH' to function parameter 'Aeromonas'
+                                            }
+                                            wqi_params = {}
+                                            all_wqi_features_present = True
+                                            for feature_name, param_name in required_wqi_features.items():
+                                                if feature_name in predicted_step and isinstance(predicted_step[feature_name], (np.float64, np.float32)):
+                                                    wqi_params[param_name] = float(predicted_step[feature_name])
+                                                else:
+                                                    all_wqi_features_present = False
+                                                    logger.info(f"Prediction: Skipping WQI calculation for step {ts_dt}. Missing or invalid feature: {feature_name}")
+                                                    logger.info(f"Prediction: Predicted step: {predicted_step}")
+                                                    logger.info(f"Prediction: Required features: {required_wqi_features}")
+                                                    logger.info(f"Prediction: WQI params: {wqi_params}")
+                                                    
+                                                    break
+                                            
+                                            if all_wqi_features_present:
+                                                try:
+                                                    logger.info(f"Prediction: Calculating WQI for step {ts_dt} with params: {wqi_params}")
+                                                    calculated_wqi = calculate_WQI(**wqi_params)
+                                                    logger.info(f"Prediction: Calculated WQI = {calculated_wqi} for step {ts_dt}")
+                                                except Exception as wqi_calc_err:
+                                                    logger.info(f"Prediction: Error calculating WQI for step {ts_dt}: {wqi_calc_err}. Params: {wqi_params}")
+                                            # --- End WQI Calculation --- 
                                             
                                             # ... (Feature processing - use model_params_required for filtering output) ...
                                             feature_inputs = []
@@ -701,9 +768,10 @@ async def predict_station_models(
                                                 dp_input = water_quality_pb2.DataPointInput(
                                                     station_id=station_id_str, monitoring_time=pb_ts,
                                                     observation_type=water_quality_pb2.OBSERVATION_TYPE_PREDICTED,
-                                                    source=model_name_for_result, # Use actual model name
+                                                    source=model_type, # Use actual model name
                                                     data_source_schema_id=prediction_schema_id,
-                                                    features=feature_inputs
+                                                    features=feature_inputs,
+                                                    wqi=calculated_wqi # Add calculated WQI (will be null if calculation failed/skipped)
                                                 )
                                                 datapoint_inputs.append(dp_input)
                                                 
@@ -764,7 +832,7 @@ async def predict_station_models(
     return results
 
 # --- DEPRECATED ---
-@router.post("/predict", tags=["DEPRECATED - Use /predict-station-models"])
+@router.post("/predict", tags=["DEPRECATED"])
 async def predict(
     file: UploadFile = File(...),
     elements_list: List[str] = Form(...),
@@ -800,7 +868,7 @@ async def predict(
         logger.error(f"API Error during prediction: {e}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Prediction failed: {str(e)}")
 
-@router.post("/train", tags=["AI Models Training/Prediction"])
+@router.post("/train", tags=["DEPRECATED"])
 async def train(
     file: UploadFile = File(...),
     elements_list: List[str] = Form(...),

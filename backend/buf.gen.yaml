@@ -24,17 +24,3 @@ plugins:
       - logtostderr=true
       # - allow_merge=true
       # - merge_file_name=openapi.json
-
-  # --- Generate Python code ---
-  - name: python
-    out: services/ai_service/proto # Output to ai_service/proto
-    opt:
-      # Generate for water-quality AND core
-      - paths=proto/water-quality-service,proto/core
-
-  # Generate Python gRPC code
-  - name: grpc_python
-    out: services/ai_service/proto # Output to ai_service/proto
-    opt:
-      # Generate for water-quality AND core
-      - paths=proto/water-quality-service,proto/core

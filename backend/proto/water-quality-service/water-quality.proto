@@ -496,6 +496,36 @@ message ListDataPointsByStationResponse {
   }];
 }
 
+// --- Add Request/Response for ListAllDataPoints ---
+
+message ListAllDataPointsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List All Data Points Request";
+      description: "Request to list data points across all stations with filtering and pagination options.";
+    }
+  };
+  core.FilterOptions options = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Filtering, pagination, and sorting options.";
+  }];
+}
+
+message ListAllDataPointsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List All Data Points Response";
+      description: "Contains a paginated list of data points from all stations.";
+      required: ["data_points", "pagination"];
+    }
+  };
+  repeated DataPoint data_points = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of data points matching the filter criteria.";
+  }];
+  core.PaginationInfo pagination = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Pagination information including total count and current page.";
+  }];
+}
+
 // --- File Upload ---
 
 // New UploadRequest message for streaming, with flat fields inside a oneof
@@ -838,6 +868,32 @@ service WaterQualityService {
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "List Data Points by Station";
       description: "Retrieves a paginated list of data points for a specific station.";
+      tags: ["Data Points"];
+    };
+  }
+
+  rpc ListDataPointsByStationPost(ListDataPointsByStationRequest) returns (ListDataPointsByStationResponse) {
+    option (google.api.http) = {
+      // Expects the ListDataPointsByStationRequest message in the JSON body
+      post: "/api/v1/water-quality/data-points/list-by-station";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "List Data Points by Station (POST)";
+      description: "Retrieves a paginated list of data points using POST. All filter/pagination parameters, including station_id, must be provided in the JSON request body.";
+      tags: ["Data Points"];
+    };
+  }
+
+  // --- Add ListAllDataPoints RPC ---
+  rpc ListAllDataPoints(ListAllDataPointsRequest) returns (ListAllDataPointsResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/water-quality/data-points/list-all";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "List All Data Points";
+      description: "Retrieves a paginated list of data points across all stations. Uses POST with JSON body.";
       tags: ["Data Points"];
     };
   }

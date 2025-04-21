@@ -125,6 +125,76 @@
         ]
       }
     },
+    "/api/v1/water-quality/data-points/list-all": {
+      "post": {
+        "summary": "List All Data Points",
+        "description": "Retrieves a paginated list of data points across all stations. Uses POST with JSON body.",
+        "operationId": "WaterQualityService_ListAllDataPoints",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityListAllDataPointsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to list data points across all stations with filtering and pagination options.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityListAllDataPointsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Data Points"
+        ]
+      }
+    },
+    "/api/v1/water-quality/data-points/list-by-station": {
+      "post": {
+        "summary": "List Data Points by Station (POST)",
+        "description": "Retrieves a paginated list of data points using POST. All filter/pagination parameters, including station_id, must be provided in the JSON request body.",
+        "operationId": "WaterQualityService_ListDataPointsByStationPost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityListDataPointsByStationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to list data points for a specific station with filtering and pagination options.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityListDataPointsByStationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Data Points"
+        ]
+      }
+    },
     "/api/v1/water-quality/schemas": {
       "get": {
         "summary": "List Data Source Schemas",
@@ -1291,6 +1361,59 @@
       ],
       "default": "INDICATOR_PURPOSE_UNSPECIFIED",
       "title": "- INDICATOR_PURPOSE_UNSPECIFIED: Default value"
+    },
+    "waterqualityListAllDataPointsRequest": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "$ref": "#/definitions/coreFilterOptions",
+          "description": "Filtering, pagination, and sorting options."
+        }
+      },
+      "description": "Request to list data points across all stations with filtering and pagination options.",
+      "title": "List All Data Points Request"
+    },
+    "waterqualityListAllDataPointsResponse": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataPoint"
+          },
+          "description": "List of data points matching the filter criteria."
+        },
+        "pagination": {
+          "$ref": "#/definitions/corePaginationInfo",
+          "description": "Pagination information including total count and current page."
+        }
+      },
+      "description": "Contains a paginated list of data points from all stations.",
+      "title": "List All Data Points Response",
+      "required": [
+        "dataPoints",
+        "pagination"
+      ]
+    },
+    "waterqualityListDataPointsByStationRequest": {
+      "type": "object",
+      "properties": {
+        "stationId": {
+          "type": "string",
+          "example": "b2c3d4e5-f6a7-8901-2345-67890abcdef0",
+          "description": "UUID of the station to list data points for."
+        },
+        "options": {
+          "$ref": "#/definitions/coreFilterOptions",
+          "description": "Filtering, pagination, and sorting options."
+        }
+      },
+      "description": "Request to list data points for a specific station with filtering and pagination options.",
+      "title": "List Data Points By Station Request",
+      "required": [
+        "stationId"
+      ]
     },
     "waterqualityListDataPointsByStationResponse": {
       "type": "object",

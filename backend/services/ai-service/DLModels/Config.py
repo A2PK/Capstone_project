@@ -6,7 +6,7 @@ class Config:
         self.c_out = c_out    # Number of output features
         self.d_ff = d_ff
         self.dropout = dropout
-        self.epochs = 80
+        self.epochs = 200
 
 class ConfigETSFormer(Config):
     def __init__(self, base_config: Config):

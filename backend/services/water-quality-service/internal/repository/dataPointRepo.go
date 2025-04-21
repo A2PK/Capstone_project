@@ -157,6 +157,10 @@ func (r *gormDataPointRepository) FindByStationID(ctx context.Context, stationID
 	// Apply filter for station ID
 	query = query.Where("station_id = ?", stationID)
 
+	if len(opts.Filters) > 0 {
+		query = query.Where(opts.Filters)
+	}
+
 	// Count total matching records before applying pagination
 	if err := query.Count(&total).Error; err != nil {
 		// Handle count error, maybe log it

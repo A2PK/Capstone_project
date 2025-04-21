@@ -22,9 +22,14 @@ grpcio = ">=1.72.0rc1"
 protobuf = "^6.30.2"
 protoc-gen-openapiv2 = "^0.0.1"
 apscheduler = "^3.11.0"
-torch = "^2.6.0"
 einops = "^0.8.1"
+torch = {version = "^2.6.0+cpu", source = "pytorch_cpu"}
 
+
+[[tool.poetry.source]]
+name = "pytorch_cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]

@@ -263,6 +263,54 @@ func local_request_WaterQualityService_ListDataPointsByStation_0(ctx context.Con
 	return msg, metadata, err
 }
 
+func request_WaterQualityService_ListDataPointsByStationPost_0(ctx context.Context, marshaler runtime.Marshaler, client WaterQualityServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListDataPointsByStationRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.ListDataPointsByStationPost(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WaterQualityService_ListDataPointsByStationPost_0(ctx context.Context, marshaler runtime.Marshaler, server WaterQualityServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListDataPointsByStationRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.ListDataPointsByStationPost(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_WaterQualityService_ListAllDataPoints_0(ctx context.Context, marshaler runtime.Marshaler, client WaterQualityServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListAllDataPointsRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.ListAllDataPoints(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WaterQualityService_ListAllDataPoints_0(ctx context.Context, marshaler runtime.Marshaler, server WaterQualityServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListAllDataPointsRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.ListAllDataPoints(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_WaterQualityService_UploadData_0(ctx context.Context, marshaler runtime.Marshaler, client WaterQualityServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var metadata runtime.ServerMetadata
 	stream, err := client.UploadData(ctx)
@@ -606,6 +654,46 @@ func RegisterWaterQualityServiceHandlerServer(ctx context.Context, mux *runtime.
 		}
 		forward_WaterQualityService_ListDataPointsByStation_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_WaterQualityService_ListDataPointsByStationPost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/waterquality.WaterQualityService/ListDataPointsByStationPost", runtime.WithHTTPPathPattern("/api/v1/water-quality/data-points/list-by-station"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WaterQualityService_ListDataPointsByStationPost_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WaterQualityService_ListDataPointsByStationPost_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_WaterQualityService_ListAllDataPoints_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/waterquality.WaterQualityService/ListAllDataPoints", runtime.WithHTTPPathPattern("/api/v1/water-quality/data-points/list-all"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WaterQualityService_ListAllDataPoints_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WaterQualityService_ListAllDataPoints_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 
 	mux.Handle(http.MethodPost, pattern_WaterQualityService_UploadData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
@@ -869,6 +957,40 @@ func RegisterWaterQualityServiceHandlerClient(ctx context.Context, mux *runtime.
 		}
 		forward_WaterQualityService_ListDataPointsByStation_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_WaterQualityService_ListDataPointsByStationPost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/waterquality.WaterQualityService/ListDataPointsByStationPost", runtime.WithHTTPPathPattern("/api/v1/water-quality/data-points/list-by-station"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WaterQualityService_ListDataPointsByStationPost_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WaterQualityService_ListDataPointsByStationPost_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_WaterQualityService_ListAllDataPoints_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/waterquality.WaterQualityService/ListAllDataPoints", runtime.WithHTTPPathPattern("/api/v1/water-quality/data-points/list-all"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WaterQualityService_ListAllDataPoints_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WaterQualityService_ListAllDataPoints_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_WaterQualityService_UploadData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -958,33 +1080,37 @@ func RegisterWaterQualityServiceHandlerClient(ctx context.Context, mux *runtime.
 }
 
 var (
-	pattern_WaterQualityService_CreateStations_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "stations"}, ""))
-	pattern_WaterQualityService_UpdateStations_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "stations"}, ""))
-	pattern_WaterQualityService_DeleteStations_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "water-quality", "stations", "delete"}, ""))
-	pattern_WaterQualityService_ListStations_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "stations"}, ""))
-	pattern_WaterQualityService_CreateDataPoints_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "data-points"}, ""))
-	pattern_WaterQualityService_UpdateDataPoints_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "data-points"}, ""))
-	pattern_WaterQualityService_DeleteDataPoints_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "water-quality", "data-points", "delete"}, ""))
-	pattern_WaterQualityService_ListDataPointsByStation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "water-quality", "stations", "station_id", "data-points"}, ""))
-	pattern_WaterQualityService_UploadData_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "upload"}, ""))
-	pattern_WaterQualityService_CreateDataSourceSchema_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "schemas"}, ""))
-	pattern_WaterQualityService_UpdateDataSourceSchema_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "water-quality", "schemas", "schema.id"}, ""))
-	pattern_WaterQualityService_GetDataSourceSchema_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "water-quality", "schemas", "id"}, ""))
-	pattern_WaterQualityService_ListDataSourceSchemas_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "schemas"}, ""))
+	pattern_WaterQualityService_CreateStations_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "stations"}, ""))
+	pattern_WaterQualityService_UpdateStations_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "stations"}, ""))
+	pattern_WaterQualityService_DeleteStations_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "water-quality", "stations", "delete"}, ""))
+	pattern_WaterQualityService_ListStations_0                = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "stations"}, ""))
+	pattern_WaterQualityService_CreateDataPoints_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "data-points"}, ""))
+	pattern_WaterQualityService_UpdateDataPoints_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "data-points"}, ""))
+	pattern_WaterQualityService_DeleteDataPoints_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "water-quality", "data-points", "delete"}, ""))
+	pattern_WaterQualityService_ListDataPointsByStation_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "water-quality", "stations", "station_id", "data-points"}, ""))
+	pattern_WaterQualityService_ListDataPointsByStationPost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "water-quality", "data-points", "list-by-station"}, ""))
+	pattern_WaterQualityService_ListAllDataPoints_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "water-quality", "data-points", "list-all"}, ""))
+	pattern_WaterQualityService_UploadData_0                  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "upload"}, ""))
+	pattern_WaterQualityService_CreateDataSourceSchema_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "schemas"}, ""))
+	pattern_WaterQualityService_UpdateDataSourceSchema_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "water-quality", "schemas", "schema.id"}, ""))
+	pattern_WaterQualityService_GetDataSourceSchema_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "water-quality", "schemas", "id"}, ""))
+	pattern_WaterQualityService_ListDataSourceSchemas_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "water-quality", "schemas"}, ""))
 )
 
 var (
-	forward_WaterQualityService_CreateStations_0          = runtime.ForwardResponseMessage
-	forward_WaterQualityService_UpdateStations_0          = runtime.ForwardResponseMessage
-	forward_WaterQualityService_DeleteStations_0          = runtime.ForwardResponseMessage
-	forward_WaterQualityService_ListStations_0            = runtime.ForwardResponseMessage
-	forward_WaterQualityService_CreateDataPoints_0        = runtime.ForwardResponseMessage
-	forward_WaterQualityService_UpdateDataPoints_0        = runtime.ForwardResponseMessage
-	forward_WaterQualityService_DeleteDataPoints_0        = runtime.ForwardResponseMessage
-	forward_WaterQualityService_ListDataPointsByStation_0 = runtime.ForwardResponseMessage
-	forward_WaterQualityService_UploadData_0              = runtime.ForwardResponseMessage
-	forward_WaterQualityService_CreateDataSourceSchema_0  = runtime.ForwardResponseMessage
-	forward_WaterQualityService_UpdateDataSourceSchema_0  = runtime.ForwardResponseMessage
-	forward_WaterQualityService_GetDataSourceSchema_0     = runtime.ForwardResponseMessage
-	forward_WaterQualityService_ListDataSourceSchemas_0   = runtime.ForwardResponseMessage
+	forward_WaterQualityService_CreateStations_0              = runtime.ForwardResponseMessage
+	forward_WaterQualityService_UpdateStations_0              = runtime.ForwardResponseMessage
+	forward_WaterQualityService_DeleteStations_0              = runtime.ForwardResponseMessage
+	forward_WaterQualityService_ListStations_0                = runtime.ForwardResponseMessage
+	forward_WaterQualityService_CreateDataPoints_0            = runtime.ForwardResponseMessage
+	forward_WaterQualityService_UpdateDataPoints_0            = runtime.ForwardResponseMessage
+	forward_WaterQualityService_DeleteDataPoints_0            = runtime.ForwardResponseMessage
+	forward_WaterQualityService_ListDataPointsByStation_0     = runtime.ForwardResponseMessage
+	forward_WaterQualityService_ListDataPointsByStationPost_0 = runtime.ForwardResponseMessage
+	forward_WaterQualityService_ListAllDataPoints_0           = runtime.ForwardResponseMessage
+	forward_WaterQualityService_UploadData_0                  = runtime.ForwardResponseMessage
+	forward_WaterQualityService_CreateDataSourceSchema_0      = runtime.ForwardResponseMessage
+	forward_WaterQualityService_UpdateDataSourceSchema_0      = runtime.ForwardResponseMessage
+	forward_WaterQualityService_GetDataSourceSchema_0         = runtime.ForwardResponseMessage
+	forward_WaterQualityService_ListDataSourceSchemas_0       = runtime.ForwardResponseMessage
 )

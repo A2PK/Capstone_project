@@ -75,7 +75,7 @@ def trainWithDLModel(df, elements_list, date_column_name,place_column_name, plac
         else:
             logger.warning(f"No model path returned for {model_type_name}")
 
-    return model_result,eval_result
+    return model_result, eval_result, [a[0] for a in model_type_list]
 
 def predictWithDLModel(df, num_step, freq_days, elements_list, date_column_name,place_column_name, place_id, date_tag, model_dir="saved_models"):
     logger.info(f"Starting prediction for place {place_id} with model date tag {date_tag}")
@@ -105,7 +105,9 @@ def predictWithDLModel(df, num_step, freq_days, elements_list, date_column_name,
     model_result = {}
     for model_type_name,model_class,config in model_type_list:
         filename = f"{model_type_name}_multitarget_place{place_id}_{date_tag}.pkl"
-        model_path = os.path.join(model_dir, filename)
+        
+        model_path = os.path.join(model_dir,  filename)
+        scaler_path = os.path.join(model_dir, "scale_"+ filename)
 
         if not os.path.exists(model_path):
             logger.warning(f"Model {model_type_name} not found at {model_path}, skipping...")
@@ -120,8 +122,9 @@ def predictWithDLModel(df, num_step, freq_days, elements_list, date_column_name,
             element_column=elements_list,
             n_steps=num_step,
             num_lags=12,
-            model_output_length = config.enc_in,
-            model_path=model_path
+            model_output_length = config.pred_len,
+            model_path=model_path,
+            scaler_path=scaler_path
         )
         # raise Exception (type(results))
 

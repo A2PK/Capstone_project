@@ -19,19 +19,21 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	WaterQualityService_CreateStations_FullMethodName          = "/waterquality.WaterQualityService/CreateStations"
-	WaterQualityService_UpdateStations_FullMethodName          = "/waterquality.WaterQualityService/UpdateStations"
-	WaterQualityService_DeleteStations_FullMethodName          = "/waterquality.WaterQualityService/DeleteStations"
-	WaterQualityService_ListStations_FullMethodName            = "/waterquality.WaterQualityService/ListStations"
-	WaterQualityService_CreateDataPoints_FullMethodName        = "/waterquality.WaterQualityService/CreateDataPoints"
-	WaterQualityService_UpdateDataPoints_FullMethodName        = "/waterquality.WaterQualityService/UpdateDataPoints"
-	WaterQualityService_DeleteDataPoints_FullMethodName        = "/waterquality.WaterQualityService/DeleteDataPoints"
-	WaterQualityService_ListDataPointsByStation_FullMethodName = "/waterquality.WaterQualityService/ListDataPointsByStation"
-	WaterQualityService_UploadData_FullMethodName              = "/waterquality.WaterQualityService/UploadData"
-	WaterQualityService_CreateDataSourceSchema_FullMethodName  = "/waterquality.WaterQualityService/CreateDataSourceSchema"
-	WaterQualityService_UpdateDataSourceSchema_FullMethodName  = "/waterquality.WaterQualityService/UpdateDataSourceSchema"
-	WaterQualityService_GetDataSourceSchema_FullMethodName     = "/waterquality.WaterQualityService/GetDataSourceSchema"
-	WaterQualityService_ListDataSourceSchemas_FullMethodName   = "/waterquality.WaterQualityService/ListDataSourceSchemas"
+	WaterQualityService_CreateStations_FullMethodName              = "/waterquality.WaterQualityService/CreateStations"
+	WaterQualityService_UpdateStations_FullMethodName              = "/waterquality.WaterQualityService/UpdateStations"
+	WaterQualityService_DeleteStations_FullMethodName              = "/waterquality.WaterQualityService/DeleteStations"
+	WaterQualityService_ListStations_FullMethodName                = "/waterquality.WaterQualityService/ListStations"
+	WaterQualityService_CreateDataPoints_FullMethodName            = "/waterquality.WaterQualityService/CreateDataPoints"
+	WaterQualityService_UpdateDataPoints_FullMethodName            = "/waterquality.WaterQualityService/UpdateDataPoints"
+	WaterQualityService_DeleteDataPoints_FullMethodName            = "/waterquality.WaterQualityService/DeleteDataPoints"
+	WaterQualityService_ListDataPointsByStation_FullMethodName     = "/waterquality.WaterQualityService/ListDataPointsByStation"
+	WaterQualityService_ListDataPointsByStationPost_FullMethodName = "/waterquality.WaterQualityService/ListDataPointsByStationPost"
+	WaterQualityService_ListAllDataPoints_FullMethodName           = "/waterquality.WaterQualityService/ListAllDataPoints"
+	WaterQualityService_UploadData_FullMethodName                  = "/waterquality.WaterQualityService/UploadData"
+	WaterQualityService_CreateDataSourceSchema_FullMethodName      = "/waterquality.WaterQualityService/CreateDataSourceSchema"
+	WaterQualityService_UpdateDataSourceSchema_FullMethodName      = "/waterquality.WaterQualityService/UpdateDataSourceSchema"
+	WaterQualityService_GetDataSourceSchema_FullMethodName         = "/waterquality.WaterQualityService/GetDataSourceSchema"
+	WaterQualityService_ListDataSourceSchemas_FullMethodName       = "/waterquality.WaterQualityService/ListDataSourceSchemas"
 )
 
 // WaterQualityServiceClient is the client API for WaterQualityService service.
@@ -48,6 +50,9 @@ type WaterQualityServiceClient interface {
 	UpdateDataPoints(ctx context.Context, in *UpdateDataPointsRequest, opts ...grpc.CallOption) (*UpdateDataPointsResponse, error)
 	DeleteDataPoints(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 	ListDataPointsByStation(ctx context.Context, in *ListDataPointsByStationRequest, opts ...grpc.CallOption) (*ListDataPointsByStationResponse, error)
+	ListDataPointsByStationPost(ctx context.Context, in *ListDataPointsByStationRequest, opts ...grpc.CallOption) (*ListDataPointsByStationResponse, error)
+	// --- Add ListAllDataPoints RPC ---
+	ListAllDataPoints(ctx context.Context, in *ListAllDataPointsRequest, opts ...grpc.CallOption) (*ListAllDataPointsResponse, error)
 	// File Upload RPC
 	UploadData(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadRequest, UploadDataResponse], error)
 	// DataSourceSchema RPCs
@@ -145,6 +150,26 @@ func (c *waterQualityServiceClient) ListDataPointsByStation(ctx context.Context,
 	return out, nil
 }
 
+func (c *waterQualityServiceClient) ListDataPointsByStationPost(ctx context.Context, in *ListDataPointsByStationRequest, opts ...grpc.CallOption) (*ListDataPointsByStationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListDataPointsByStationResponse)
+	err := c.cc.Invoke(ctx, WaterQualityService_ListDataPointsByStationPost_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waterQualityServiceClient) ListAllDataPoints(ctx context.Context, in *ListAllDataPointsRequest, opts ...grpc.CallOption) (*ListAllDataPointsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAllDataPointsResponse)
+	err := c.cc.Invoke(ctx, WaterQualityService_ListAllDataPoints_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waterQualityServiceClient) UploadData(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadRequest, UploadDataResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &WaterQualityService_ServiceDesc.Streams[0], WaterQualityService_UploadData_FullMethodName, cOpts...)
@@ -212,6 +237,9 @@ type WaterQualityServiceServer interface {
 	UpdateDataPoints(context.Context, *UpdateDataPointsRequest) (*UpdateDataPointsResponse, error)
 	DeleteDataPoints(context.Context, *DeleteRequest) (*DeleteResponse, error)
 	ListDataPointsByStation(context.Context, *ListDataPointsByStationRequest) (*ListDataPointsByStationResponse, error)
+	ListDataPointsByStationPost(context.Context, *ListDataPointsByStationRequest) (*ListDataPointsByStationResponse, error)
+	// --- Add ListAllDataPoints RPC ---
+	ListAllDataPoints(context.Context, *ListAllDataPointsRequest) (*ListAllDataPointsResponse, error)
 	// File Upload RPC
 	UploadData(grpc.ClientStreamingServer[UploadRequest, UploadDataResponse]) error
 	// DataSourceSchema RPCs
@@ -252,6 +280,12 @@ func (UnimplementedWaterQualityServiceServer) DeleteDataPoints(context.Context, 
 }
 func (UnimplementedWaterQualityServiceServer) ListDataPointsByStation(context.Context, *ListDataPointsByStationRequest) (*ListDataPointsByStationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDataPointsByStation not implemented")
+}
+func (UnimplementedWaterQualityServiceServer) ListDataPointsByStationPost(context.Context, *ListDataPointsByStationRequest) (*ListDataPointsByStationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDataPointsByStationPost not implemented")
+}
+func (UnimplementedWaterQualityServiceServer) ListAllDataPoints(context.Context, *ListAllDataPointsRequest) (*ListAllDataPointsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAllDataPoints not implemented")
 }
 func (UnimplementedWaterQualityServiceServer) UploadData(grpc.ClientStreamingServer[UploadRequest, UploadDataResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method UploadData not implemented")
@@ -433,6 +467,42 @@ func _WaterQualityService_ListDataPointsByStation_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WaterQualityService_ListDataPointsByStationPost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDataPointsByStationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaterQualityServiceServer).ListDataPointsByStationPost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WaterQualityService_ListDataPointsByStationPost_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaterQualityServiceServer).ListDataPointsByStationPost(ctx, req.(*ListDataPointsByStationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WaterQualityService_ListAllDataPoints_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAllDataPointsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaterQualityServiceServer).ListAllDataPoints(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WaterQualityService_ListAllDataPoints_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaterQualityServiceServer).ListAllDataPoints(ctx, req.(*ListAllDataPointsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _WaterQualityService_UploadData_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(WaterQualityServiceServer).UploadData(&grpc.GenericServerStream[UploadRequest, UploadDataResponse]{ServerStream: stream})
 }
@@ -550,6 +620,14 @@ var WaterQualityService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListDataPointsByStation",
 			Handler:    _WaterQualityService_ListDataPointsByStation_Handler,
+		},
+		{
+			MethodName: "ListDataPointsByStationPost",
+			Handler:    _WaterQualityService_ListDataPointsByStationPost_Handler,
+		},
+		{
+			MethodName: "ListAllDataPoints",
+			Handler:    _WaterQualityService_ListAllDataPoints_Handler,
 		},
 		{
 			MethodName: "CreateDataSourceSchema",

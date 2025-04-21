@@ -12,7 +12,6 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/emptypb"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
@@ -1343,6 +1342,102 @@ func (x *ListDataPointsByStationResponse) GetPagination() *core.PaginationInfo {
 	return nil
 }
 
+type ListAllDataPointsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Options       *core.FilterOptions    `protobuf:"bytes,1,opt,name=options,proto3" json:"options,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAllDataPointsRequest) Reset() {
+	*x = ListAllDataPointsRequest{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAllDataPointsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAllDataPointsRequest) ProtoMessage() {}
+
+func (x *ListAllDataPointsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAllDataPointsRequest.ProtoReflect.Descriptor instead.
+func (*ListAllDataPointsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ListAllDataPointsRequest) GetOptions() *core.FilterOptions {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+type ListAllDataPointsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DataPoints    []*DataPoint           `protobuf:"bytes,1,rep,name=data_points,json=dataPoints,proto3" json:"data_points,omitempty"`
+	Pagination    *core.PaginationInfo   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAllDataPointsResponse) Reset() {
+	*x = ListAllDataPointsResponse{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAllDataPointsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAllDataPointsResponse) ProtoMessage() {}
+
+func (x *ListAllDataPointsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAllDataPointsResponse.ProtoReflect.Descriptor instead.
+func (*ListAllDataPointsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ListAllDataPointsResponse) GetDataPoints() []*DataPoint {
+	if x != nil {
+		return x.DataPoints
+	}
+	return nil
+}
+
+func (x *ListAllDataPointsResponse) GetPagination() *core.PaginationInfo {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
 // New UploadRequest message for streaming, with flat fields inside a oneof
 type UploadRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1358,7 +1453,7 @@ type UploadRequest struct {
 
 func (x *UploadRequest) Reset() {
 	*x = UploadRequest{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[20]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1370,7 +1465,7 @@ func (x *UploadRequest) String() string {
 func (*UploadRequest) ProtoMessage() {}
 
 func (x *UploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[20]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1383,7 +1478,7 @@ func (x *UploadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadRequest.ProtoReflect.Descriptor instead.
 func (*UploadRequest) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{20}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *UploadRequest) GetPayload() isUploadRequest_Payload {
@@ -1455,7 +1550,7 @@ type UploadDataResponse struct {
 
 func (x *UploadDataResponse) Reset() {
 	*x = UploadDataResponse{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[21]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1467,7 +1562,7 @@ func (x *UploadDataResponse) String() string {
 func (*UploadDataResponse) ProtoMessage() {}
 
 func (x *UploadDataResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[21]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1480,7 +1575,7 @@ func (x *UploadDataResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadDataResponse.ProtoReflect.Descriptor instead.
 func (*UploadDataResponse) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{21}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *UploadDataResponse) GetMessage() string {
@@ -1535,7 +1630,7 @@ type DataSourceSchema struct {
 
 func (x *DataSourceSchema) Reset() {
 	*x = DataSourceSchema{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[22]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1547,7 +1642,7 @@ func (x *DataSourceSchema) String() string {
 func (*DataSourceSchema) ProtoMessage() {}
 
 func (x *DataSourceSchema) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[22]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1560,7 +1655,7 @@ func (x *DataSourceSchema) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DataSourceSchema.ProtoReflect.Descriptor instead.
 func (*DataSourceSchema) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{22}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *DataSourceSchema) GetId() string {
@@ -1639,7 +1734,7 @@ type DataSourceSchemaInput struct {
 
 func (x *DataSourceSchemaInput) Reset() {
 	*x = DataSourceSchemaInput{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[23]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1651,7 +1746,7 @@ func (x *DataSourceSchemaInput) String() string {
 func (*DataSourceSchemaInput) ProtoMessage() {}
 
 func (x *DataSourceSchemaInput) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[23]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1664,7 +1759,7 @@ func (x *DataSourceSchemaInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DataSourceSchemaInput.ProtoReflect.Descriptor instead.
 func (*DataSourceSchemaInput) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{23}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *DataSourceSchemaInput) GetName() string {
@@ -1711,7 +1806,7 @@ type CreateDataSourceSchemaRequest struct {
 
 func (x *CreateDataSourceSchemaRequest) Reset() {
 	*x = CreateDataSourceSchemaRequest{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[24]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1723,7 +1818,7 @@ func (x *CreateDataSourceSchemaRequest) String() string {
 func (*CreateDataSourceSchemaRequest) ProtoMessage() {}
 
 func (x *CreateDataSourceSchemaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[24]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1736,7 +1831,7 @@ func (x *CreateDataSourceSchemaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateDataSourceSchemaRequest.ProtoReflect.Descriptor instead.
 func (*CreateDataSourceSchemaRequest) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{24}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *CreateDataSourceSchemaRequest) GetSchema() *DataSourceSchemaInput {
@@ -1755,7 +1850,7 @@ type CreateDataSourceSchemaResponse struct {
 
 func (x *CreateDataSourceSchemaResponse) Reset() {
 	*x = CreateDataSourceSchemaResponse{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[25]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1767,7 +1862,7 @@ func (x *CreateDataSourceSchemaResponse) String() string {
 func (*CreateDataSourceSchemaResponse) ProtoMessage() {}
 
 func (x *CreateDataSourceSchemaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[25]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1780,7 +1875,7 @@ func (x *CreateDataSourceSchemaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateDataSourceSchemaResponse.ProtoReflect.Descriptor instead.
 func (*CreateDataSourceSchemaResponse) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{25}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *CreateDataSourceSchemaResponse) GetSchema() *DataSourceSchema {
@@ -1799,7 +1894,7 @@ type UpdateDataSourceSchemaRequest struct {
 
 func (x *UpdateDataSourceSchemaRequest) Reset() {
 	*x = UpdateDataSourceSchemaRequest{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[26]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1811,7 +1906,7 @@ func (x *UpdateDataSourceSchemaRequest) String() string {
 func (*UpdateDataSourceSchemaRequest) ProtoMessage() {}
 
 func (x *UpdateDataSourceSchemaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[26]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1824,7 +1919,7 @@ func (x *UpdateDataSourceSchemaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDataSourceSchemaRequest.ProtoReflect.Descriptor instead.
 func (*UpdateDataSourceSchemaRequest) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{26}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *UpdateDataSourceSchemaRequest) GetSchema() *DataSourceSchema {
@@ -1843,7 +1938,7 @@ type UpdateDataSourceSchemaResponse struct {
 
 func (x *UpdateDataSourceSchemaResponse) Reset() {
 	*x = UpdateDataSourceSchemaResponse{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[27]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1855,7 +1950,7 @@ func (x *UpdateDataSourceSchemaResponse) String() string {
 func (*UpdateDataSourceSchemaResponse) ProtoMessage() {}
 
 func (x *UpdateDataSourceSchemaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[27]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1868,7 +1963,7 @@ func (x *UpdateDataSourceSchemaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDataSourceSchemaResponse.ProtoReflect.Descriptor instead.
 func (*UpdateDataSourceSchemaResponse) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{27}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *UpdateDataSourceSchemaResponse) GetSchema() *DataSourceSchema {
@@ -1887,7 +1982,7 @@ type GetDataSourceSchemaRequest struct {
 
 func (x *GetDataSourceSchemaRequest) Reset() {
 	*x = GetDataSourceSchemaRequest{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[28]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1899,7 +1994,7 @@ func (x *GetDataSourceSchemaRequest) String() string {
 func (*GetDataSourceSchemaRequest) ProtoMessage() {}
 
 func (x *GetDataSourceSchemaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[28]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1912,7 +2007,7 @@ func (x *GetDataSourceSchemaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDataSourceSchemaRequest.ProtoReflect.Descriptor instead.
 func (*GetDataSourceSchemaRequest) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{28}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *GetDataSourceSchemaRequest) GetId() string {
@@ -1931,7 +2026,7 @@ type GetDataSourceSchemaResponse struct {
 
 func (x *GetDataSourceSchemaResponse) Reset() {
 	*x = GetDataSourceSchemaResponse{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[29]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1943,7 +2038,7 @@ func (x *GetDataSourceSchemaResponse) String() string {
 func (*GetDataSourceSchemaResponse) ProtoMessage() {}
 
 func (x *GetDataSourceSchemaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[29]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1956,7 +2051,7 @@ func (x *GetDataSourceSchemaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDataSourceSchemaResponse.ProtoReflect.Descriptor instead.
 func (*GetDataSourceSchemaResponse) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{29}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *GetDataSourceSchemaResponse) GetSchema() *DataSourceSchema {
@@ -1975,7 +2070,7 @@ type ListDataSourceSchemasRequest struct {
 
 func (x *ListDataSourceSchemasRequest) Reset() {
 	*x = ListDataSourceSchemasRequest{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[30]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1987,7 +2082,7 @@ func (x *ListDataSourceSchemasRequest) String() string {
 func (*ListDataSourceSchemasRequest) ProtoMessage() {}
 
 func (x *ListDataSourceSchemasRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[30]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2000,7 +2095,7 @@ func (x *ListDataSourceSchemasRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDataSourceSchemasRequest.ProtoReflect.Descriptor instead.
 func (*ListDataSourceSchemasRequest) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{30}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *ListDataSourceSchemasRequest) GetOptions() *core.FilterOptions {
@@ -2020,7 +2115,7 @@ type ListDataSourceSchemasResponse struct {
 
 func (x *ListDataSourceSchemasResponse) Reset() {
 	*x = ListDataSourceSchemasResponse{}
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[31]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2032,7 +2127,7 @@ func (x *ListDataSourceSchemasResponse) String() string {
 func (*ListDataSourceSchemasResponse) ProtoMessage() {}
 
 func (x *ListDataSourceSchemasResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[31]
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2045,7 +2140,7 @@ func (x *ListDataSourceSchemasResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDataSourceSchemasResponse.ProtoReflect.Descriptor instead.
 func (*ListDataSourceSchemasResponse) Descriptor() ([]byte, []int) {
-	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{31}
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ListDataSourceSchemasResponse) GetSchemas() []*DataSourceSchema {
@@ -2066,7 +2161,7 @@ var File_proto_water_quality_service_water_quality_proto protoreflect.FileDescri
 
 const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
 	"\n" +
-	"/proto/water-quality-service/water-quality.proto\x12\fwaterquality\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17proto/core/common.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\xd8\b\n" +
+	"/proto/water-quality-service/water-quality.proto\x12\fwaterquality\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17proto/core/common.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\xd8\b\n" +
 	"\aStation\x12m\n" +
 	"\x02id\x18\x01 \x01(\tB]\x92AZ20Unique identifier for the station (UUID format).J&\"a1b2c3d4-e5f6-7890-1234-567890abcdef\"R\x02id\x12\x7f\n" +
 	"\n" +
@@ -2204,6 +2299,17 @@ const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
 	"pagination\x18\x02 \x01(\v2\x14.core.PaginationInfoBC\x92A@2>Pagination information including total count and current page.R\n" +
 	"pagination:\x8a\x01\x92A\x86\x01\n" +
 	"\x83\x01*$List Data Points By Station Response2@Contains a paginated list of data points for a specific station.\xd2\x01\vdata_points\xd2\x01\n" +
+	"pagination\"\xf8\x01\n" +
+	"\x18ListAllDataPointsRequest\x12_\n" +
+	"\aoptions\x18\x01 \x01(\v2\x13.core.FilterOptionsB0\x92A-2+Filtering, pagination, and sorting options.R\aoptions:{\x92Ax\n" +
+	"v*\x1cList All Data Points Request2VRequest to list data points across all stations with filtering and pagination options.\"\x86\x03\n" +
+	"\x19ListAllDataPointsResponse\x12p\n" +
+	"\vdata_points\x18\x01 \x03(\v2\x17.waterquality.DataPointB6\x92A321List of data points matching the filter criteria.R\n" +
+	"dataPoints\x12y\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2\x14.core.PaginationInfoBC\x92A@2>Pagination information including total count and current page.R\n" +
+	"pagination:|\x92Ay\n" +
+	"w*\x1dList All Data Points Response2;Contains a paginated list of data points from all stations.\xd2\x01\vdata_points\xd2\x01\n" +
 	"pagination\"\xf2\x03\n" +
 	"\rUploadRequest\x12\x84\x01\n" +
 	"\bfilename\x18\x01 \x01(\tBf\x92Ac2DName of the file being uploaded (sent usually as the first message).J\x1b\"water_quality_jan2023.csv\"H\x00R\bfilename\x12Z\n" +
@@ -2283,7 +2389,7 @@ const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
 	"\x1dINDICATOR_PURPOSE_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cINDICATOR_PURPOSE_PREDICTION\x10\x01\x12\x1d\n" +
 	"\x19INDICATOR_PURPOSE_DISPLAY\x10\x02\x12\x1e\n" +
-	"\x1aINDICATOR_PURPOSE_ANALYSIS\x10\x032\xbd\x19\n" +
+	"\x1aINDICATOR_PURPOSE_ANALYSIS\x10\x032\xe8\x1e\n" +
 	"\x13WaterQualityService\x12\xd2\x01\n" +
 	"\x0eCreateStations\x12#.waterquality.CreateStationsRequest\x1a$.waterquality.CreateStationsResponse\"u\x92AI\n" +
 	"\bStations\x12\x0fCreate Stations\x1a,Creates one or more new monitoring stations.\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/api/v1/water-quality/stations\x12\xd7\x01\n" +
@@ -2300,7 +2406,11 @@ const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
 	"\x10DeleteDataPoints\x12\x1b.waterquality.DeleteRequest\x1a\x1c.waterquality.DeleteResponse\"\x95\x01\x92A_\n" +
 	"\vData Points\x12\x12Delete Data Points\x1a<Deletes one or more data points. Can be soft or hard delete.\x82\xd3\xe4\x93\x02-:\x01*\"(/api/v1/water-quality/data-points/delete\x12\xa8\x02\n" +
 	"\x17ListDataPointsByStation\x12,.waterquality.ListDataPointsByStationRequest\x1a-.waterquality.ListDataPointsByStationResponse\"\xaf\x01\x92Am\n" +
-	"\vData Points\x12\x1bList Data Points by Station\x1aARetrieves a paginated list of data points for a specific station.\x82\xd3\xe4\x93\x029\x127/api/v1/water-quality/stations/{station_id}/data-points\x12\xda\x01\n" +
+	"\vData Points\x12\x1bList Data Points by Station\x1aARetrieves a paginated list of data points for a specific station.\x82\xd3\xe4\x93\x029\x127/api/v1/water-quality/stations/{station_id}/data-points\x12\x89\x03\n" +
+	"\x1bListDataPointsByStationPost\x12,.waterquality.ListDataPointsByStationRequest\x1a-.waterquality.ListDataPointsByStationResponse\"\x8c\x02\x92A\xcc\x01\n" +
+	"\vData Points\x12\"List Data Points by Station (POST)\x1a\x98\x01Retrieves a paginated list of data points using POST. All filter/pagination parameters, including station_id, must be provided in the JSON request body.\x82\xd3\xe4\x93\x026:\x01*\"1/api/v1/water-quality/data-points/list-by-station\x12\x9c\x02\n" +
+	"\x11ListAllDataPoints\x12&.waterquality.ListAllDataPointsRequest\x1a'.waterquality.ListAllDataPointsResponse\"\xb5\x01\x92A}\n" +
+	"\vData Points\x12\x14List All Data Points\x1aXRetrieves a paginated list of data points across all stations. Uses POST with JSON body.\x82\xd3\xe4\x93\x02/:\x01*\"*/api/v1/water-quality/data-points/list-all\x12\xda\x01\n" +
 	"\n" +
 	"UploadData\x12\x1b.waterquality.UploadRequest\x1a .waterquality.UploadDataResponse\"\x8a\x01\x92A`\n" +
 	"\vData Import\x12\vUpload Data\x1aDStreams a data file for processing and importing water quality data.\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/api/v1/water-quality/upload(\x01\x12\xff\x01\n" +
@@ -2333,7 +2443,7 @@ func file_proto_water_quality_service_water_quality_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_water_quality_service_water_quality_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_proto_water_quality_service_water_quality_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
+var file_proto_water_quality_service_water_quality_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_proto_water_quality_service_water_quality_proto_goTypes = []any{
 	(ObservationType)(0),                    // 0: waterquality.ObservationType
 	(IndicatorPurpose)(0),                   // 1: waterquality.IndicatorPurpose
@@ -2357,96 +2467,105 @@ var file_proto_water_quality_service_water_quality_proto_goTypes = []any{
 	(*UpdateDataPointsResponse)(nil),        // 19: waterquality.UpdateDataPointsResponse
 	(*ListDataPointsByStationRequest)(nil),  // 20: waterquality.ListDataPointsByStationRequest
 	(*ListDataPointsByStationResponse)(nil), // 21: waterquality.ListDataPointsByStationResponse
-	(*UploadRequest)(nil),                   // 22: waterquality.UploadRequest
-	(*UploadDataResponse)(nil),              // 23: waterquality.UploadDataResponse
-	(*DataSourceSchema)(nil),                // 24: waterquality.DataSourceSchema
-	(*DataSourceSchemaInput)(nil),           // 25: waterquality.DataSourceSchemaInput
-	(*CreateDataSourceSchemaRequest)(nil),   // 26: waterquality.CreateDataSourceSchemaRequest
-	(*CreateDataSourceSchemaResponse)(nil),  // 27: waterquality.CreateDataSourceSchemaResponse
-	(*UpdateDataSourceSchemaRequest)(nil),   // 28: waterquality.UpdateDataSourceSchemaRequest
-	(*UpdateDataSourceSchemaResponse)(nil),  // 29: waterquality.UpdateDataSourceSchemaResponse
-	(*GetDataSourceSchemaRequest)(nil),      // 30: waterquality.GetDataSourceSchemaRequest
-	(*GetDataSourceSchemaResponse)(nil),     // 31: waterquality.GetDataSourceSchemaResponse
-	(*ListDataSourceSchemasRequest)(nil),    // 32: waterquality.ListDataSourceSchemasRequest
-	(*ListDataSourceSchemasResponse)(nil),   // 33: waterquality.ListDataSourceSchemasResponse
-	(*timestamppb.Timestamp)(nil),           // 34: google.protobuf.Timestamp
-	(*core.FilterOptions)(nil),              // 35: core.FilterOptions
-	(*core.PaginationInfo)(nil),             // 36: core.PaginationInfo
-	(*structpb.Struct)(nil),                 // 37: google.protobuf.Struct
+	(*ListAllDataPointsRequest)(nil),        // 22: waterquality.ListAllDataPointsRequest
+	(*ListAllDataPointsResponse)(nil),       // 23: waterquality.ListAllDataPointsResponse
+	(*UploadRequest)(nil),                   // 24: waterquality.UploadRequest
+	(*UploadDataResponse)(nil),              // 25: waterquality.UploadDataResponse
+	(*DataSourceSchema)(nil),                // 26: waterquality.DataSourceSchema
+	(*DataSourceSchemaInput)(nil),           // 27: waterquality.DataSourceSchemaInput
+	(*CreateDataSourceSchemaRequest)(nil),   // 28: waterquality.CreateDataSourceSchemaRequest
+	(*CreateDataSourceSchemaResponse)(nil),  // 29: waterquality.CreateDataSourceSchemaResponse
+	(*UpdateDataSourceSchemaRequest)(nil),   // 30: waterquality.UpdateDataSourceSchemaRequest
+	(*UpdateDataSourceSchemaResponse)(nil),  // 31: waterquality.UpdateDataSourceSchemaResponse
+	(*GetDataSourceSchemaRequest)(nil),      // 32: waterquality.GetDataSourceSchemaRequest
+	(*GetDataSourceSchemaResponse)(nil),     // 33: waterquality.GetDataSourceSchemaResponse
+	(*ListDataSourceSchemasRequest)(nil),    // 34: waterquality.ListDataSourceSchemasRequest
+	(*ListDataSourceSchemasResponse)(nil),   // 35: waterquality.ListDataSourceSchemasResponse
+	(*timestamppb.Timestamp)(nil),           // 36: google.protobuf.Timestamp
+	(*core.FilterOptions)(nil),              // 37: core.FilterOptions
+	(*core.PaginationInfo)(nil),             // 38: core.PaginationInfo
+	(*structpb.Struct)(nil),                 // 39: google.protobuf.Struct
 }
 var file_proto_water_quality_service_water_quality_proto_depIdxs = []int32{
-	34, // 0: waterquality.Station.created_at:type_name -> google.protobuf.Timestamp
-	34, // 1: waterquality.Station.updated_at:type_name -> google.protobuf.Timestamp
-	34, // 2: waterquality.Station.deleted_at:type_name -> google.protobuf.Timestamp
+	36, // 0: waterquality.Station.created_at:type_name -> google.protobuf.Timestamp
+	36, // 1: waterquality.Station.updated_at:type_name -> google.protobuf.Timestamp
+	36, // 2: waterquality.Station.deleted_at:type_name -> google.protobuf.Timestamp
 	3,  // 3: waterquality.CreateStationsRequest.stations:type_name -> waterquality.StationInput
 	2,  // 4: waterquality.CreateStationsResponse.stations:type_name -> waterquality.Station
 	2,  // 5: waterquality.UpdateStationsRequest.stations:type_name -> waterquality.Station
 	2,  // 6: waterquality.UpdateStationsResponse.stations:type_name -> waterquality.Station
-	35, // 7: waterquality.ListStationsRequest.options:type_name -> core.FilterOptions
+	37, // 7: waterquality.ListStationsRequest.options:type_name -> core.FilterOptions
 	2,  // 8: waterquality.ListStationsResponse.stations:type_name -> waterquality.Station
-	36, // 9: waterquality.ListStationsResponse.pagination:type_name -> core.PaginationInfo
+	38, // 9: waterquality.ListStationsResponse.pagination:type_name -> core.PaginationInfo
 	1,  // 10: waterquality.DataPointFeature.purpose:type_name -> waterquality.IndicatorPurpose
 	1,  // 11: waterquality.DataPointFeatureInput.purpose:type_name -> waterquality.IndicatorPurpose
-	34, // 12: waterquality.DataPoint.created_at:type_name -> google.protobuf.Timestamp
-	34, // 13: waterquality.DataPoint.updated_at:type_name -> google.protobuf.Timestamp
-	34, // 14: waterquality.DataPoint.deleted_at:type_name -> google.protobuf.Timestamp
-	34, // 15: waterquality.DataPoint.monitoring_time:type_name -> google.protobuf.Timestamp
+	36, // 12: waterquality.DataPoint.created_at:type_name -> google.protobuf.Timestamp
+	36, // 13: waterquality.DataPoint.updated_at:type_name -> google.protobuf.Timestamp
+	36, // 14: waterquality.DataPoint.deleted_at:type_name -> google.protobuf.Timestamp
+	36, // 15: waterquality.DataPoint.monitoring_time:type_name -> google.protobuf.Timestamp
 	0,  // 16: waterquality.DataPoint.observation_type:type_name -> waterquality.ObservationType
 	12, // 17: waterquality.DataPoint.features:type_name -> waterquality.DataPointFeature
-	34, // 18: waterquality.DataPointInput.monitoring_time:type_name -> google.protobuf.Timestamp
+	36, // 18: waterquality.DataPointInput.monitoring_time:type_name -> google.protobuf.Timestamp
 	0,  // 19: waterquality.DataPointInput.observation_type:type_name -> waterquality.ObservationType
 	13, // 20: waterquality.DataPointInput.features:type_name -> waterquality.DataPointFeatureInput
 	15, // 21: waterquality.CreateDataPointsRequest.data_points:type_name -> waterquality.DataPointInput
 	14, // 22: waterquality.CreateDataPointsResponse.data_points:type_name -> waterquality.DataPoint
 	14, // 23: waterquality.UpdateDataPointsRequest.data_points:type_name -> waterquality.DataPoint
 	14, // 24: waterquality.UpdateDataPointsResponse.data_points:type_name -> waterquality.DataPoint
-	35, // 25: waterquality.ListDataPointsByStationRequest.options:type_name -> core.FilterOptions
+	37, // 25: waterquality.ListDataPointsByStationRequest.options:type_name -> core.FilterOptions
 	14, // 26: waterquality.ListDataPointsByStationResponse.data_points:type_name -> waterquality.DataPoint
-	36, // 27: waterquality.ListDataPointsByStationResponse.pagination:type_name -> core.PaginationInfo
-	34, // 28: waterquality.DataSourceSchema.created_at:type_name -> google.protobuf.Timestamp
-	34, // 29: waterquality.DataSourceSchema.updated_at:type_name -> google.protobuf.Timestamp
-	34, // 30: waterquality.DataSourceSchema.deleted_at:type_name -> google.protobuf.Timestamp
-	37, // 31: waterquality.DataSourceSchema.schema_definition:type_name -> google.protobuf.Struct
-	37, // 32: waterquality.DataSourceSchemaInput.schema_definition:type_name -> google.protobuf.Struct
-	25, // 33: waterquality.CreateDataSourceSchemaRequest.schema:type_name -> waterquality.DataSourceSchemaInput
-	24, // 34: waterquality.CreateDataSourceSchemaResponse.schema:type_name -> waterquality.DataSourceSchema
-	24, // 35: waterquality.UpdateDataSourceSchemaRequest.schema:type_name -> waterquality.DataSourceSchema
-	24, // 36: waterquality.UpdateDataSourceSchemaResponse.schema:type_name -> waterquality.DataSourceSchema
-	24, // 37: waterquality.GetDataSourceSchemaResponse.schema:type_name -> waterquality.DataSourceSchema
-	35, // 38: waterquality.ListDataSourceSchemasRequest.options:type_name -> core.FilterOptions
-	24, // 39: waterquality.ListDataSourceSchemasResponse.schemas:type_name -> waterquality.DataSourceSchema
-	36, // 40: waterquality.ListDataSourceSchemasResponse.pagination:type_name -> core.PaginationInfo
-	4,  // 41: waterquality.WaterQualityService.CreateStations:input_type -> waterquality.CreateStationsRequest
-	6,  // 42: waterquality.WaterQualityService.UpdateStations:input_type -> waterquality.UpdateStationsRequest
-	8,  // 43: waterquality.WaterQualityService.DeleteStations:input_type -> waterquality.DeleteRequest
-	10, // 44: waterquality.WaterQualityService.ListStations:input_type -> waterquality.ListStationsRequest
-	16, // 45: waterquality.WaterQualityService.CreateDataPoints:input_type -> waterquality.CreateDataPointsRequest
-	18, // 46: waterquality.WaterQualityService.UpdateDataPoints:input_type -> waterquality.UpdateDataPointsRequest
-	8,  // 47: waterquality.WaterQualityService.DeleteDataPoints:input_type -> waterquality.DeleteRequest
-	20, // 48: waterquality.WaterQualityService.ListDataPointsByStation:input_type -> waterquality.ListDataPointsByStationRequest
-	22, // 49: waterquality.WaterQualityService.UploadData:input_type -> waterquality.UploadRequest
-	26, // 50: waterquality.WaterQualityService.CreateDataSourceSchema:input_type -> waterquality.CreateDataSourceSchemaRequest
-	28, // 51: waterquality.WaterQualityService.UpdateDataSourceSchema:input_type -> waterquality.UpdateDataSourceSchemaRequest
-	30, // 52: waterquality.WaterQualityService.GetDataSourceSchema:input_type -> waterquality.GetDataSourceSchemaRequest
-	32, // 53: waterquality.WaterQualityService.ListDataSourceSchemas:input_type -> waterquality.ListDataSourceSchemasRequest
-	5,  // 54: waterquality.WaterQualityService.CreateStations:output_type -> waterquality.CreateStationsResponse
-	7,  // 55: waterquality.WaterQualityService.UpdateStations:output_type -> waterquality.UpdateStationsResponse
-	9,  // 56: waterquality.WaterQualityService.DeleteStations:output_type -> waterquality.DeleteResponse
-	11, // 57: waterquality.WaterQualityService.ListStations:output_type -> waterquality.ListStationsResponse
-	17, // 58: waterquality.WaterQualityService.CreateDataPoints:output_type -> waterquality.CreateDataPointsResponse
-	19, // 59: waterquality.WaterQualityService.UpdateDataPoints:output_type -> waterquality.UpdateDataPointsResponse
-	9,  // 60: waterquality.WaterQualityService.DeleteDataPoints:output_type -> waterquality.DeleteResponse
-	21, // 61: waterquality.WaterQualityService.ListDataPointsByStation:output_type -> waterquality.ListDataPointsByStationResponse
-	23, // 62: waterquality.WaterQualityService.UploadData:output_type -> waterquality.UploadDataResponse
-	27, // 63: waterquality.WaterQualityService.CreateDataSourceSchema:output_type -> waterquality.CreateDataSourceSchemaResponse
-	29, // 64: waterquality.WaterQualityService.UpdateDataSourceSchema:output_type -> waterquality.UpdateDataSourceSchemaResponse
-	31, // 65: waterquality.WaterQualityService.GetDataSourceSchema:output_type -> waterquality.GetDataSourceSchemaResponse
-	33, // 66: waterquality.WaterQualityService.ListDataSourceSchemas:output_type -> waterquality.ListDataSourceSchemasResponse
-	54, // [54:67] is the sub-list for method output_type
-	41, // [41:54] is the sub-list for method input_type
-	41, // [41:41] is the sub-list for extension type_name
-	41, // [41:41] is the sub-list for extension extendee
-	0,  // [0:41] is the sub-list for field type_name
+	38, // 27: waterquality.ListDataPointsByStationResponse.pagination:type_name -> core.PaginationInfo
+	37, // 28: waterquality.ListAllDataPointsRequest.options:type_name -> core.FilterOptions
+	14, // 29: waterquality.ListAllDataPointsResponse.data_points:type_name -> waterquality.DataPoint
+	38, // 30: waterquality.ListAllDataPointsResponse.pagination:type_name -> core.PaginationInfo
+	36, // 31: waterquality.DataSourceSchema.created_at:type_name -> google.protobuf.Timestamp
+	36, // 32: waterquality.DataSourceSchema.updated_at:type_name -> google.protobuf.Timestamp
+	36, // 33: waterquality.DataSourceSchema.deleted_at:type_name -> google.protobuf.Timestamp
+	39, // 34: waterquality.DataSourceSchema.schema_definition:type_name -> google.protobuf.Struct
+	39, // 35: waterquality.DataSourceSchemaInput.schema_definition:type_name -> google.protobuf.Struct
+	27, // 36: waterquality.CreateDataSourceSchemaRequest.schema:type_name -> waterquality.DataSourceSchemaInput
+	26, // 37: waterquality.CreateDataSourceSchemaResponse.schema:type_name -> waterquality.DataSourceSchema
+	26, // 38: waterquality.UpdateDataSourceSchemaRequest.schema:type_name -> waterquality.DataSourceSchema
+	26, // 39: waterquality.UpdateDataSourceSchemaResponse.schema:type_name -> waterquality.DataSourceSchema
+	26, // 40: waterquality.GetDataSourceSchemaResponse.schema:type_name -> waterquality.DataSourceSchema
+	37, // 41: waterquality.ListDataSourceSchemasRequest.options:type_name -> core.FilterOptions
+	26, // 42: waterquality.ListDataSourceSchemasResponse.schemas:type_name -> waterquality.DataSourceSchema
+	38, // 43: waterquality.ListDataSourceSchemasResponse.pagination:type_name -> core.PaginationInfo
+	4,  // 44: waterquality.WaterQualityService.CreateStations:input_type -> waterquality.CreateStationsRequest
+	6,  // 45: waterquality.WaterQualityService.UpdateStations:input_type -> waterquality.UpdateStationsRequest
+	8,  // 46: waterquality.WaterQualityService.DeleteStations:input_type -> waterquality.DeleteRequest
+	10, // 47: waterquality.WaterQualityService.ListStations:input_type -> waterquality.ListStationsRequest
+	16, // 48: waterquality.WaterQualityService.CreateDataPoints:input_type -> waterquality.CreateDataPointsRequest
+	18, // 49: waterquality.WaterQualityService.UpdateDataPoints:input_type -> waterquality.UpdateDataPointsRequest
+	8,  // 50: waterquality.WaterQualityService.DeleteDataPoints:input_type -> waterquality.DeleteRequest
+	20, // 51: waterquality.WaterQualityService.ListDataPointsByStation:input_type -> waterquality.ListDataPointsByStationRequest
+	20, // 52: waterquality.WaterQualityService.ListDataPointsByStationPost:input_type -> waterquality.ListDataPointsByStationRequest
+	22, // 53: waterquality.WaterQualityService.ListAllDataPoints:input_type -> waterquality.ListAllDataPointsRequest
+	24, // 54: waterquality.WaterQualityService.UploadData:input_type -> waterquality.UploadRequest
+	28, // 55: waterquality.WaterQualityService.CreateDataSourceSchema:input_type -> waterquality.CreateDataSourceSchemaRequest
+	30, // 56: waterquality.WaterQualityService.UpdateDataSourceSchema:input_type -> waterquality.UpdateDataSourceSchemaRequest
+	32, // 57: waterquality.WaterQualityService.GetDataSourceSchema:input_type -> waterquality.GetDataSourceSchemaRequest
+	34, // 58: waterquality.WaterQualityService.ListDataSourceSchemas:input_type -> waterquality.ListDataSourceSchemasRequest
+	5,  // 59: waterquality.WaterQualityService.CreateStations:output_type -> waterquality.CreateStationsResponse
+	7,  // 60: waterquality.WaterQualityService.UpdateStations:output_type -> waterquality.UpdateStationsResponse
+	9,  // 61: waterquality.WaterQualityService.DeleteStations:output_type -> waterquality.DeleteResponse
+	11, // 62: waterquality.WaterQualityService.ListStations:output_type -> waterquality.ListStationsResponse
+	17, // 63: waterquality.WaterQualityService.CreateDataPoints:output_type -> waterquality.CreateDataPointsResponse
+	19, // 64: waterquality.WaterQualityService.UpdateDataPoints:output_type -> waterquality.UpdateDataPointsResponse
+	9,  // 65: waterquality.WaterQualityService.DeleteDataPoints:output_type -> waterquality.DeleteResponse
+	21, // 66: waterquality.WaterQualityService.ListDataPointsByStation:output_type -> waterquality.ListDataPointsByStationResponse
+	21, // 67: waterquality.WaterQualityService.ListDataPointsByStationPost:output_type -> waterquality.ListDataPointsByStationResponse
+	23, // 68: waterquality.WaterQualityService.ListAllDataPoints:output_type -> waterquality.ListAllDataPointsResponse
+	25, // 69: waterquality.WaterQualityService.UploadData:output_type -> waterquality.UploadDataResponse
+	29, // 70: waterquality.WaterQualityService.CreateDataSourceSchema:output_type -> waterquality.CreateDataSourceSchemaResponse
+	31, // 71: waterquality.WaterQualityService.UpdateDataSourceSchema:output_type -> waterquality.UpdateDataSourceSchemaResponse
+	33, // 72: waterquality.WaterQualityService.GetDataSourceSchema:output_type -> waterquality.GetDataSourceSchemaResponse
+	35, // 73: waterquality.WaterQualityService.ListDataSourceSchemas:output_type -> waterquality.ListDataSourceSchemasResponse
+	59, // [59:74] is the sub-list for method output_type
+	44, // [44:59] is the sub-list for method input_type
+	44, // [44:44] is the sub-list for extension type_name
+	44, // [44:44] is the sub-list for extension extendee
+	0,  // [0:44] is the sub-list for field type_name
 }
 
 func init() { file_proto_water_quality_service_water_quality_proto_init() }
@@ -2459,19 +2578,19 @@ func file_proto_water_quality_service_water_quality_proto_init() {
 	file_proto_water_quality_service_water_quality_proto_msgTypes[11].OneofWrappers = []any{}
 	file_proto_water_quality_service_water_quality_proto_msgTypes[12].OneofWrappers = []any{}
 	file_proto_water_quality_service_water_quality_proto_msgTypes[13].OneofWrappers = []any{}
-	file_proto_water_quality_service_water_quality_proto_msgTypes[20].OneofWrappers = []any{
+	file_proto_water_quality_service_water_quality_proto_msgTypes[22].OneofWrappers = []any{
 		(*UploadRequest_Filename)(nil),
 		(*UploadRequest_FileType)(nil),
 		(*UploadRequest_DataChunk)(nil),
 	}
-	file_proto_water_quality_service_water_quality_proto_msgTypes[22].OneofWrappers = []any{}
+	file_proto_water_quality_service_water_quality_proto_msgTypes[24].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_water_quality_service_water_quality_proto_rawDesc), len(file_proto_water_quality_service_water_quality_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   32,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

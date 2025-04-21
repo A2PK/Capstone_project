@@ -1,0 +1,316 @@
+INFO:     Will watch for changes in these directories: ['/app']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [1] using StatReload
+INFO:     Started server process [17]
+INFO:     Waiting for application startup.
+2025-04-20 23:13:01,702 - INFO - Database initialization complete.
+INFO:     Application startup complete.
+2025-04-20 23:13:09,539 - INFO - gRPC channel opened to water-quality-service.ride-sharing.svc.cluster.local:9090
+2025-04-20 23:13:09,540 - INFO - Processing station ID: 6152c2cf-ad9c-424c-9178-a1c366845746
+2025-04-20 23:13:09,540 - INFO - Calling ListDataPointsByStationPost for station: 6152c2cf-ad9c-424c-9178-a1c366845746 with filters
+2025-04-20 23:13:10,106 - INFO - Received 51 data points (filtered for actual) for station 6152c2cf-ad9c-424c-9178-a1c366845746
+2025-04-20 23:13:10,111 - INFO - DataFrame created for station 6152c2cf-ad9c-424c-9178-a1c366845746 with 51 rows and features: ['P-PO4', 'EC', 'AH', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'N-NH4']
+2025-04-20 23:13:10,111 - INFO - Starting model training for station 6152c2cf-ad9c-424c-9178-a1c366845746...
+2025-04-20 23:13:10,111 - INFO - Starting training for place 6152c2cf-ad9c-424c-9178-a1c366845746 with date tag 200425
+2025-04-20 23:13:10,111 - INFO - Preprocessing data...
+2025-04-20 23:13:10,121 - INFO - Preprocessing complete.
+2025-04-20 23:13:10,156 - INFO - Training ETSformerPar model...
+/root/.cache/pypoetry/virtualenvs/ai-service-9TtSrW0h-py3.12/lib/python3.12/site-packages/torch/optim/lr_scheduler.py:62: UserWarning: The verbose parameter is deprecated. Please use get_last_lr() to access the learning rate.
+  warnings.warn(
+2025-04-20 23:13:20,565 - INFO - Model saved to saved_models/ETSformerPar_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+2025-04-20 23:13:20,565 - INFO - Training ETSformer model...
+/root/.cache/pypoetry/virtualenvs/ai-service-9TtSrW0h-py3.12/lib/python3.12/site-packages/torch/optim/lr_scheduler.py:62: UserWarning: The verbose parameter is deprecated. Please use get_last_lr() to access the learning rate.
+  warnings.warn(
+2025-04-20 23:13:28,740 - INFO - Model saved to saved_models/ETSformer_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+2025-04-20 23:13:28,740 - INFO - Starting training for place 6152c2cf-ad9c-424c-9178-a1c366845746 with date tag 200425
+2025-04-20 23:13:28,741 - INFO - Preprocessing data...
+2025-04-20 23:13:28,747 - INFO - Preprocessing complete.
+2025-04-20 23:13:28,747 - INFO - Training rf model...
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+2025-04-20 23:13:30,519 - INFO - Model saved to saved_models/rf_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+2025-04-20 23:13:30,519 - INFO - Training xgb model...
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+/app/MLCode.py:30: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  data[f'{col}_lag_{lag}'] = data[col].shift(lag)
+2025-04-20 23:13:31,174 - INFO - Model saved to saved_models/xgb_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+2025-04-20 23:13:31,175 - INFO - Training completed for station 6152c2cf-ad9c-424c-9178-a1c366845746. Model paths: {'ETSformerPar': 'saved_models/ETSformerPar_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl', 'ETSformer': 'saved_models/ETSformer_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl', 'rf': 'saved_models/rf_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl', 'xgb': 'saved_models/xgb_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl'}, Types: ['ETSformerPar', 'ETSformer', 'rf', 'xgb'], Evaluation: {'ETSformerPar': {'P-PO4': {'mse': 1.006861767962749, 'rmse': np.float64(1.0034250186051517), 'mae': 0.9364706742301462, 'r2': -2.62067598019627, 'HRSE': np.float64(1.4540068787615266)}, 'EC': {'mse': 1.26646082651962, 'rmse': np.float64(1.1253714171417453), 'mae': 0.8192702165318952, 'r2': -0.0009203280889478194, 'HRSE': np.float64(2.7044760624453996)}, 'AH': {'mse': 1.2620609740085322, 'rmse': np.float64(1.1234148717230568), 'mae': 0.8965350176291575, 'r2': -1.070171853214362, 'HRSE': np.float64(1.9182802430348473)}, 'TSS': {'mse': 0.4844212943627685, 'rmse': np.float64(0.6960038034111369), 'mae': 0.5507987198123356, 'r2': -0.20033331196478654, 'HRSE': np.float64(1.441440637858698)}, 'DO': {'mse': 1.2002195856446531, 'rmse': np.float64(1.095545337101415), 'mae': 0.6779097428193791, 'r2': -2.3253253834381082, 'HRSE': np.float64(3.262804827491678)}, 'pH': {'mse': 2.7328348880875017, 'rmse': np.float64(1.653128817753626), 'mae': 1.3172083089428488, 'r2': -1.8706201386155992, 'HRSE': np.float64(3.299761425474199)}, 'N-NO2': {'mse': 0.5766790318277306, 'rmse': np.float64(0.7593938581709301), 'mae': 0.6594061960200824, 'r2': -12.624321331836963, 'HRSE': np.float64(1.5262520766104002)}, 'COD': {'mse': 1.824149248919011, 'rmse': np.float64(1.3506106948040248), 'mae': 1.2032250347531528, 'r2': -2.545170183561732, 'HRSE': np.float64(2.036199994827805)}, 'N-NH4': {'mse': 0.6370669123321869, 'rmse': np.float64(0.7981647150383102), 'mae': 0.6546211381412459, 'r2': -12.638768321364507, 'HRSE': np.float64(1.5562721881431796)}}, 'ETSformer': {'P-PO4': {'mse': 0.440036661976195, 'rmse': np.float64(0.663352592499792), 'mae': 0.49010471100858927, 'r2': -0.5823723008637463, 'HRSE': np.float64(1.8179776653206272)}, 'EC': {'mse': 1.7101646660199028, 'rmse': np.float64(1.3077326431728706), 'mae': 1.1196018760394173, 'r2': -0.3515922030552032, 'HRSE': np.float64(2.544733357261149)}, 'AH': {'mse': 0.8520376790309636, 'rmse': np.float64(0.9230588708370466), 'mae': 0.687363906609714, 'r2': -0.3976063417963427, 'HRSE': np.float64(1.841280330129115)}, 'TSS': {'mse': 1.1735069048545077, 'rmse': np.float64(1.0832852370703239), 'mae': 0.7848845749445549, 'r2': -1.9077983278387824, 'HRSE': np.float64(2.6803317994673677)}, 'DO': {'mse': 1.0129384566991275, 'rmse': np.float64(1.006448437178541), 'mae': 0.7720999274266436, 'r2': -1.8064447557844585, 'HRSE': np.float64(2.1327241427199675)}, 'pH': {'mse': 1.2971865226851655, 'rmse': np.float64(1.1389409654082892), 'mae': 0.937293922326118, 'r2': -0.36258863343431824, 'HRSE': np.float64(2.609980485091737)}, 'N-NO2': {'mse': 0.5086923399167966, 'rmse': np.float64(0.7132267100416225), 'mae': 0.6129656972103779, 'r2': -11.01810281900595, 'HRSE': np.float64(1.2499677564238867)}, 'COD': {'mse': 0.8809210313211547, 'rmse': np.float64(0.9385739349252965), 'mae': 0.7697409722350557, 'r2': -0.71203917451541, 'HRSE': np.float64(1.8155702001406875)}, 'N-NH4': {'mse': 0.1253705113672077, 'rmse': np.float64(0.3540769850854581), 'mae': 0.28357972382849045, 'r2': -1.6840184692824622, 'HRSE': np.float64(0.6061550065758413)}}, 'rf': {'P-PO4': {'rmse': np.float64(0.031596386550609784), 'mae': 0.027524583333333318, 'r2': -0.37712788075600256}, 'EC': {'rmse': np.float64(45.17102528170021), 'mae': 37.1, 'r2': 0.49704405886634906}, 'AH': {'rmse': np.float64(1705.4686309297438), 'mae': 1394.779404761905, 'r2': -0.8673543630792624}, 'TSS': {'rmse': np.float64(19.05098201209061), 'mae': 14.671875, 'r2': -1.1716674083769631}, 'DO': {'rmse': np.float64(0.12344634461983864), 'mae': 0.10224999999999973, 'r2': 0.09694814814815167}, 'pH': {'rmse': np.float64(0.05843907083450375), 'mae': 0.054625000000001145, 'r2': -2.1224000000001557}, 'N-NO2': {'rmse': np.float64(0.00449422407096041), 'mae': 0.003964999999999996, 'r2': -0.2824158730158708}, 'COD': {'rmse': np.float64(1.5163601155398396), 'mae': 1.1802499999999982, 'r2': -0.3219392022996741}, 'N-NH4': {'rmse': np.float64(0.028968305740930032), 'mae': 0.02368375000000001, 'r2': 0.1802925075169035}}, 'xgb': {'P-PO4': {'rmse': np.float64(0.02968632911885368), 'mae': 0.021964013135991993, 'r2': -0.2156608487668248}, 'EC': {'rmse': np.float64(43.59719982404288), 'mae': 29.34123706817627, 'r2': 0.5314809667274887}, 'AH': {'rmse': np.float64(2006.0247431577295), 'mae': 1535.229751586914, 'r2': -1.5835200731315986}, 'TSS': {'rmse': np.float64(21.52167857574532), 'mae': 16.545374274253845, 'r2': -1.7714743378770086}, 'DO': {'rmse': np.float64(0.1967881574746837), 'mae': 0.17944781780242924, 'r2': -1.2948491213203472}, 'pH': {'rmse': np.float64(0.06908308786982996), 'mae': 0.062480914592742964, 'r2': -3.363403912805195}, 'N-NO2': {'rmse': np.float64(0.0040255256961741126), 'mae': 0.0031262136069126426, 'r2': -0.02887981781321103}, 'COD': {'rmse': np.float64(2.4622223522192757), 'mae': 1.9231683015823364, 'r2': -2.485469730085935}, 'N-NH4': {'rmse': np.float64(0.05061950672284715), 'mae': 0.04349939371645451, 'r2': -1.5029290052552629}}}
+2025-04-20 23:13:31,175 - INFO - Saving metadata for model: ETSformerPar v200425, path: saved_models/ETSformerPar_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+2025-04-20 23:13:31,175 - INFO - Use case: Creating model ETSformerPar v200425
+2025-04-20 23:13:31,745 - INFO - Created AI Model record with ID: 413eb3d4-cff7-4fb3-9b53-1461b5e9ef70
+2025-04-20 23:13:31,745 - INFO - Metadata saved successfully for model ID: 413eb3d4-cff7-4fb3-9b53-1461b5e9ef70
+2025-04-20 23:13:31,745 - INFO - Saving metadata for model: ETSformer v200425, path: saved_models/ETSformer_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+2025-04-20 23:13:31,745 - INFO - Use case: Creating model ETSformer v200425
+2025-04-20 23:13:31,846 - INFO - Created AI Model record with ID: feed7a53-ba3f-4b6f-8756-9e593ff7b8b8
+2025-04-20 23:13:31,846 - INFO - Metadata saved successfully for model ID: feed7a53-ba3f-4b6f-8756-9e593ff7b8b8
+2025-04-20 23:13:31,847 - INFO - Saving metadata for model: rf v200425, path: saved_models/rf_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+2025-04-20 23:13:31,847 - INFO - Use case: Creating model rf v200425
+2025-04-20 23:13:31,947 - INFO - Created AI Model record with ID: 294d7900-ece8-4627-a495-56fa318ef8f2
+2025-04-20 23:13:31,948 - INFO - Metadata saved successfully for model ID: 294d7900-ece8-4627-a495-56fa318ef8f2
+2025-04-20 23:13:31,948 - INFO - Saving metadata for model: xgb v200425, path: saved_models/xgb_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+2025-04-20 23:13:31,948 - INFO - Use case: Creating model xgb v200425
+2025-04-20 23:13:32,048 - INFO - Created AI Model record with ID: be426058-2807-4edc-8fc8-8237940f17d6
+2025-04-20 23:13:32,048 - INFO - Metadata saved successfully for model ID: be426058-2807-4edc-8fc8-8237940f17d6
+2025-04-20 23:13:32,048 - INFO - gRPC channel to water-quality-service.ride-sharing.svc.cluster.local:9090 closed.
+Scaler saved to: saved_models/scale_ETSformerPar_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+Starting training...
+Epoch [1/200], Loss: 2.830835
+Epoch [5/200], Loss: 2.620105
+Epoch [10/200], Loss: 2.578678
+Epoch [15/200], Loss: 2.394901
+Epoch [20/200], Loss: 2.246890
+Epoch [25/200], Loss: 2.287701
+Epoch [30/200], Loss: 2.632750
+Epoch [35/200], Loss: 2.006997
+Epoch [40/200], Loss: 2.187800
+Epoch [45/200], Loss: 2.137415
+Epoch [50/200], Loss: 2.187870
+Epoch [55/200], Loss: 2.006808
+Epoch [60/200], Loss: 2.127449
+Epoch [65/200], Loss: 2.174522
+Epoch [70/200], Loss: 2.181911
+Epoch [75/200], Loss: 2.363779
+Epoch [80/200], Loss: 2.244422
+Epoch [85/200], Loss: 2.589384
+Epoch [90/200], Loss: 2.355275
+Epoch [95/200], Loss: 2.213723
+Epoch [100/200], Loss: 2.387112
+Epoch [105/200], Loss: 2.225204
+Epoch [110/200], Loss: 2.198395
+Epoch [115/200], Loss: 2.307765
+Epoch [120/200], Loss: 2.222976
+Epoch [125/200], Loss: 2.341421
+Epoch [130/200], Loss: 2.347877
+Epoch [135/200], Loss: 2.188301
+Epoch [140/200], Loss: 2.111542
+Epoch [145/200], Loss: 2.158288
+Epoch [150/200], Loss: 2.402588
+Epoch [155/200], Loss: 2.218646
+Epoch [160/200], Loss: 2.321233
+Epoch [165/200], Loss: 2.205910
+Epoch [170/200], Loss: 2.232218
+Epoch [175/200], Loss: 2.077012
+Epoch [180/200], Loss: 2.260975
+Epoch [185/200], Loss: 2.268104
+Epoch [190/200], Loss: 2.137584
+Epoch [195/200], Loss: 2.113690
+Epoch [200/200], Loss: 2.490363
+Model saved to: saved_models/ETSformerPar_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+
+Starting evaluation...
+
+Evaluating 6152c2cf-ad9c-424c-9178-a1c366845746...
+6152c2cf-ad9c-424c-9178-a1c366845746 Metrics:
+  P-PO4: RMSE=1.003, MAE=0.936, R²=-2.621, HRSE=1.454
+  EC: RMSE=1.125, MAE=0.819, R²=-0.001, HRSE=2.704
+  AH: RMSE=1.123, MAE=0.897, R²=-1.070, HRSE=1.918
+  TSS: RMSE=0.696, MAE=0.551, R²=-0.200, HRSE=1.441
+  DO: RMSE=1.096, MAE=0.678, R²=-2.325, HRSE=3.263
+  pH: RMSE=1.653, MAE=1.317, R²=-1.871, HRSE=3.300
+  N-NO2: RMSE=0.759, MAE=0.659, R²=-12.624, HRSE=1.526
+  COD: RMSE=1.351, MAE=1.203, R²=-2.545, HRSE=2.036
+  N-NH4: RMSE=0.798, MAE=0.655, R²=-12.639, HRSE=1.556
+Scaler saved to: saved_models/scale_ETSformer_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+Starting training...
+Epoch [1/200], Loss: 1.531631
+Epoch [5/200], Loss: 1.612238
+Epoch [10/200], Loss: 1.445958
+Epoch [15/200], Loss: 1.495778
+Epoch [20/200], Loss: 1.462957
+Epoch [25/200], Loss: 1.361461
+Epoch [30/200], Loss: 1.472253
+Epoch [35/200], Loss: 1.500221
+Epoch [40/200], Loss: 1.472941
+Epoch [45/200], Loss: 1.430368
+Epoch [50/200], Loss: 1.591028
+Epoch [55/200], Loss: 1.576355
+Epoch [60/200], Loss: 1.285419
+Epoch [65/200], Loss: 1.399000
+Epoch [70/200], Loss: 1.460314
+Epoch [75/200], Loss: 1.403789
+Epoch [80/200], Loss: 1.377701
+Epoch [85/200], Loss: 1.569465
+Epoch [90/200], Loss: 1.473253
+Epoch [95/200], Loss: 1.537370
+Epoch [100/200], Loss: 1.429302
+Epoch [105/200], Loss: 1.495098
+Epoch [110/200], Loss: 1.356832
+Epoch [115/200], Loss: 1.436131
+Epoch [120/200], Loss: 1.541833
+Epoch [125/200], Loss: 1.405856
+Epoch [130/200], Loss: 1.481749
+Epoch [135/200], Loss: 1.556399
+Epoch [140/200], Loss: 1.556575
+Epoch [145/200], Loss: 1.500702
+Epoch [150/200], Loss: 1.380493
+Epoch [155/200], Loss: 1.384619
+Epoch [160/200], Loss: 1.424692
+Epoch [165/200], Loss: 1.483784
+Epoch [170/200], Loss: 1.468647
+Epoch [175/200], Loss: 1.560541
+Epoch [180/200], Loss: 1.473974
+Epoch [185/200], Loss: 1.398275
+Epoch [190/200], Loss: 1.416323
+Epoch [195/200], Loss: 1.574842
+Epoch [200/200], Loss: 1.427058
+Model saved to: saved_models/ETSformer_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+
+Starting evaluation...
+
+Evaluating 6152c2cf-ad9c-424c-9178-a1c366845746...
+6152c2cf-ad9c-424c-9178-a1c366845746 Metrics:
+  P-PO4: RMSE=0.663, MAE=0.490, R²=-0.582, HRSE=1.818
+  EC: RMSE=1.308, MAE=1.120, R²=-0.352, HRSE=2.545
+  AH: RMSE=0.923, MAE=0.687, R²=-0.398, HRSE=1.841
+  TSS: RMSE=1.083, MAE=0.785, R²=-1.908, HRSE=2.680
+  DO: RMSE=1.006, MAE=0.772, R²=-1.806, HRSE=2.133
+  pH: RMSE=1.139, MAE=0.937, R²=-0.363, HRSE=2.610
+  N-NO2: RMSE=0.713, MAE=0.613, R²=-11.018, HRSE=1.250
+  COD: RMSE=0.939, MAE=0.770, R²=-0.712, HRSE=1.816
+  N-NH4: RMSE=0.354, MAE=0.284, R²=-1.684, HRSE=0.606
+Multivariate model saved to: saved_models/rf_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+Multivariate model saved to: saved_models/xgb_multitarget_place6152c2cf-ad9c-424c-9178-a1c366845746_200425.pkl
+INFO:     127.0.0.1:46510 - "POST /api/v2/models/train-station-models HTTP/1.1" 200 OK
+2025-04-20 23:13:44,240 - INFO - Prediction: gRPC channel opened to water-quality-service.ride-sharing.svc.cluster.local:9090
+2025-04-20 23:13:44,386 - INFO - Found existing prediction DataSourceSchema: 00fe0c72-1494-4498-8b64-ca8d5346b838
+2025-04-20 23:13:44,386 - INFO - Prediction: Processing station ID: 6152c2cf-ad9c-424c-9178-a1c366845746
+2025-04-20 23:13:44,386 - INFO - Prediction: Calling ListDataPointsByStationPost for 6152c2cf-ad9c-424c-9178-a1c366845746 with filters
+2025-04-20 23:13:44,535 - INFO - Prediction: Finding newest 'ETSformerPar' model for 6152c2cf-ad9c-424c-9178-a1c366845746
+2025-04-20 23:13:44,535 - INFO - Use case: Finding newest model for station 6152c2cf-ad9c-424c-9178-a1c366845746 type ETSformerPar
+2025-04-20 23:13:44,733 - INFO - Prediction: Found model ETSformerPar v200425. Required params: {'P-PO4', 'EC', 'N-NH4', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'AH'}. Available features in input: {'P-PO4', 'EC', 'N-NH4', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'AH'}
+2025-04-20 23:13:44,733 - INFO - Prediction: Calling predict for station 6152c2cf-ad9c-424c-9178-a1c366845746 using model 413eb3d4-cff7-4fb3-9b53-1461b5e9ef70 (ETSformerPar) version 200425 with elements: ['P-PO4', 'EC', 'AH', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'N-NH4']
+2025-04-20 23:13:44,733 - INFO - Starting prediction for place 6152c2cf-ad9c-424c-9178-a1c366845746 with model date tag 200425
+2025-04-20 23:13:44,733 - INFO - Preprocessing data...
+2025-04-20 23:13:44,739 - INFO - Preprocessing complete.
+2025-04-20 23:13:44,739 - INFO - Running prediction with ETSformerPar model...
+2025-04-20 23:13:44,765 - INFO - Prediction successful with ETSformerPar
+2025-04-20 23:13:44,766 - INFO - Running prediction with ETSformer model...
+2025-04-20 23:13:44,790 - INFO - Prediction successful with ETSformer
+2025-04-20 23:13:44,791 - INFO - Prediction: predictWithMLModel completed for 6152c2cf-ad9c-424c-9178-a1c366845746, type ETSformerPar
+2025-04-20 23:13:44,791 - INFO - Prediction: Skipping WQI calculation for step 2024-07-23 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:44,791 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-07-23 00:00:00'), 'P-PO4': np.float32(0.06428363), 'EC': np.float32(284.46103), 'AH': np.float32(3216.8787), 'TSS': np.float32(17.77845), 'DO': np.float32(4.5699816), 'pH': np.float32(7.5171194), 'N-NO2': np.float32(0.010531846), 'COD': np.float32(1.6172761), 'N-NH4': np.float32(0.035873383)}
+2025-04-20 23:13:44,791 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:44,791 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:44,792 - INFO - Prediction: Skipping WQI calculation for step 2024-07-30 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:44,792 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-07-30 00:00:00'), 'P-PO4': np.float32(-0.036990024), 'EC': np.float32(287.17752), 'AH': np.float32(3025.4192), 'TSS': np.float32(14.374271), 'DO': np.float32(4.866452), 'pH': np.float32(7.5789905), 'N-NO2': np.float32(0.007609842), 'COD': np.float32(2.982588), 'N-NH4': np.float32(0.038667753)}
+2025-04-20 23:13:44,792 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:44,792 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:44,792 - INFO - Prediction: Skipping WQI calculation for step 2024-08-06 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:44,792 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-08-06 00:00:00'), 'P-PO4': np.float32(-0.029346377), 'EC': np.float32(326.71222), 'AH': np.float32(-255.02144), 'TSS': np.float32(1.6720103), 'DO': np.float32(4.8887), 'pH': np.float32(7.591394), 'N-NO2': np.float32(0.00022096118), 'COD': np.float32(5.359568), 'N-NH4': np.float32(0.21166109)}
+2025-04-20 23:13:44,792 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:44,792 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:44,792 - INFO - Prediction: Skipping WQI calculation for step 2024-08-13 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:44,792 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-08-13 00:00:00'), 'P-PO4': np.float32(0.0539749), 'EC': np.float32(301.7696), 'AH': np.float32(-2128.7554), 'TSS': np.float32(37.15075), 'DO': np.float32(5.3053966), 'pH': np.float32(7.7475734), 'N-NO2': np.float32(-0.035032317), 'COD': np.float32(6.9014764), 'N-NH4': np.float32(0.2875148)}
+2025-04-20 23:13:44,792 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:44,792 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:44,792 - INFO - Prediction: Skipping WQI calculation for step 2024-08-20 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:44,792 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-08-20 00:00:00'), 'P-PO4': np.float32(0.06305024), 'EC': np.float32(360.3989), 'AH': np.float32(353.57977), 'TSS': np.float32(12.148088), 'DO': np.float32(5.208657), 'pH': np.float32(7.6107383), 'N-NO2': np.float32(-0.004372059), 'COD': np.float32(5.87153), 'N-NH4': np.float32(0.086925045)}
+2025-04-20 23:13:44,792 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:44,792 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:44,793 - INFO - Prediction: Skipping WQI calculation for step 2024-08-27 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:44,793 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-08-27 00:00:00'), 'P-PO4': np.float32(0.03088884), 'EC': np.float32(252.06628), 'AH': np.float32(-1489.3909), 'TSS': np.float32(40.93546), 'DO': np.float32(5.28016), 'pH': np.float32(7.8159337), 'N-NO2': np.float32(-0.028090859), 'COD': np.float32(7.5637097), 'N-NH4': np.float32(0.3438324)}
+2025-04-20 23:13:44,793 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:44,793 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:44,793 - INFO - Prediction: Skipping WQI calculation for step 2024-09-03 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:44,793 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-09-03 00:00:00'), 'P-PO4': np.float32(-0.06688615), 'EC': np.float32(341.317), 'AH': np.float32(-174.9861), 'TSS': np.float32(46.830555), 'DO': np.float32(4.934274), 'pH': np.float32(7.8362966), 'N-NO2': np.float32(-0.04219221), 'COD': np.float32(7.716444), 'N-NH4': np.float32(0.19899726)}
+2025-04-20 23:13:44,793 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:44,793 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:44,981 - INFO - Prediction: Created 7 points.
+2025-04-20 23:13:44,982 - INFO - Prediction: Finding newest 'ETSformer' model for 6152c2cf-ad9c-424c-9178-a1c366845746
+2025-04-20 23:13:44,982 - INFO - Use case: Finding newest model for station 6152c2cf-ad9c-424c-9178-a1c366845746 type ETSformer
+2025-04-20 23:13:45,015 - INFO - Prediction: Found model ETSformerPar v200425. Required params: {'P-PO4', 'EC', 'N-NH4', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'AH'}. Available features in input: {'P-PO4', 'EC', 'N-NH4', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'AH'}
+2025-04-20 23:13:45,015 - INFO - Prediction: Calling predict for station 6152c2cf-ad9c-424c-9178-a1c366845746 using model 413eb3d4-cff7-4fb3-9b53-1461b5e9ef70 (ETSformerPar) version 200425 with elements: ['P-PO4', 'EC', 'AH', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'N-NH4']
+2025-04-20 23:13:45,015 - INFO - Starting prediction for place 6152c2cf-ad9c-424c-9178-a1c366845746 with model date tag 200425
+2025-04-20 23:13:45,015 - INFO - Preprocessing data...
+2025-04-20 23:13:45,021 - INFO - Preprocessing complete.
+2025-04-20 23:13:45,021 - INFO - Running prediction with ETSformerPar model...
+2025-04-20 23:13:45,047 - INFO - Prediction successful with ETSformerPar
+2025-04-20 23:13:45,047 - INFO - Running prediction with ETSformer model...
+2025-04-20 23:13:45,073 - INFO - Prediction successful with ETSformer
+2025-04-20 23:13:45,074 - INFO - Prediction: predictWithMLModel completed for 6152c2cf-ad9c-424c-9178-a1c366845746, type ETSformer
+2025-04-20 23:13:45,074 - INFO - Prediction: Skipping WQI calculation for step 2024-07-23 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:45,074 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-07-23 00:00:00'), 'P-PO4': np.float32(0.06557511), 'EC': np.float32(242.51515), 'AH': np.float32(1458.8969), 'TSS': np.float32(30.128532), 'DO': np.float32(4.749607), 'pH': np.float32(7.544741), 'N-NO2': np.float32(0.0211996), 'COD': np.float32(6.3427258), 'N-NH4': np.float32(0.047323816)}
+2025-04-20 23:13:45,074 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:45,074 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:45,074 - INFO - Prediction: Skipping WQI calculation for step 2024-07-30 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:45,074 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-07-30 00:00:00'), 'P-PO4': np.float32(0.05085321), 'EC': np.float32(228.22557), 'AH': np.float32(291.0473), 'TSS': np.float32(18.257532), 'DO': np.float32(4.7947974), 'pH': np.float32(7.437805), 'N-NO2': np.float32(0.03517654), 'COD': np.float32(5.349531), 'N-NH4': np.float32(-0.07978968)}
+2025-04-20 23:13:45,075 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:45,075 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:45,075 - INFO - Prediction: Skipping WQI calculation for step 2024-08-06 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:45,075 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-08-06 00:00:00'), 'P-PO4': np.float32(0.034992836), 'EC': np.float32(260.0652), 'AH': np.float32(561.155), 'TSS': np.float32(20.76641), 'DO': np.float32(4.8397264), 'pH': np.float32(7.5027523), 'N-NO2': np.float32(0.028159562), 'COD': np.float32(3.066717), 'N-NH4': np.float32(-0.094273835)}
+2025-04-20 23:13:45,075 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:45,075 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:45,075 - INFO - Prediction: Skipping WQI calculation for step 2024-08-13 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:45,075 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-08-13 00:00:00'), 'P-PO4': np.float32(0.03768243), 'EC': np.float32(248.82175), 'AH': np.float32(-340.24884), 'TSS': np.float32(32.668083), 'DO': np.float32(4.74477), 'pH': np.float32(7.5102177), 'N-NO2': np.float32(0.0054028924), 'COD': np.float32(2.826724), 'N-NH4': np.float32(0.14694266)}
+2025-04-20 23:13:45,075 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:45,075 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:45,076 - INFO - Prediction: Skipping WQI calculation for step 2024-08-20 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:45,076 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-08-20 00:00:00'), 'P-PO4': np.float32(0.038515568), 'EC': np.float32(228.80414), 'AH': np.float32(1447.2648), 'TSS': np.float32(19.802185), 'DO': np.float32(4.904078), 'pH': np.float32(7.443992), 'N-NO2': np.float32(0.02031679), 'COD': np.float32(5.178031), 'N-NH4': np.float32(0.008249774)}
+2025-04-20 23:13:45,076 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:45,076 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:45,076 - INFO - Prediction: Skipping WQI calculation for step 2024-08-27 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:45,076 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-08-27 00:00:00'), 'P-PO4': np.float32(0.028658016), 'EC': np.float32(230.49055), 'AH': np.float32(2488.0237), 'TSS': np.float32(10.790997), 'DO': np.float32(5.1400537), 'pH': np.float32(7.507837), 'N-NO2': np.float32(0.00046416398), 'COD': np.float32(3.8792596), 'N-NH4': np.float32(-0.09892298)}
+2025-04-20 23:13:45,076 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:45,076 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:45,076 - INFO - Prediction: Skipping WQI calculation for step 2024-09-03 00:00:00+00:00. Missing or invalid feature: pH
+2025-04-20 23:13:45,076 - INFO - Prediction: Predicted step: {'timestamp': Timestamp('2024-09-03 00:00:00'), 'P-PO4': np.float32(0.043468975), 'EC': np.float32(251.41988), 'AH': np.float32(-165.26234), 'TSS': np.float32(31.080217), 'DO': np.float32(4.9901333), 'pH': np.float32(7.5131993), 'N-NO2': np.float32(-0.0070149717), 'COD': np.float32(2.783599), 'N-NH4': np.float32(0.0367511)}
+2025-04-20 23:13:45,076 - INFO - Prediction: Required features: {'pH': 'ph', 'DO': 'DO', 'EC': 'EC', 'N-NO2': 'N_NO2', 'N-NH4': 'N_NH4', 'P-PO4': 'P_PO4', 'TSS': 'TSS', 'COD': 'COD', 'AH': 'Aeromonas'}
+2025-04-20 23:13:45,076 - INFO - Prediction: WQI params: {}
+2025-04-20 23:13:45,198 - INFO - Prediction: Created 7 points.
+2025-04-20 23:13:45,198 - INFO - gRPC channel to water-quality-service.ride-sharing.svc.cluster.local:9090 closed.
+
+--- Predicting 7 steps ahead for Place=6152c2cf-ad9c-424c-9178-a1c366845746, Elements=['P-PO4', 'EC', 'AH', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'N-NH4'] ---
+
+--- Multi-step prediction complete ---
+
+--- Predicting 7 steps ahead for Place=6152c2cf-ad9c-424c-9178-a1c366845746, Elements=['P-PO4', 'EC', 'AH', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'N-NH4'] ---
+
+--- Multi-step prediction complete ---
+
+--- Predicting 7 steps ahead for Place=6152c2cf-ad9c-424c-9178-a1c366845746, Elements=['P-PO4', 'EC', 'AH', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'N-NH4'] ---
+
+--- Multi-step prediction complete ---
+
+--- Predicting 7 steps ahead for Place=6152c2cf-ad9c-424c-9178-a1c366845746, Elements=['P-PO4', 'EC', 'AH', 'TSS', 'DO', 'pH', 'N-NO2', 'COD', 'N-NH4'] ---
+
+--- Multi-step prediction complete ---
+INFO:     127.0.0.1:51876 - "POST /api/v2/models/predict-station-models HTTP/1.1" 200 OK

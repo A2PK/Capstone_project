@@ -335,6 +335,59 @@ func (s *waterQualityServer) ListDataPointsByStation(ctx context.Context, req *p
 	return response, nil
 }
 
+// --- New DataPoint List Methods ---
+
+// ListDataPointsByStationPost implements the pb.WaterQualityServiceServer.ListDataPointsByStationPost method
+// This version expects the station_id and filters in the POST body.
+func (s *waterQualityServer) ListDataPointsByStationPost(ctx context.Context, req *pb.ListDataPointsByStationRequest) (*pb.ListDataPointsByStationResponse, error) {
+	if req == nil || req.StationId == "" {
+		return nil, status.Errorf(http.StatusBadRequest, "station ID is required in the request body")
+	}
+
+	stationID, err := uuid.Parse(req.StationId)
+	if err != nil {
+		return nil, status.Errorf(http.StatusBadRequest, "invalid station ID format: %v", err)
+	}
+
+	// Use the existing mapper to convert the request to filter options
+	// This mapper implicitly handles the station_id filter within the options map
+	opts := s.mapper.ProtoListDataPointsRequestToFilterOptions(req)
+
+	// Use the existing use case method
+	result, err := s.dataPointUC.ListByStation(ctx, stationID, opts)
+	if err != nil {
+		return nil, coreController.MapErrorToHttpStatus(err)
+	}
+
+	// Use the existing mapper to convert the result to the proto response
+	response, err := s.mapper.DataPointPaginationResultToProtoList(result)
+	if err != nil {
+		return nil, status.Errorf(http.StatusInternalServerError, "failed to map data point pagination result: %v", err)
+	}
+
+	return response, nil
+}
+
+// ListAllDataPoints implements the pb.WaterQualityServiceServer.ListAllDataPoints method
+func (s *waterQualityServer) ListAllDataPoints(ctx context.Context, req *pb.ListAllDataPointsRequest) (*pb.ListAllDataPointsResponse, error) {
+	// Use the new mapper to convert the request to filter options (without station_id filter)
+	opts := s.mapper.ProtoListAllDataPointsRequestToFilterOptions(req)
+
+	// Call the base use case's List method (assuming it handles general listing without station ID)
+	result, err := s.dataPointUC.List(ctx, opts)
+	if err != nil {
+		return nil, coreController.MapErrorToHttpStatus(err)
+	}
+
+	// Use the new mapper to convert the result to the ListAllDataPointsResponse proto
+	response, err := s.mapper.DataPointPaginationResultToProtoListAll(result)
+	if err != nil {
+		return nil, status.Errorf(http.StatusInternalServerError, "failed to map all data point pagination result: %v", err)
+	}
+
+	return response, nil
+}
+
 // --- File Upload Method ---
 
 // UploadData implements the streaming pb.WaterQualityServiceServer.UploadData method

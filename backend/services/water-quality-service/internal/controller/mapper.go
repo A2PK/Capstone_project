@@ -39,6 +39,10 @@ type Mapper interface {
 	ApplyProtoDataSourceSchemaUpdateToEntity(req *pb.DataSourceSchema, existingSchema *entity.DataSourceSchema) error
 	ProtoListDataSourceSchemasRequestToFilterOptions(req *pb.ListDataSourceSchemasRequest) coreTypes.FilterOptions
 	DataSourceSchemaPaginationResultToProtoList(result *coreTypes.PaginationResult[entity.DataSourceSchema]) (*pb.ListDataSourceSchemasResponse, error)
+
+	// Add mappings for ListAllDataPoints
+	ProtoListAllDataPointsRequestToFilterOptions(req *pb.ListAllDataPointsRequest) coreTypes.FilterOptions
+	DataPointPaginationResultToProtoListAll(result *coreTypes.PaginationResult[entity.DataPoint]) (*pb.ListAllDataPointsResponse, error)
 }
 
 // Ensure WaterQualityMapper implements Mapper interface.
@@ -532,6 +536,67 @@ func (m *WaterQualityMapper) DataPointPaginationResultToProtoList(result *coreTy
 	}
 
 	return &pb.ListDataPointsByStationResponse{
+		DataPoints: protoDataPoints,
+		Pagination: &corePb.PaginationInfo{
+			TotalItems: result.TotalItems,
+			Limit:      int32(result.Limit),
+			Offset:     int32(result.Offset),
+		},
+	}, nil
+}
+
+// ProtoListAllDataPointsRequestToFilterOptions maps ListAllDataPointsRequest to core FilterOptions.
+func (m *WaterQualityMapper) ProtoListAllDataPointsRequestToFilterOptions(req *pb.ListAllDataPointsRequest) coreTypes.FilterOptions {
+	opts := coreTypes.DefaultFilterOptions()
+	if req == nil || req.Options == nil {
+		return opts
+	}
+
+	// No station_id filter applied here
+	if req.Options.Limit != nil {
+		opts.Limit = int(*req.Options.Limit)
+	}
+	if req.Options.Offset != nil {
+		opts.Offset = int(*req.Options.Offset)
+	}
+	if req.Options.SortBy != nil {
+		opts.SortBy = *req.Options.SortBy
+	}
+	if req.Options.SortDesc != nil {
+		opts.SortDesc = *req.Options.SortDesc
+	}
+	if req.Options.IncludeDeleted != nil {
+		opts.IncludeDeleted = *req.Options.IncludeDeleted
+	}
+
+	if len(req.Options.Filters) > 0 {
+		opts.Filters = make(map[string]interface{}, len(req.Options.Filters))
+		for k, v := range req.Options.Filters {
+			opts.Filters[k] = mapProtoValueToGo(v)
+		}
+	}
+	return opts
+}
+
+// DataPointPaginationResultToProtoListAll maps a PaginationResult to ListAllDataPointsResponse.
+func (m *WaterQualityMapper) DataPointPaginationResultToProtoListAll(result *coreTypes.PaginationResult[entity.DataPoint]) (*pb.ListAllDataPointsResponse, error) {
+	if result == nil {
+		return &pb.ListAllDataPointsResponse{
+			DataPoints: []*pb.DataPoint{},
+			Pagination: &corePb.PaginationInfo{TotalItems: 0, Limit: 0, Offset: 0},
+		}, nil
+	}
+
+	protoDataPoints := make([]*pb.DataPoint, 0, len(result.Items))
+	for _, dp := range result.Items {
+		protoDP, err := m.DataPointEntityToProto(dp)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map data point entity %s to proto: %w", dp.ID.String(), err)
+		}
+		protoDataPoints = append(protoDataPoints, protoDP)
+	}
+
+	return &pb.ListAllDataPointsResponse{
 		DataPoints: protoDataPoints,
 		Pagination: &corePb.PaginationInfo{
 			TotalItems: result.TotalItems,
