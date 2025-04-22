@@ -9,6 +9,7 @@ import Link from "next/link";
 import ReportPublisher from "@/components/report-publisher"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PageLoader from "@/components/pageloader";
+import Image from "next/image";
 interface NewsItem {
   title: string;
   description: string;
@@ -140,7 +141,7 @@ const NewsPage = () => {
         {displayedNews.map((item, index) => (
           <Link key={index} href="/newsadmindetail" className="block h-full">
             <Card className="hover:shadow-lg transition-shadow flex flex-col h-full">
-              <img
+              <Image
                 src={item.imageUrl}
                 alt={item.title}
                 className="w-full h-64 object-cover rounded-t-md"

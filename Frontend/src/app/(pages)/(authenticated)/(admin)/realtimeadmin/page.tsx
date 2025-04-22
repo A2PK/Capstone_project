@@ -220,7 +220,7 @@ export default function Realtimedata() {
 
     // --- Sorting Logic ---
     // --- Sorting Logic ---
-    const getSortValue = (item: DisplayRowData, key: string): number | string | Date | null => {
+    const getSortValue = useCallback((item: DisplayRowData, key: string): number | string | Date | null => {
         // Xử lý các key đặc biệt trước
         if (key === 'monitoringTime') {
             try { return parseISO(item.monitoringTime); } catch { return null; }
@@ -260,12 +260,13 @@ export default function Realtimedata() {
         else {
             return potentialValue !== null && potentialValue !== undefined ? String(potentialValue) : null;
         }
-    };
+    }, []); // <-- Empty dependency array for useCallback
 
     const sortedData = useMemo(() => {
         let sortableItems = [...filteredDisplayData];
         if (sortConfig) {
             sortableItems.sort((a, b) => {
+                // Pass the memoized getSortValue function here
                 const valueA = getSortValue(a, sortConfig.key);
                 const valueB = getSortValue(b, sortConfig.key);
 
@@ -286,6 +287,7 @@ export default function Realtimedata() {
             });
         }
         return sortableItems;
+    // Keep getSortValue in the dependency array now that it's stable
     }, [filteredDisplayData, sortConfig, getSortValue]);
 
     // --- Pagination Logic ---

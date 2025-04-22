@@ -5,70 +5,31 @@ import dynamic from "next/dynamic"; // For client-side only components like Leaf
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import "leaflet/dist/leaflet.css"; // Leaflet CSS
-import L, { Icon, DivIcon, PointTuple, point as leafletPoint, LatLngExpression } from 'leaflet'; // Import Leaflet types directly
-import { MapPin, AlertTriangle, ArrowRight, ServerCrash, CheckCircle, Droplet } from "lucide-react";
+import { MapPin, AlertTriangle, ArrowRight, ServerCrash, CheckCircle } from "lucide-react";
 import PageLoader from "@/components/pageloader"; // Your loader component
 import { cn } from "@/lib/utils"; // Utility for class names
-// Import necessary types and functions
 import {
     Station,
     DataPoint,
-    QueryOptions, // Keep for getStations if needed
     ApiRequestDataPointsByStationId, // Use this for filtering
-    RequestOptions // Part of ApiRequestDataPointsByStationId
 } from "@/types/station2";
 import { getStations, getAllDataPointsByStationID } from "@/lib/station"; // Use the correct API function
 import { format, parseISO, isValid as isValidDate } from "date-fns"; // For date formatting
 
 // --- Dynamic Imports for Leaflet (Client-side only) ---
+// Don't import L directly at the top level - will move inside useEffect
 const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), { ssr: false });
 const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), { ssr: false });
 const MarkerClusterGroup = dynamic(() => import("react-leaflet-cluster"), { ssr: false });
 
-// --- Leaflet Icons (Client-side setup) ---
-let redIcon: Icon | undefined, blueIcon: Icon | undefined, createClusterCustomIcon: ((cluster: any) => DivIcon) | undefined;
-if (typeof window !== "undefined") {
-    // Use the imported L directly
-    redIcon = new L.Icon({
-        iconUrl: "/red_one.png",
-        iconSize: [38, 38] as PointTuple,
-        iconAnchor: [19, 38] as PointTuple,
-        popupAnchor: [0, -38] as PointTuple,
-    });
-
-    blueIcon = new L.Icon({
-        iconUrl: "/blue_one.png",
-        iconSize: [38, 38] as PointTuple,
-        iconAnchor: [19, 38] as PointTuple,
-        popupAnchor: [0, -38] as PointTuple,
-    });
-
-    createClusterCustomIcon = (cluster: any): DivIcon => {
-        const count = cluster.getChildCount();
-        const style = `
-            background-color: rgba(51, 51, 51, 0.8);
-            height: 2.5em;
-            width: 2.5em;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-size: 1rem;
-            font-weight: bold;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-            border: 2px solid #fff;
-        `;
-        return L.divIcon({
-            html: `<span style="${style}">${count}</span>`,
-            className: "custom-marker-cluster",
-            iconSize: leafletPoint(40, 40, true),
-        });
-    };
-}
+// Type for Leaflet types we'll use
+type LeafletIcons = {
+    redIcon: any;
+    blueIcon: any;
+    createClusterCustomIcon: any;
+};
 
 // --- Helper Functions ---
 
@@ -116,7 +77,7 @@ function formatMonitoringTime(timeString: string | undefined | null): string {
         return format(date, 'HH:mm, dd/MM/yyyy'); // Format as HH:mm, dd/MM/yyyy
     } catch (e) {
         console.error("Failed to format time:", timeString, e);
-        return timeString; // Return original on error
+        return timeString; 
     }
 }
 
@@ -127,7 +88,6 @@ interface StationDisplayData extends Station {
     errorData: string | null; // Track error specific to this station's data
 }
 
-
 // --- Main Component ---
 export default function HomePage() {
     // --- State ---
@@ -135,10 +95,74 @@ export default function HomePage() {
     const [selectedStationId, setSelectedStationId] = useState<string | null>(null); // Track selected station on map
     const [isLoading, setIsLoading] = useState(true); // Overall loading state
     const [error, setError] = useState<string | null>(null); // Overall error state
+    const [isClient, setIsClient] = useState(false); // Track if we're on client-side
+    
+    // Leaflet icons state
+    const [leafletIcons, setLeafletIcons] = useState<LeafletIcons | null>(null);
 
     // --- Constants ---
-    const initialMapCenter: LatLngExpression = [10.8231, 106.6297]; // HCMC default center
+    // Define as tuple with exactly 2 elements (explicitly typed)
+    const initialMapCenter: [number, number] = [10.8231, 106.6297]; // HCMC default center
     const initialMapZoom = 10; // Default map zoom
+
+    // Client-side detection effect
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    // Leaflet initialization effect - ONLY runs client-side
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            // Dynamic import of Leaflet
+            Promise.all([
+                import('leaflet'),
+                // Create a dynamic import for CSS that won't be processed by TypeScript
+                // This avoids the "cannot find module" TypeScript error
+                import('leaflet/dist/leaflet.css' as any)
+            ]).then(([L]) => {
+                const redIcon = new L.Icon({
+                    iconUrl: "/red_one.png",
+                    iconSize: [38, 38],
+                    iconAnchor: [19, 38],
+                    popupAnchor: [0, -38],
+                });
+
+                const blueIcon = new L.Icon({
+                    iconUrl: "/blue_one.png",
+                    iconSize: [38, 38],
+                    iconAnchor: [19, 38],
+                    popupAnchor: [0, -38],
+                });
+
+                const createClusterCustomIcon = (cluster: any) => {
+                    const count = cluster.getChildCount();
+                    const style = `
+                        background-color: rgba(51, 51, 51, 0.8);
+                        height: 2.5em;
+                        width: 2.5em;
+                        color: #fff;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 50%;
+                        font-size: 1rem;
+                        font-weight: bold;
+                        box-shadow: 0 0 5px rgba(0,0,0,0.5);
+                        border: 2px solid #fff;
+                    `;
+                    return L.divIcon({
+                        html: `<span style="${style}">${count}</span>`,
+                        className: "custom-marker-cluster",
+                        iconSize: L.point(40, 40),
+                    });
+                };
+
+                setLeafletIcons({ redIcon, blueIcon, createClusterCustomIcon });
+            }).catch(err => {
+                console.error("Failed to load Leaflet:", err);
+            });
+        }
+    }, []);
 
     // --- Data Fetching Effect ---
     useEffect(() => {
@@ -295,20 +319,20 @@ export default function HomePage() {
                     <AlertTriangle className="w-6 h-6 mr-2 text-yellow-500" />
                     Dashboard Cảnh báo (Dữ liệu thực tế mới nhất)
                 </h2>
-                {isLoading && stationDisplayData.length > 0 && ( // Show skeleton or message if still loading latest data
+                {isLoading && stationDisplayData.length > 0 && ( 
                     <p className="text-gray-500 italic">Đang cập nhật trạng thái trạm...</p>
-                    // Optionally render skeleton cards here
+                    
                 )}
                 {!isLoading && warningStations.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {warningStations.map((station) => {
-                            // We already filtered for stations with data in warningStations memo
+                            
                             const status = station.latestData!.status;
                             const wqi = station.latestData!.wqi;
                             const time = formatMonitoringTime(station.latestData!.monitoringTime);
                             const statusStyle = getStatusTailwindClasses(status);
 
-                            // Basic recommendation based on status
+                            
                             let recommendation = "Xem xét chi tiết.";
                             if (status === "Kém") recommendation = "Chỉ dùng cho giao thông thủy.";
                             if (status === "Rất Kém") recommendation = "Ô nhiễm nặng, cần xử lý.";
@@ -335,15 +359,15 @@ export default function HomePage() {
                                             </strong>
                                         </div>
                                         <p className="text-sm text-gray-700 italic">
-                                            <span className="font-medium text-gray-800">Khuyến nghị:</span> "{recommendation}"
+                                            <span className="font-medium text-gray-800">Khuyến nghị:</span> {'"'}{recommendation}{'"'}
                                         </p>
-                                        {/* Show specific error if fetching data for this station failed */}
+                                        
                                         {station.errorData && <p className="text-xs text-red-500 italic mt-1">{station.errorData}</p>}
                                     </CardContent>
                                     <CardFooter className="pt-2 pb-3 border-t border-gray-200 mt-auto">
-                                        {/* Link to the specific station detail page */}
+                                        
                                         <Button asChild variant="link" size="sm" className="p-0 h-auto text-blue-600 hover:text-blue-800 font-medium">
-                                            <Link href={`/dashboardofficer/stations?id=${station.id}`}> {/* Adjust path if needed */}
+                                            <Link href={`/dashboardofficer/stations?id=${station.id}`}> 
                                                 Xem chi tiết
                                                 <ArrowRight className="w-4 h-4 ml-1" />
                                             </Link>
@@ -353,7 +377,7 @@ export default function HomePage() {
                             );
                         })}
                     </div>
-                ) : !isLoading ? ( // Only show "No Warnings" card if not loading and no warning stations
+                ) : !isLoading ? ( 
                     <Card className="border-green-500 bg-green-50 border-l-4">
                         <CardHeader className="flex flex-row items-center space-x-3 pb-4">
                             <CheckCircle className="w-6 h-6 text-green-600" />
@@ -363,17 +387,16 @@ export default function HomePage() {
                             <p className="text-sm text-green-800">Tất cả các trạm đang có chỉ số WQI thực tế (actual) mới nhất từ mức Trung bình trở lên, hoặc không có dữ liệu thực tế gần đây.</p>
                         </CardContent>
                     </Card>
-                ) : null /* Don't show anything while initial loading */ }
+                ) : null  }
             </section>
 
-            {/* === Bản đồ địa lý === */}
+            
             <section>
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Bản đồ Trạm quan trắc</h2>
-                <div className="relative w-full h-[500px] border border-gray-300 rounded-lg overflow-hidden shadow-md z-0"> {/* Ensure z-index is lower than popups */}
-                    {/* Check if window is defined for client-side rendering */}
-                    {typeof window !== 'undefined' && MapContainer && TileLayer && Marker && Popup && MarkerClusterGroup && redIcon && blueIcon && createClusterCustomIcon && (
+                <div className="relative w-full h-[500px] border border-gray-300 rounded-lg overflow-hidden shadow-md z-0"> 
+                    {isClient && leafletIcons && (
                         <MapContainer
-                            key="leaflet-map-home" // Unique key
+                            key="leaflet-map-home" 
                             center={initialMapCenter}
                             zoom={initialMapZoom}
                             style={{ height: "100%", width: "100%" }}
@@ -384,36 +407,36 @@ export default function HomePage() {
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
 
-                            {/* Marker Clustering */}
+                            
                             {uniqueStationsForMap.length > 0 && (
                                 <MarkerClusterGroup
                                     chunkedLoading
-                                    iconCreateFunction={createClusterCustomIcon}
+                                    iconCreateFunction={leafletIcons.createClusterCustomIcon}
                                     maxClusterRadius={60}
                                 >
-                                    {/* Map through unique stations */}
+                                    
                                     {uniqueStationsForMap.map((station) => {
                                         const isValidPosition = typeof station.latitude === 'number' && typeof station.longitude === 'number';
-                                        if (!isValidPosition) return null; // Skip if invalid coords
+                                        if (!isValidPosition) return null; 
 
                                         const isSelected = selectedStationId === station.id;
                                         const status = station.latestData?.status || "Không xác định";
                                         const wqi = station.latestData?.wqi;
                                         const time = formatMonitoringTime(station.latestData?.monitoringTime);
                                         const statusStyle = getStatusTailwindClasses(status);
-                                        const displayIcon = isSelected ? blueIcon : redIcon; // Use defined icons
+                                        const displayIcon = isSelected ? leafletIcons.blueIcon : leafletIcons.redIcon; 
 
                                         return (
                                             <Marker
                                                 key={station.id}
-                                                position={[station.latitude, station.longitude]}
-                                                icon={displayIcon} // Use the variable
+                                                position={[station.latitude, station.longitude] as [number, number]}
+                                                icon={displayIcon} 
                                                 eventHandlers={{
                                                     click: () => handleSelectStation(station),
                                                 }}
-                                                zIndexOffset={isSelected ? 1000 : 0} // Bring selected to front
+                                                zIndexOffset={isSelected ? 1000 : 0} 
                                             >
-                                                <Popup minWidth={200}> {/* Popup content */}
+                                                <Popup minWidth={200}> 
                                                     <div className="text-sm space-y-1">
                                                         <h3 className="text-md font-bold mb-1">{station.name}</h3>
                                                         <p className="text-xs text-gray-600">
@@ -421,7 +444,7 @@ export default function HomePage() {
                                                         </p>
                                                         <hr className="my-1" />
                                                         <p className="text-xs font-semibold text-gray-700">Dữ liệu thực tế mới nhất:</p>
-                                                        {/* Show data loading state or actual data */}
+                                                        
                                                         {station.isLoadingData ? (
                                                             <p className="text-xs text-gray-500 italic">Đang tải trạng thái...</p>
                                                         ) : station.errorData ? (
@@ -435,10 +458,10 @@ export default function HomePage() {
                                                         ) : (
                                                             <p className="text-xs text-gray-500 italic">Không có dữ liệu thực tế gần đây.</p>
                                                         )}
-                                                        {/* Link to details page */}
+                                                        
                                                         <div className="mt-2 pt-1 border-t">
                                                             <Button asChild variant="link" size="sm" className="p-0 h-auto text-xs text-blue-600 hover:text-blue-800 font-medium">
-                                                                <Link href={`/dashboardofficer/stations?id=${station.id}`}> {/* Adjust path */}
+                                                                <Link href={`/dashboardofficer/stations?id=${station.id}`}> 
                                                                     Xem thêm
                                                                     <ArrowRight className="w-3 h-3 ml-1" />
                                                                 </Link>
@@ -453,8 +476,8 @@ export default function HomePage() {
                             )}
                         </MapContainer>
                     )}
-                     {/* Fallback or message if Leaflet components aren't ready (optional) */}
-                    {typeof window === 'undefined' || !MapContainer || !TileLayer || !Marker || !Popup || !MarkerClusterGroup || !redIcon || !blueIcon || !createClusterCustomIcon && (
+                    
+                    {(!isClient || !leafletIcons) && (
                         <div className="flex items-center justify-center h-full">
                             <p className="text-gray-500">Đang tải bản đồ...</p>
                         </div>

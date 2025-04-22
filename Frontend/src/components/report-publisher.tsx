@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle, AlertTriangle, BookOpen, CheckCircle, FileText, File, Info, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 type BadgeType = "important" | "danger" | "urgent"
 
@@ -329,7 +330,7 @@ export default function ReportPublisher() {
                       Bìa
                     </h4>
                     <div className="aspect-video relative overflow-hidden rounded-md shadow-md">
-                      <img
+                      <Image
                         src={reportData.backCoverImage || "/placeholder.svg"}
                         alt="Back cover preview"
                         className="object-cover w-full h-full"

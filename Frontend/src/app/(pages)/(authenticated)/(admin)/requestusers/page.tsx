@@ -395,7 +395,7 @@ export default function AdminRequestsPage() {
               Xác nhận thêm vào kho dữ liệu
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn thêm dữ liệu từ file "{previewingFile}" vào kho dữ liệu không?
+              Bạn có chắc chắn muốn thêm dữ liệu từ file {'"'}{previewingFile}{'"'} vào kho dữ liệu không?
               <p className="mt-2 text-amber-600">Hành động này không thể hoàn tác.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>

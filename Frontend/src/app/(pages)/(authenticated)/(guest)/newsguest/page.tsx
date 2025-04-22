@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { FilterIcon } from "lucide-react";
 import Link from "next/link";
 import PageLoader from "@/components/pageloader";
+import Image from "next/image";
 interface NewsItem {
   title: string;
   description: string;
@@ -136,7 +137,7 @@ const NewsPage = () => {
         {displayedNews.map((item, index) => (
           <Link key={index} href="/newsguestdetail" className="block h-full">
             <Card className="hover:shadow-lg transition-shadow flex flex-col h-full">
-              <img
+              <Image
                 src={item.imageUrl}
                 alt={item.title}
                 className="w-full h-64 object-cover rounded-t-md"
