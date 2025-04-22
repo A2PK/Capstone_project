@@ -1,286 +1,466 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
+import React, { useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic"; // For client-side only components like Leaflet
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import "leaflet/dist/leaflet.css";
-import { MapPin, Droplet, AlertTriangle, ArrowRight, ServerCrash, CheckCircle, TrendingUp, TrendingDown } from "lucide-react"; // Thêm icon xu hướng nếu muốn
-import PageLoader from "@/components/pageloader";
-import { cn } from "@/lib/utils";
+import "leaflet/dist/leaflet.css"; // Leaflet CSS
+import L, { Icon, DivIcon, PointTuple, point as leafletPoint, LatLngExpression } from 'leaflet'; // Import Leaflet types directly
+import { MapPin, AlertTriangle, ArrowRight, ServerCrash, CheckCircle, Droplet } from "lucide-react";
+import PageLoader from "@/components/pageloader"; // Your loader component
+import { cn } from "@/lib/utils"; // Utility for class names
+// Import necessary types and functions
+import {
+    Station,
+    DataPoint,
+    QueryOptions, // Keep for getStations if needed
+    ApiRequestDataPointsByStationId, // Use this for filtering
+    RequestOptions // Part of ApiRequestDataPointsByStationId
+} from "@/types/station2";
+import { getStations, getAllDataPointsByStationID } from "@/lib/station"; // Use the correct API function
+import { format, parseISO, isValid as isValidDate } from "date-fns"; // For date formatting
 
-// --- Types (Nên định nghĩa rõ ràng hơn) ---
-interface FeatureData {
-  name: string;
-  trend: number[];
-  prediction: number[];
-}
-
-interface Station {
-  name: string;
-  lat: number;
-  lng: number;
-  wqi: number;
-  status: "Nguy hiểm" | "Kém" | "Trung bình" | "Tốt" | "Rất tốt" | string; // Mở rộng Status
-  recommendation: string;
-  time: string;
-  trend: number[];
-  prediction: number[];
-  feature: FeatureData[];
-}
-
-// --- Dynamic Imports cho Map ---
+// --- Dynamic Imports for Leaflet (Client-side only) ---
 const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), { ssr: false });
 const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), { ssr: false });
 const MarkerClusterGroup = dynamic(() => import("react-leaflet-cluster"), { ssr: false });
 
-// --- Dữ liệu mẫu mới ---
-const stations: Station[] = [
- {
-   name: "Tân An",
-   lat: 10.535,
-   lng: 106.413,
-   wqi: 37,
-   status: "Nguy hiểm",
-   recommendation: "WQI nguy hiểm, cần xử lý nguồn nước khẩn cấp",
-   time: "10:20, Thg 3, 2025",
-   trend: [25, 30, 34, 37, 33, 39, 42, 40, 45, 47, 44, 49, 46, 50, 48],
-   prediction: [50, 53, 55, 58, 60, 62, 65, 68, 70, 72, 74, 75, 78, 80, 82],
-   feature: [ { name: "pH", trend: [6.0, 6.1, 6.3, 6.2, 6.4, 6.5, 6.3, 6.6, 6.7, 6.8, 6.5, 6.9, 7.0, 6.8, 7.1], prediction: [7.0, 7.1, 7.2, 7.3, 7.2, 7.4, 7.5, 7.5, 7.6, 7.7, 7.8, 7.9, 8.0, 8.0, 8.1], }, { name: "NH4", trend: [1.2, 1.5, 1.8, 2.0, 1.7, 2.2, 2.4, 2.1, 2.5, 2.7, 2.6, 2.9, 3.0, 2.8, 3.1], prediction: [3.0, 3.2, 3.3, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.2, 4.3, 4.4, 4.5, 4.6, 4.8], }, { name: "DO", trend: [4.5, 4.3, 4.0, 3.8, 4.1, 3.9, 3.7, 4.0, 4.2, 4.3, 4.1, 4.4, 4.5, 4.6, 4.7], prediction: [4.8, 4.9, 5.0, 5.1, 5.0, 5.2, 5.3, 5.4, 5.4, 5.5, 5.6, 5.6, 5.7, 5.8, 6.0], }, ],
- },
- {
-   name: "Mỹ Tho",
-   lat: 10.36,
-   lng: 106.365,
-   wqi: 78,
-   status: "Tốt",
-   recommendation: "WQI tốt, cần theo dõi thường xuyên",
-   time: "10:20, Thg 3, 2025",
-   trend: [68, 70, 72, 74, 73, 76, 78, 77, 80, 82, 81, 84, 85, 87, 89],
-   prediction: [90, 91, 92, 93, 94, 95, 96, 97, 97, 98, 99, 99, 100, 100, 100],
-   feature: [ { name: "pH", trend: [6.8, 6.9, 7.0, 7.1, 7.0, 7.2, 7.3, 7.2, 7.4, 7.5, 7.4, 7.6, 7.7, 7.8, 7.9], prediction: [8.0, 8.0, 8.1, 8.2, 8.2, 8.3, 8.4, 8.4, 8.5, 8.6, 8.6, 8.7, 8.8, 8.8, 8.9], }, { name: "NH4", trend: [0.8, 0.9, 1.0, 1.1, 1.0, 1.2, 1.3, 1.2, 1.4, 1.5, 1.4, 1.6, 1.7, 1.8, 1.9], prediction: [1.9, 2.0, 2.1, 2.2, 2.2, 2.3, 2.4, 2.5, 2.6, 2.6, 2.7, 2.8, 2.9, 3.0, 3.0], }, { name: "DO", trend: [6.0, 6.2, 6.3, 6.4, 6.3, 6.5, 6.6, 6.7, 6.8, 6.8, 6.9, 7.0, 7.1, 7.1, 7.2], prediction: [7.2, 7.3, 7.4, 7.5, 7.5, 7.6, 7.7, 7.7, 7.8, 7.9, 7.9, 8.0, 8.1, 8.2, 8.2], }, ],
- },
- // ... (các trạm khác giữ nguyên cấu trúc tương tự) ...
- {
-   name: "Trà Vinh",
-   lat: 9.934,
-   lng: 106.342,
-   wqi: 62,
-   status: "Trung bình",
-   recommendation: "WQI trung bình, cần giám sát thêm",
-   time: "10:18, Thg 3, 2025",
-   trend: [50, 52, 55, 57, 60, 58, 62, 63, 65, 67, 68, 70, 72, 73, 75],
-   prediction: [75, 76, 77, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90],
-   feature: [ /* ... feature data ... */ ],
- },
-  {
-    name: "Long Xuyên",
-    lat: 10.371,
-    lng: 105.432,
-    wqi: 45,
-    status: "Kém", // Thêm status mới
-    recommendation: "WQI thấp, cần xử lý trước khi sử dụng",
-    time: "10:18, Thg 3, 2025",
-    trend: [40, 42, 43, 44, 45, 46, 47, 47, 48, 49, 50, 51, 51, 52, 53],
-    prediction: [53, 54, 55, 55, 56, 57, 58, 58, 59, 60, 61, 62, 63, 64, 65],
-    feature: [ /* ... feature data ... */ ],
-  },
-];
-
-
-// --- Code cho Map Icons (giữ nguyên) ---
-let redIcon: any, blueIcon: any, orangeIcon: any, greenIcon: any, createClusterCustomIcon: any; // Thêm orange, green
-
+// --- Leaflet Icons (Client-side setup) ---
+let redIcon: Icon | undefined, blueIcon: Icon | undefined, createClusterCustomIcon: ((cluster: any) => DivIcon) | undefined;
 if (typeof window !== "undefined") {
-  const { Icon, divIcon, point } = require("leaflet");
+    // Use the imported L directly
+    redIcon = new L.Icon({
+        iconUrl: "/red_one.png",
+        iconSize: [38, 38] as PointTuple,
+        iconAnchor: [19, 38] as PointTuple,
+        popupAnchor: [0, -38] as PointTuple,
+    });
 
-  // Định nghĩa các màu icon khác nhau nếu muốn map trực quan hơn
-  redIcon = new Icon({ iconUrl: "/red_one.png", iconSize: [38, 38], }); // Nguy hiểm
-  orangeIcon = new Icon({ iconUrl: "/orange_one.png", iconSize: [38, 38], }); // Kém (cần tạo file /orange_one.png)
-  blueIcon = new Icon({ iconUrl: "/blue_one.png", iconSize: [38, 38], }); // Trung bình/Tốt (ví dụ)
-  greenIcon = new Icon({ iconUrl: "/green_one.png", iconSize: [38, 38], }); // Rất tốt (cần tạo file /green_one.png)
+    blueIcon = new L.Icon({
+        iconUrl: "/blue_one.png",
+        iconSize: [38, 38] as PointTuple,
+        iconAnchor: [19, 38] as PointTuple,
+        popupAnchor: [0, -38] as PointTuple,
+    });
 
-
-  createClusterCustomIcon = (cluster: any) => { /* ... giữ nguyên ... */
-    return divIcon({
-     html: `<span style="background-color: #333; height: 2em; width: 2em; color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.2rem; box-shadow: 0 0 0px 5px #fff;">${cluster.getChildCount()}</span>`,
-     className: "custom-marker-cluster",
-     iconSize: point(33, 33, true),
-   });
-  };
+    createClusterCustomIcon = (cluster: any): DivIcon => {
+        const count = cluster.getChildCount();
+        const style = `
+            background-color: rgba(51, 51, 51, 0.8);
+            height: 2.5em;
+            width: 2.5em;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            border: 2px solid #fff;
+        `;
+        return L.divIcon({
+            html: `<span style="${style}">${count}</span>`,
+            className: "custom-marker-cluster",
+            iconSize: leafletPoint(40, 40, true),
+        });
+    };
 }
 
-// --- Component chính ---
-export default function StationsPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, []);
+// --- Helper Functions ---
 
-  const [selectedStation, setSelectedStation] = useState<Station | null>(null); // Có thể null ban đầu
-  const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
-
-  // --- Lọc các trạm cần cảnh báo (Thêm "Kém") ---
-  const warningStations = stations.filter(
-    station => station.status === "Nguy hiểm" || station.status === "Trung bình" || station.status === "Kém"
-  );
-
-  // --- Hàm lấy màu và icon dựa trên status ---
-  const getStatusStyle = (status: string): { color: string; border: string; bg: string; icon?: any } => {
-    switch (status) {
-      case "Nguy hiểm": return { color: "text-red-600", border: "border-red-500", bg: "bg-red-50", icon: redIcon };
-      case "Kém": return { color: "text-orange-600", border: "border-orange-500", bg: "bg-orange-50", icon: orangeIcon }; // Thêm Kém
-      case "Trung bình": return { color: "text-yellow-600", border: "border-yellow-500", bg: "bg-yellow-50", icon: blueIcon }; // Ví dụ icon
-      case "Tốt": return { color: "text-green-600", border: "border-green-500", bg: "bg-green-50", icon: blueIcon }; // Ví dụ icon
-      case "Rất tốt": return { color: "text-blue-600", border: "border-blue-500", bg: "bg-blue-50", icon: greenIcon };
-      default: return { color: "text-gray-600", border: "border-gray-500", bg: "bg-gray-50", icon: blueIcon };
+// Function to derive status text from WQI
+function deriveStatusFromWqi(wqi: number | null | undefined): string {
+    if (wqi === null || wqi === undefined || isNaN(wqi)) {
+        return "Không xác định";
     }
-  };
+    if (wqi > 91) return "Rất Tốt";
+    if (wqi > 76) return "Tốt";
+    if (wqi > 51) return "Trung Bình";
+    if (wqi > 26) return "Kém";
+    if (wqi >= 0) return "Rất Kém";
+    return "Không xác định";
+}
+
+// Function to get Tailwind CSS classes based on status for styling cards/elements
+const getStatusTailwindClasses = (status: string): { bg: string; text: string; border: string; iconColor: string } => {
+    switch (status) {
+        case "Rất Tốt":
+            return { bg: "bg-emerald-50", text: "text-emerald-800", border: "border-emerald-400", iconColor: "text-emerald-500" };
+        case "Tốt":
+            return { bg: "bg-green-50", text: "text-green-800", border: "border-green-400", iconColor: "text-green-500" };
+        case "Trung Bình":
+            return { bg: "bg-yellow-50", text: "text-yellow-800", border: "border-yellow-400", iconColor: "text-yellow-500" };
+        case "Kém":
+            return { bg: "bg-orange-50", text: "text-orange-800", border: "border-orange-400", iconColor: "text-orange-500" };
+        case "Rất Kém":
+            return { bg: "bg-red-50", text: "text-red-800", border: "border-red-400", iconColor: "text-red-500" };
+        case "Không xác định":
+        default:
+            return { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-400", iconColor: "text-gray-500" };
+    }
+};
+
+// Function to format the monitoring time string
+function formatMonitoringTime(timeString: string | undefined | null): string {
+    if (!timeString) return "N/A";
+    try {
+        const date = parseISO(timeString);
+        if (!isValidDate(date)) {
+            console.warn("Invalid date format received:", timeString);
+            return timeString; // Return original if invalid
+        }
+        return format(date, 'HH:mm, dd/MM/yyyy'); // Format as HH:mm, dd/MM/yyyy
+    } catch (e) {
+        console.error("Failed to format time:", timeString, e);
+        return timeString; // Return original on error
+    }
+}
+
+// Interface for combined station and latest data display
+interface StationDisplayData extends Station {
+    latestData: (DataPoint & { status: string }) | null; // Include derived status
+    isLoadingData: boolean; // Track loading specific to this station's data
+    errorData: string | null; // Track error specific to this station's data
+}
 
 
-  if (isLoading) return <PageLoader message="Đang tải trang chủ..." />;
+// --- Main Component ---
+export default function HomePage() {
+    // --- State ---
+    const [stationDisplayData, setStationDisplayData] = useState<StationDisplayData[]>([]); // Holds stations merged with latest data
+    const [selectedStationId, setSelectedStationId] = useState<string | null>(null); // Track selected station on map
+    const [isLoading, setIsLoading] = useState(true); // Overall loading state
+    const [error, setError] = useState<string | null>(null); // Overall error state
 
-  return (
-    <div className="container mx-auto px-4 py-6 space-y-8">
+    // --- Constants ---
+    const initialMapCenter: LatLngExpression = [10.8231, 106.6297]; // HCMC default center
+    const initialMapZoom = 10; // Default map zoom
 
-      {/* === Dashboard Cảnh báo (Cập nhật) === */}
-      <section>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-          <AlertTriangle className="w-6 h-6 mr-2 text-yellow-500" />
-          Dashboard Cảnh báo
-        </h2>
-        {warningStations.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"> {/* Thêm xl breakpoint nếu cần */}
-            {warningStations.map((station, index) => {
-              const statusStyle = getStatusStyle(station.status);
-              // Lấy WQI trước đó để xem xu hướng (nếu có đủ dữ liệu)
-              const previousWQI = station.trend.length > 1 ? station.trend[station.trend.length - 2] : null;
-              const trendIcon = previousWQI !== null ? (station.wqi > previousWQI ? <TrendingUp className="w-4 h-4 text-green-500" /> : (station.wqi < previousWQI ? <TrendingDown className="w-4 h-4 text-red-500" /> : null) ) : null;
+    // --- Data Fetching Effect ---
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            setIsLoading(true);
+            setError(null);
+            setStationDisplayData([]); // Clear previous data
 
-              return (
-                <Card key={index} className={cn("hover:shadow-md transition-shadow border-l-4 flex flex-col h-full", statusStyle.border)}> {/* Đảm bảo card có chiều cao bằng nhau */}
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start gap-2">
-                        <CardTitle className="text-lg font-semibold flex items-center">
-                          <MapPin className="w-5 h-5 mr-2 text-gray-600 flex-shrink-0" />
-                          {station.name}
-                        </CardTitle>
-                        <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap", statusStyle.color, statusStyle.bg, statusStyle.border.replace('border-l-4','border'))}>
-                            {station.status}
-                        </span>
-                    </div>
-                    <CardDescription className="text-xs pt-1">{station.time}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow space-y-2 pb-3"> {/* flex-grow để nội dung chiếm không gian */}
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Chỉ số WQI:</span>
-                        <div className="flex items-center gap-1">
-                           {/* Hiển thị icon xu hướng nếu có */}
-                           {/* {trendIcon} */}
-                           <strong className={cn("text-3xl font-bold", statusStyle.color)}>{station.wqi}</strong>
-                        </div>
-                    </div>
-                    <p className="text-sm text-gray-700 italic">
-                       <span className="font-medium text-gray-800">Khuyến nghị:</span> "{station.recommendation}"
-                    </p>
-                  </CardContent>
-                  <CardFooter className="pt-2 pb-3 border-t border-gray-200 mt-auto"> {/* Đẩy footer xuống dưới */}
-                     <Button asChild variant="link" size="sm" className="p-0 h-auto text-blue-600 hover:text-blue-800 font-medium">
-                          <Link href={`/dashboardofficer/stations`}> {/* Cần trang chi tiết để xem trend/prediction */}
-                            Xem chi tiết
-                            <ArrowRight className="w-4 h-4 ml-1" />
-                          </Link>
-                     </Button>
-                  </CardFooter>
+            try {
+                // 1. Fetch all stations
+                const stations = await getStations({ limit: 1000 }); // Adjust limit if needed
+
+                // Initialize display data with loading state for data points
+                const initialDisplayData: StationDisplayData[] = stations.map(station => ({
+                    ...station,
+                    latestData: null,
+                    isLoadingData: true, // Start loading data for each
+                    errorData: null,
+                }));
+                setStationDisplayData(initialDisplayData); // Show stations on map/list immediately
+
+                // 2. Fetch latest 'actual' data point for each station concurrently using getAllDataPointsByStationID
+                const dataPointPromises = stations.map(async (station) => {
+                    try {
+                        // Define the payload for the POST request
+                        const apiRequestOptions: ApiRequestDataPointsByStationId = {
+                            stationId: station.id,
+                            options: {
+                                limit: 1, // Get only the latest one
+                                sortBy: 'monitoring_time', // Sort by time (ensure backend uses this field name)
+                                sortDesc: true, // Get the most recent
+                                filters: {
+                                    observation_type: 'actual' // Filter for actual data points
+                                }
+                            }
+                        };
+
+                        // Call the API function that supports filters in the payload
+                        const dataPoints = await getAllDataPointsByStationID(apiRequestOptions);
+
+                        if (dataPoints.length > 0) {
+                            const latestPoint = dataPoints[0];
+                            const status = deriveStatusFromWqi(latestPoint.wqi);
+                            return { stationId: station.id, latestData: { ...latestPoint, status }, errorData: null };
+                        } else {
+                            // No 'actual' data found for this station within the query limits
+                            console.log(`No 'actual' data points found for station ${station.id}`);
+                            return { stationId: station.id, latestData: null, errorData: null }; // Indicate no data found
+                        }
+                    } catch (err) {
+                        console.error(`Failed to fetch latest 'actual' data for station ${station.id}:`, err);
+                        return { stationId: station.id, latestData: null, errorData: "Lỗi tải dữ liệu điểm đo" }; // Specific error for this station
+                    }
+                });
+
+                // Wait for all data point fetches to settle
+                const results = await Promise.allSettled(dataPointPromises);
+
+                // Update the stationDisplayData state with the results
+                setStationDisplayData(prevData => {
+                    const newDataMap = new Map(prevData.map(s => [s.id, s]));
+                    results.forEach(result => {
+                        if (result.status === 'fulfilled' && result.value) {
+                            const { stationId, latestData, errorData } = result.value;
+                            const station = newDataMap.get(stationId);
+                            if (station) {
+                                station.latestData = latestData;
+                                station.isLoadingData = false; // Mark as loaded (or no data found)
+                                station.errorData = errorData;
+                            }
+                        } else if (result.status === 'rejected') {
+                            // This case might be redundant if catch inside promise handles it, but good practice
+                            console.error("Promise rejected (should have been caught):", result.reason);
+                            // Potentially find stationId from error if possible and update its state
+                        }
+                    });
+                    return Array.from(newDataMap.values());
+                });
+
+            } catch (err) {
+                console.error("Failed to fetch stations or process data:", err);
+                setError(err instanceof Error ? err.message : "Lỗi không xác định khi tải trang.");
+            } finally {
+                setIsLoading(false); // Mark overall loading as complete
+            }
+        };
+
+        fetchInitialData();
+    }, []); // Run only once on mount
+
+    // --- Memoized Data Derivations ---
+
+    // Filter stations for the warning dashboard ("Kém" or "Rất Kém") based on latest 'actual' data
+    const warningStations = useMemo(() => {
+        return stationDisplayData.filter(
+            station => !station.isLoadingData && (station.latestData?.status === "Kém" || station.latestData?.status === "Rất Kém")
+        );
+    }, [stationDisplayData]); // Recalculate when display data changes
+
+    // Derive unique stations for map markers (handles potential coordinate overlaps)
+    const uniqueStationsForMap = useMemo(() => {
+        const coordMap = new Map<string, StationDisplayData>();
+        stationDisplayData.forEach((station) => {
+            if (typeof station.latitude === 'number' && typeof station.longitude === 'number' && !isNaN(station.latitude) && !isNaN(station.longitude)) {
+                const coordKey = `${station.latitude.toFixed(5)},${station.longitude.toFixed(5)}`;
+                if (!coordMap.has(coordKey)) {
+                    coordMap.set(coordKey, station);
+                }
+                // Optionally handle multiple stations at same location (e.g., combine popups) - keeping simple for now
+            } else {
+                console.warn(`Station ${station.id} (${station.name}) has invalid coordinates.`);
+            }
+        });
+        return Array.from(coordMap.values());
+    }, [stationDisplayData]); // Recalculate when display data changes
+
+    // --- Event Handlers ---
+
+    const handleSelectStation = (station: StationDisplayData) => {
+        setSelectedStationId(station.id === selectedStationId ? null : station.id); // Toggle selection
+        // Map centering/zooming can be handled by map interactions or a dedicated MapUpdater component if needed
+    };
+
+    // --- Render Logic ---
+
+    if (isLoading && stationDisplayData.length === 0) { // Show loader only during initial empty state
+        return <PageLoader message="Đang tải dữ liệu trang chủ..." />;
+    }
+
+    if (error && stationDisplayData.length === 0) { // Show error only if loading failed completely
+        return (
+            <div className="container mx-auto px-4 py-6 flex justify-center items-center h-[calc(100vh-200px)]">
+                <Card className="border-red-500 bg-red-50 border-l-4 max-w-md">
+                    <CardHeader className="flex flex-row items-center space-x-3 pb-4">
+                        <ServerCrash className="w-6 h-6 text-red-600" />
+                        <CardTitle className="text-red-700">Lỗi Tải Dữ Liệu</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-red-800">{error}</p>
+                        <p className="text-sm text-red-800 mt-2">Vui lòng thử làm mới trang hoặc kiểm tra kết nối mạng.</p>
+                    </CardContent>
                 </Card>
-              );
-            })}
-          </div>
-        ) : (
-          <Card className="border-green-500 bg-green-50 border-l-4">
-             {/* ... Nội dung không có cảnh báo giữ nguyên ... */}
-             <CardHeader className="flex flex-row items-center space-x-3 pb-4">
-                <CheckCircle className="w-6 h-6 text-green-600"/>
-                <CardTitle className="text-green-700">Không có cảnh báo</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-sm text-green-800">Tất cả các trạm hiện đang có chỉ số ổn định.</p>
-            </CardContent>
-          </Card>
-        )}
-      </section>
+            </div>
+        );
+    }
 
-      {/* === Bản đồ địa lý (Cập nhật icon) === */}
-      <section>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Bản đồ Trạm quan trắc</h2>
-        <div className="relative w-full h-[500px] border border-gray-300 rounded-lg overflow-hidden shadow-md">
-          <MapContainer center={[10.3, 106.1]} zoom={9} style={{ height: "100%", width: "100%" }}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {createClusterCustomIcon && (
-              <MarkerClusterGroup chunkedLoading iconCreateFunction={createClusterCustomIcon}>
-                {stations.map((station, index) => {
-                   const statusStyle = getStatusStyle(station.status); // Lấy style (bao gồm cả icon)
-                   return (
-                      <Marker
-                        key={index}
-                        position={[station.lat, station.lng]}
-                        icon={statusStyle.icon || blueIcon} // Sử dụng icon từ style, fallback về blueIcon
-                        eventHandlers={{
-                          click: () => {
-                            setSelectedStation(station);
-                            setSelectedMarker(station.name);
-                          }
-                        }}
-                      >
-                        <Popup>
-                          {/* Popup content giữ nguyên hoặc tùy chỉnh */}
-                           <div className="p-2 rounded-lg bg-white max-w-xs min-w-[200px] border border-gray-200 shadow-sm">
-                              {/* ... nội dung popup như cũ ... */}
-                              <div className="flex items-center mb-1">
-                                <MapPin className="w-4 h-4 text-blue-500 mr-1 flex-shrink-0"/>
-                                <h3 className="text-base font-bold text-gray-800">{station.name}</h3>
-                              </div>
-                              <div className="text-xs space-y-0.5">
-                                  <div className="flex items-center">
-                                    <Droplet className="w-3 h-3 text-blue-500 mr-1.5 flex-shrink-0"/>
-                                    <span>WQI: <strong className={cn(statusStyle.color)}>{station.wqi}</strong></span>
-                                  </div>
-                                  <div className="flex items-center">
-                                      <AlertTriangle className={cn("w-3 h-3 mr-1.5 flex-shrink-0", statusStyle.color)} />
-                                      <span>Trạng thái:{" "}
-                                          <span className={cn("font-semibold", statusStyle.color)}>
-                                              {station.status}
-                                          </span>
-                                      </span>
-                                  </div>
-                                  <p className="text-gray-500 pt-0.5">{station.time}</p>
-                              </div>
-                              <Button asChild size="sm" className="mt-2 w-full h-8 text-white bg-blue-600 hover:bg-blue-700">
-                                <Link href={`/dashboardofficer/stations`}>
-                                  Xem chi tiết
-                                  <ArrowRight className="w-4 h-4 ml-1"/>
-                                </Link>
-                              </Button>
-                           </div>
-                        </Popup>
-                      </Marker>
-                   );
-                })}
-              </MarkerClusterGroup>
-            )}
-          </MapContainer>
+    // --- Main Page Structure ---
+    return (
+        <div className="container mx-auto px-4 py-6 space-y-8">
+
+            {/* === Dashboard Cảnh báo (Based on latest 'actual' data) === */}
+            <section>
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                    <AlertTriangle className="w-6 h-6 mr-2 text-yellow-500" />
+                    Dashboard Cảnh báo (Dữ liệu thực tế mới nhất)
+                </h2>
+                {isLoading && stationDisplayData.length > 0 && ( // Show skeleton or message if still loading latest data
+                    <p className="text-gray-500 italic">Đang cập nhật trạng thái trạm...</p>
+                    // Optionally render skeleton cards here
+                )}
+                {!isLoading && warningStations.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {warningStations.map((station) => {
+                            // We already filtered for stations with data in warningStations memo
+                            const status = station.latestData!.status;
+                            const wqi = station.latestData!.wqi;
+                            const time = formatMonitoringTime(station.latestData!.monitoringTime);
+                            const statusStyle = getStatusTailwindClasses(status);
+
+                            // Basic recommendation based on status
+                            let recommendation = "Xem xét chi tiết.";
+                            if (status === "Kém") recommendation = "Chỉ dùng cho giao thông thủy.";
+                            if (status === "Rất Kém") recommendation = "Ô nhiễm nặng, cần xử lý.";
+
+                            return (
+                                <Card key={station.id} className={cn("hover:shadow-md transition-shadow border-l-4 flex flex-col h-full", statusStyle.border)}>
+                                    <CardHeader className="pb-2">
+                                        <div className="flex justify-between items-start gap-2">
+                                            <CardTitle className="text-lg font-semibold flex items-center">
+                                                <MapPin className="w-5 h-5 mr-2 text-gray-600 flex-shrink-0" />
+                                                {station.name}
+                                            </CardTitle>
+                                            <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap", statusStyle.bg, statusStyle.text, statusStyle.border.replace('border-l-4', 'border'))}>
+                                                {status}
+                                            </span>
+                                        </div>
+                                        <CardDescription className="text-xs pt-1">{time}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow space-y-2 pb-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-600">Chỉ số WQI:</span>
+                                            <strong className={cn("text-3xl font-bold", statusStyle.text)}>
+                                                {wqi !== null && wqi !== undefined ? wqi.toFixed(1) : "N/A"}
+                                            </strong>
+                                        </div>
+                                        <p className="text-sm text-gray-700 italic">
+                                            <span className="font-medium text-gray-800">Khuyến nghị:</span> "{recommendation}"
+                                        </p>
+                                        {/* Show specific error if fetching data for this station failed */}
+                                        {station.errorData && <p className="text-xs text-red-500 italic mt-1">{station.errorData}</p>}
+                                    </CardContent>
+                                    <CardFooter className="pt-2 pb-3 border-t border-gray-200 mt-auto">
+                                        {/* Link to the specific station detail page */}
+                                        <Button asChild variant="link" size="sm" className="p-0 h-auto text-blue-600 hover:text-blue-800 font-medium">
+                                            <Link href={`/dashboardofficer/stations?id=${station.id}`}> {/* Adjust path if needed */}
+                                                Xem chi tiết
+                                                <ArrowRight className="w-4 h-4 ml-1" />
+                                            </Link>
+                                        </Button>
+                                    </CardFooter>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                ) : !isLoading ? ( // Only show "No Warnings" card if not loading and no warning stations
+                    <Card className="border-green-500 bg-green-50 border-l-4">
+                        <CardHeader className="flex flex-row items-center space-x-3 pb-4">
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                            <CardTitle className="text-green-700">Không có cảnh báo</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-green-800">Tất cả các trạm đang có chỉ số WQI thực tế (actual) mới nhất từ mức Trung bình trở lên, hoặc không có dữ liệu thực tế gần đây.</p>
+                        </CardContent>
+                    </Card>
+                ) : null /* Don't show anything while initial loading */ }
+            </section>
+
+            {/* === Bản đồ địa lý === */}
+            <section>
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Bản đồ Trạm quan trắc</h2>
+                <div className="relative w-full h-[500px] border border-gray-300 rounded-lg overflow-hidden shadow-md z-0"> {/* Ensure z-index is lower than popups */}
+                    {/* Check if window is defined for client-side rendering */}
+                    {typeof window !== 'undefined' && MapContainer && TileLayer && Marker && Popup && MarkerClusterGroup && redIcon && blueIcon && createClusterCustomIcon && (
+                        <MapContainer
+                            key="leaflet-map-home" // Unique key
+                            center={initialMapCenter}
+                            zoom={initialMapZoom}
+                            style={{ height: "100%", width: "100%" }}
+                            scrollWheelZoom={true}
+                        >
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+
+                            {/* Marker Clustering */}
+                            {uniqueStationsForMap.length > 0 && (
+                                <MarkerClusterGroup
+                                    chunkedLoading
+                                    iconCreateFunction={createClusterCustomIcon}
+                                    maxClusterRadius={60}
+                                >
+                                    {/* Map through unique stations */}
+                                    {uniqueStationsForMap.map((station) => {
+                                        const isValidPosition = typeof station.latitude === 'number' && typeof station.longitude === 'number';
+                                        if (!isValidPosition) return null; // Skip if invalid coords
+
+                                        const isSelected = selectedStationId === station.id;
+                                        const status = station.latestData?.status || "Không xác định";
+                                        const wqi = station.latestData?.wqi;
+                                        const time = formatMonitoringTime(station.latestData?.monitoringTime);
+                                        const statusStyle = getStatusTailwindClasses(status);
+                                        const displayIcon = isSelected ? blueIcon : redIcon; // Use defined icons
+
+                                        return (
+                                            <Marker
+                                                key={station.id}
+                                                position={[station.latitude, station.longitude]}
+                                                icon={displayIcon} // Use the variable
+                                                eventHandlers={{
+                                                    click: () => handleSelectStation(station),
+                                                }}
+                                                zIndexOffset={isSelected ? 1000 : 0} // Bring selected to front
+                                            >
+                                                <Popup minWidth={200}> {/* Popup content */}
+                                                    <div className="text-sm space-y-1">
+                                                        <h3 className="text-md font-bold mb-1">{station.name}</h3>
+                                                        <p className="text-xs text-gray-600">
+                                                            {station.location || `(${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)})`}
+                                                        </p>
+                                                        <hr className="my-1" />
+                                                        <p className="text-xs font-semibold text-gray-700">Dữ liệu thực tế mới nhất:</p>
+                                                        {/* Show data loading state or actual data */}
+                                                        {station.isLoadingData ? (
+                                                            <p className="text-xs text-gray-500 italic">Đang tải trạng thái...</p>
+                                                        ) : station.errorData ? (
+                                                            <p className="text-xs text-red-500 italic">{station.errorData}</p>
+                                                        ) : station.latestData ? (
+                                                            <>
+                                                                <p>WQI: <strong className={cn("font-bold", statusStyle.text)}>{wqi !== null && wqi !== undefined ? wqi.toFixed(1) : "N/A"}</strong></p>
+                                                                <p className={cn(statusStyle.text)}>Trạng thái: {status}</p>
+                                                                <p className="text-xs text-gray-500 mt-1">Lúc: {time}</p>
+                                                            </>
+                                                        ) : (
+                                                            <p className="text-xs text-gray-500 italic">Không có dữ liệu thực tế gần đây.</p>
+                                                        )}
+                                                        {/* Link to details page */}
+                                                        <div className="mt-2 pt-1 border-t">
+                                                            <Button asChild variant="link" size="sm" className="p-0 h-auto text-xs text-blue-600 hover:text-blue-800 font-medium">
+                                                                <Link href={`/dashboardofficer/stations?id=${station.id}`}> {/* Adjust path */}
+                                                                    Xem thêm
+                                                                    <ArrowRight className="w-3 h-3 ml-1" />
+                                                                </Link>
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </Popup>
+                                            </Marker>
+                                        );
+                                    })}
+                                </MarkerClusterGroup>
+                            )}
+                        </MapContainer>
+                    )}
+                     {/* Fallback or message if Leaflet components aren't ready (optional) */}
+                    {typeof window === 'undefined' || !MapContainer || !TileLayer || !Marker || !Popup || !MarkerClusterGroup || !redIcon || !blueIcon || !createClusterCustomIcon && (
+                        <div className="flex items-center justify-center h-full">
+                            <p className="text-gray-500">Đang tải bản đồ...</p>
+                        </div>
+                    )}
+                </div>
+            </section>
         </div>
-      </section>
-
-    </div>
-  );
+    );
 }

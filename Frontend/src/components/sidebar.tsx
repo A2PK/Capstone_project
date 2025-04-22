@@ -13,7 +13,7 @@ export default function Sidebar() {
 
   return (
     <div className="flex w-16 transition-all duration-200 ease-in-out">
-      <div className="bg-white h-screen p-4 border-r border-gray-200 w-16 flex flex-col items-center space-y-6">
+      <div className="bg-white h-full p-4 border-r border-gray-200 w-16 flex flex-col items-center space-y-6">
         {navItems.map((item, index) => (
           <Tooltip key={index} delayDuration={0}>
             <TooltipTrigger asChild>

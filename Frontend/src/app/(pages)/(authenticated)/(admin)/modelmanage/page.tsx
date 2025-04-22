@@ -1,562 +1,1100 @@
+// src/app/dashboard/modelManagement/page.tsx
 "use client";
-import { AIModel } from "@/types/aimodel";
-import { useEffect, useState } from "react";
-import dynamic from "next/dynamic"; // Import dynamic
+
+import { ModelAI } from "@/types/models";
+import { Station, QueryOptions } from "@/types/station2";
+import React, { useEffect, useState, useCallback, useMemo } from "react"; // Import useMemo
+import dynamic from "next/dynamic";
+
+// --- Các import khác giữ nguyên ---
+// ... (imports for Shadcn/UI, Custom Components, Icons, API Functions) ...
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PageLoader from "@/components/pageloader";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { RefreshCw, Cpu, BarChartHorizontal } from "lucide-react";
-import type { ApexOptions } from "apexcharts"; // Import ApexOptions type
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
-// --- Dynamic Import Chart ---
-// Chỉ load chart ở phía client
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false, loading: () => <p className="text-center text-muted-foreground">Đang tải biểu đồ...</p> });
-// --- Dữ liệu giả lập cho nhiều models (Thêm performanceHistory) ---
-const MOCK_MODELS: AIModel[] = [
-    {
-      id: "itransformer-v1",
-      name: "Itransformer",
-      type: "Transformer",
-      version: "1.0",
-      lastTrained: "2025-03-15",
-      status: "active",
-      description: "Mô hình Transformer tối ưu cho dự đoán chuỗi thời gian.",
-      useCase: "Dự đoán chỉ số chất lượng nước (WQI) cho ngày tiếp theo.", // <-- Mới
-      inputFeatures: ["DO", "pH", "Nhiệt độ", "TSS", "COD", "Lịch sử WQI"], // <-- Mới
-      outputTarget: "Chỉ số WQI (0-100)", // <-- Mới
-      lastTrainingDuration: "2 giờ 15 phút", // <-- Mới
-      deploymentDate: "2025-03-20", // <-- Mới
-      metrics: { accuracy: 90.2, precision: 90.8, recall: 90.5 }, // Giả sử đây là model phân loại WQI tốt/xấu
-      usageStats: { totalRequests: 2400, avgResponseTimeMs: 4000, errorRatePercent: 3, activeUsers: 20, peakUsageTime: "17/03/2025", peakUsageCount: 210 },
-      trainingDataSize: "3K mẫu",
-      performanceHistory: [
-        { date: "2025-01-10", metrics: { accuracy: 88.5, precision: 89.0, recall: 88.0 } },
-        { date: "2025-01-25", metrics: { accuracy: 89.1, precision: 89.5, recall: 88.8 } },
-        { date: "2025-02-10", metrics: { accuracy: 89.8, precision: 90.1, recall: 89.5 } },
-        { date: "2025-02-28", metrics: { accuracy: 90.0, precision: 90.5, recall: 90.0 } },
-        { date: "2025-03-15", metrics: { accuracy: 90.2, precision: 90.8, recall: 90.5 } },
-      ]
-    },
-    {
-      id: "lstm-v2",
-      name: "LSTM Predictor",
-      type: "LSTM",
-      version: "2.1",
-      lastTrained: "2025-04-01",
-      status: "active",
-      description: "Mạng LSTM cho dự báo nhu cầu sản phẩm.",
-      useCase: "Dự báo doanh số bán hàng tháng tới.", // <-- Mới
-      inputFeatures: ["Doanh số lịch sử", "Chiến dịch marketing", "Dữ liệu mùa vụ"], // <-- Mới
-      outputTarget: "Doanh số dự kiến (số lượng)", // <-- Mới
-      lastTrainingDuration: "5 giờ", // <-- Mới
-      deploymentDate: "2025-04-05", // <-- Mới
-      metrics: { mae: 15.5, rmse: 20.1, r2: 0.85 },
-      usageStats: { totalRequests: 5500, avgResponseTimeMs: 6500, errorRatePercent: 2, activeUsers: 45, peakUsageTime: "02/04/2025", peakUsageCount: 400 },
-      trainingDataSize: "10K mẫu",
-       performanceHistory: [
-        { date: "2025-02-05", metrics: { mae: 18.2, rmse: 23.5, r2: 0.80 } },
-        { date: "2025-02-20", metrics: { mae: 17.0, rmse: 22.0, r2: 0.82 } },
-        { date: "2025-03-10", metrics: { mae: 16.1, rmse: 21.0, r2: 0.84 } },
-        { date: "2025-03-25", metrics: { mae: 15.8, rmse: 20.5, r2: 0.845 } },
-        { date: "2025-04-01", metrics: { mae: 15.5, rmse: 20.1, r2: 0.85 } },
-      ]
-    },
-     {
-      id: "prophet-daily",
-      name: "Prophet Daily Trends",
-      type: "Statistical",
-      version: "1.5",
-      lastTrained: "2025-03-28",
-      status: "inactive",
-      description: "Mô hình Prophet của Facebook để dự báo xu hướng hàng ngày.",
-      useCase: "Phát hiện xu hướng truy cập website.", // <-- Mới
-      inputFeatures: ["Lượt truy cập hàng ngày"], // <-- Mới
-      outputTarget: "Dự báo lượt truy cập & điểm bất thường", // <-- Mới
-      lastTrainingDuration: "30 phút", // <-- Mới
-      deploymentDate: "2024-12-01", // <-- Mới
-      metrics: { mae: 5.2, rmse: 7.8 },
-      usageStats: { totalRequests: 120, avgResponseTimeMs: 1500, errorRatePercent: 1, activeUsers: 5 },
-      trainingDataSize: "1K mẫu",
-    },
-      {
-      id: "itransformer-v2-training",
-      name: "Itransformer Enhanced",
-      type: "Transformer",
-      version: "2.0 Beta",
-      lastTrained: "Đang huấn luyện...",
-      status: "training",
-      description: "Phiên bản nâng cấp đang được huấn luyện.",
-      useCase: "Dự đoán WQI với độ chính xác cao hơn.", // <-- Mới
-      inputFeatures: ["Dữ liệu cảm biến mở rộng", "Dữ liệu thời tiết"], // <-- Mới
-      outputTarget: "Chỉ số WQI (0-100)", // <-- Mới
-      // Không có duration và deployment date khi đang training
-      metrics: {},
-      usageStats: { totalRequests: 0, avgResponseTimeMs: 0, errorRatePercent: 0, activeUsers: 0 },
-      trainingDataSize: "5K mẫu",
-    },
-  ];
-  
+import PageLoader from "@/components/pageloader";
+import { Pagination } from "@/components/pagination";
+
+import { RefreshCw, Cpu, List, Info, AlertTriangle, Trash2, Edit, BrainCircuit, Filter, SortAsc, SortDesc, XCircle, SlidersHorizontal, CalendarDays, Tag, MapPin, Globe, Building } from "lucide-react";
+
+import {
+    trainStationsModels,
+    getAllAIModels,
+    predictStationsModels,
+    updateAIModel,
+    deleteAIModel
+} from "@/lib/model";
+import { getStations } from "@/lib/station";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+
+// --- Định nghĩa kiểu cho form (giữ nguyên) ---
+// ... (Interfaces: UpdateFormData, TrainFormData, PredictFormData) ...
+interface UpdateFormData {
+    name: string;
+    description: string;
+    availability: boolean;
+}
+interface TrainFormData {
+    train_test_ratio: number;
+    place_ids: string[];
+    date_tag: string;
+}
+interface PredictFormData {
+    num_step: number;
+    freq_days: number;
+    model_types: string[];
+    place_ids: string[];
+}
+
 
 export default function ModelManagement() {
-  const [models, setModels] = useState<AIModel[]>([]);
-  const [selectedModelId, setSelectedModelId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [retrainingStatus, setRetrainingStatus] = useState<{ [key: string]: boolean }>({});
-  const [activeTab, setActiveTab] = useState("overview");
-  const [isClient, setIsClient] = useState(false); // State để kiểm tra client-side rendering
+    const { toast } = useToast();
+    const MODEL_TYPES_OPTIONS = ['xgb', 'rf', 'ETSformerPar', 'ETSformer'];
+    const MODEL_DISPLAY_NAMES: { [key: string]: string } = {
+        'rf': 'Random Forest',
+        'xgb': 'XGBoost',
+        'ETSformer':'ETSformer',
+        'ETSformerPar':'ETSformer Parallel',
+      };
+    // --- States (giữ nguyên) ---
+    // ... (all states: allFetchedModels, displayedModels, stations, etc.) ...
+    const [allFetchedModels, setAllFetchedModels] = useState<ModelAI[]>([]);
+    const [displayedModels, setDisplayedModels] = useState<ModelAI[]>([]);
+    const [stations, setStations] = useState<Station[]>([]);
+    const [selectedModel, setSelectedModel] = useState<ModelAI | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isProcessing, setIsProcessing] = useState<{ [key: string]: boolean }>({});
+    const [activeTab, setActiveTab] = useState("overview"); // Tab cho model details
+    const [isClient, setIsClient] = useState(false);
+    const [error, setError] = useState<{ title: string; message: string } | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalItems, setTotalItems] = useState(0);
+    const totalPages = useMemo(() => Math.ceil(totalItems / itemsPerPage), [totalItems, itemsPerPage]);
+    const [filterStationId, setFilterStationId] = useState<string>('all');
+    const [filterStatus, setFilterStatus] = useState<string>('all');
+    const [sortBy, setSortBy] = useState<string>('created_at');
+    const [sortDesc, setSortDesc] = useState<boolean>(true);
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+    const [isTrainModalOpen, setIsTrainModalOpen] = useState(false); // Modal Train toàn cục
+    const [isPredictModalOpen, setIsPredictModalOpen] = useState(false); // Modal Predict toàn cục
+    const [currentModelForAction, setCurrentModelForAction] = useState<ModelAI | null>(null); // Chỉ dùng cho Update/Delete
+    const [updateFormData, setUpdateFormData] = useState<UpdateFormData>({ name: '', description: '', availability: false });
+    const [trainFormData, setTrainFormData] = useState<TrainFormData>({ train_test_ratio: 0.7, place_ids: [], date_tag: '' });
+    const [predictFormData, setPredictFormData] = useState<PredictFormData>({ num_step: 7, freq_days: 7, model_types: MODEL_TYPES_OPTIONS.length > 0 ? [MODEL_TYPES_OPTIONS[0]] : [], place_ids: [] });
 
-  // --- State cho dữ liệu và tùy chọn biểu đồ ---
-  const [performanceChartData, setPerformanceChartData] = useState<ApexAxisChartSeries>([]);
-  const [performanceChartOptions, setPerformanceChartOptions] = useState<ApexOptions>({});
-  const [usageChartData, setUsageChartData] = useState<ApexAxisChartSeries>([]); // State cho biểu đồ sử dụng
-  const [usageChartOptions, setUsageChartOptions] = useState<ApexOptions>({}); // State cho biểu đồ sử dụng
+
+    // --- Constants (giữ nguyên) ---
+    // ... (AVAILABLE_STATUSES, SORTABLE_FIELDS, MODEL_TYPES_OPTIONS) ...
+    const AVAILABLE_STATUSES = [
+        { value: 'available', label: 'sẵn sàng' },
+        { value: 'unavailable', label: 'Không sẵn sàng' },
+    ];
+    const SORTABLE_FIELDS = [
+        { value: 'name', label: 'Tên Model' },
+        { value: 'created_at', label: 'Ngày tạo' },
+        { value: 'updated_at', label: 'Ngày cập nhật' },
+        { value: 'trained_at', label: 'Ngày huấn luyện' },
+        { value: 'version', label: 'Phiên bản' },
+    ];
 
 
-  // Effect chạy 1 lần khi component mount để đánh dấu là client-side
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
-  // Effect để tải dữ liệu model ban đầu
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setModels(MOCK_MODELS);
-      if (MOCK_MODELS.length > 0) {
-        setSelectedModelId(MOCK_MODELS[0].id);
-      }
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, []);
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
-  // --- Effect để cập nhật dữ liệu biểu đồ khi model được chọn thay đổi ---
-  useEffect(() => {
-    if (!selectedModelId || models.length === 0) return;
-
-    const model = models.find(m => m.id === selectedModelId);
-    if (!model || !model.performanceHistory || model.performanceHistory.length === 0) {
-        setPerformanceChartData([]); // Reset chart data nếu không có history
-        setUsageChartData([]); // Reset chart usage data
-        return; // Không có model hoặc history, không cần làm gì thêm
-    }
-
-    // --- Xử lý Performance Chart ---
-    const history = model.performanceHistory;
-    const performanceSeries: ApexAxisChartSeries = [];
-    const performanceCategories = history.map(h => new Date(h.date).getTime()); // Chuyển date thành timestamp cho trục X
-
-    // Thêm series dựa trên metrics có sẵn
-    if (history[0].metrics.accuracy !== undefined) {
-      performanceSeries.push({ name: "Accuracy (%)", data: history.map(h => ({ x: new Date(h.date).getTime(), y: h.metrics.accuracy ?? 0 })) });
-    }
-    if (history[0].metrics.precision !== undefined) {
-      performanceSeries.push({ name: "Precision (%)", data: history.map(h => ({ x: new Date(h.date).getTime(), y: h.metrics.precision ?? 0 })) });
-    }
-    if (history[0].metrics.recall !== undefined) {
-      performanceSeries.push({ name: "Recall (%)", data: history.map(h => ({ x: new Date(h.date).getTime(), y: h.metrics.recall ?? 0 })) });
-    }
-    if (history[0].metrics.mae !== undefined) {
-      performanceSeries.push({ name: "MAE", data: history.map(h => ({ x: new Date(h.date).getTime(), y: h.metrics.mae ?? 0 })) });
-    }
-     if (history[0].metrics.rmse !== undefined) {
-      performanceSeries.push({ name: "RMSE", data: history.map(h => ({ x: new Date(h.date).getTime(), y: h.metrics.rmse ?? 0 })) });
-    }
-    // Thêm R2 nếu muốn
-     if (history[0].metrics.r2 !== undefined) {
-       // performanceSeries.push({ name: "R-squared", data: history.map(h => ({ x: new Date(h.date).getTime(), y: h.metrics.r2 ?? 0 })) });
-     }
-
-    setPerformanceChartData(performanceSeries);
-
-    // Cấu hình options chung cho performance chart
-    setPerformanceChartOptions({
-      chart: {
-        height: 300,
-        type: 'line',
-        zoom: { enabled: false },
-        toolbar: { show: true, tools: { download: true, selection: false, zoom: false, zoomin: false, zoomout: false, pan: false, reset: true } },
-        fontFamily: 'inherit',
-      },
-      stroke: { curve: 'smooth', width: 2 },
-      dataLabels: { enabled: false },
-      markers: { size: 4, hover: { sizeOffset: 2 } },
-      xaxis: {
-        type: 'datetime',
-        categories: performanceCategories, // Dùng timestamp
-         labels: { datetimeUTC: false, format: 'dd MMM yy' }, // Format ngày tháng
-        tooltip: { enabled: false }
-      },
-      yaxis: {
-        title: { text: 'Giá trị Metric' },
-        labels: {
-          formatter: (val) => val.toFixed(1) // Format số thập phân
+    // --- Fetching Functions (giữ nguyên) ---
+    // ... (fetchAllModelsData, fetchStations) ...
+    const fetchAllModelsData = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const fetchedModels = await getAllAIModels();
+            setAllFetchedModels(fetchedModels);
+        } catch (err: any) {
+            console.error("Failed to fetch AI models:", err);
+            setError({ title: "Lỗi Tải Dữ Liệu", message: err.message || "Không thể tải danh sách models." });
+            toast({ variant: "destructive", title: "Lỗi Tải Dữ Liệu", description: err.message || "Không thể tải danh sách models." });
+            setAllFetchedModels([]);
+        } finally {
+            setIsLoading(false);
         }
-      },
-      tooltip: {
-        x: { format: 'dd MMM yyyy' }, // Format tooltip ngày
-        y: { formatter: (val) => val !== undefined ? val.toFixed(2) : 'N/A' } // Format tooltip giá trị
-      },
-      legend: { position: 'top' },
-      grid: {
-          borderColor: '#e7e7e7',
-          row: { colors: ['#f3f3f3', 'transparent'], opacity: 0.5 },
-      },
-    });
+    }, [toast]);
 
-    // --- Xử lý Usage Chart (Ví dụ: Total Requests theo ngày - cần dữ liệu usage history) ---
-    // Giả sử bạn có dữ liệu usage history (tương tự performance history)
-    // const usageHistory = model.usageHistory || [];
-    // if (usageHistory.length > 0) { ... }
-    // --- Tạo dữ liệu giả lập cho usage chart ---
-     const usageSeries = [{
-        name: "Số yêu cầu",
-        data: history.map((h, index) => ({
-            x: new Date(h.date).getTime(),
-            // Tạo số yêu cầu giả lập tăng dần
-            y: Math.floor((model.usageStats.totalRequests / history.length) * (index + 1) + (Math.random() - 0.5) * 100)
-        }))
-     }];
-     setUsageChartData(usageSeries);
-     setUsageChartOptions({
-        chart: { type: 'area', height: 300, zoom: { enabled: false }, toolbar: { show: false }, fontFamily: 'inherit', },
-        dataLabels: { enabled: false },
-        stroke: { curve: 'smooth', width: 2 },
-        xaxis: {
-            type: 'datetime',
-             labels: { datetimeUTC: false, format: 'dd MMM yy' },
-        },
-        yaxis: { title: { text: 'Số lượng yêu cầu' } },
-        tooltip: { x: { format: 'dd MMM yyyy' } },
-        grid: { borderColor: '#e7e7e7' },
-     });
+    const fetchStations = useCallback(async () => {
+        try {
+            const options: QueryOptions = { limit: 500 };
+            const fetchedStations = await getStations(options);
+            setStations(fetchedStations);
+        } catch (err: any) {
+            console.error("Failed to fetch Stations:", err);
+            setError(prev => ({
+                title: prev?.title ?? "Lỗi Tải Stations",
+                message: `${prev?.message ?? ''}\n${err.message || "Không thể tải danh sách stations."}`.trim()
+            }));
+            toast({ variant: "destructive", title: "Lỗi Tải Stations", description: err.message || "Không thể tải danh sách stations." });
+        }
+    }, [toast]);
 
 
-  }, [selectedModelId, models]); // Chạy lại khi selectedModelId hoặc models thay đổi
+    // --- Effect tải dữ liệu ban đầu (giữ nguyên) ---
+    // ... (useEffect for initial fetch) ...
+    useEffect(() => {
+        if (isClient) {
+            fetchAllModelsData();
+            fetchStations();
+        }
+    }, [isClient, fetchAllModelsData, fetchStations]);
 
 
-  const handleRetrain = (modelId: string) => {
-    // ... (logic handleRetrain giữ nguyên)
-    if (!modelId) return;
-    setRetrainingStatus(prev => ({ ...prev, [modelId]: true }));
-    console.log(`Bắt đầu huấn luyện lại model: ${modelId}`);
-    setTimeout(() => {
-      console.log(`Hoàn thành huấn luyện lại model: ${modelId}`);
-       setModels(prevModels => prevModels.map(model =>
-           model.id === modelId
-             ? {
-                 ...model,
-                 status: 'active',
-                 lastTrained: new Date().toLocaleDateString('vi-VN'), // Cập nhật ngày theo locale VN
-                 // Quan trọng: Cập nhật lại metrics và performanceHistory sau khi huấn luyện
-                 metrics: { ...model.metrics, accuracy: (model.metrics.accuracy ?? 85) + Math.random() * 5 }, // ví dụ tăng accuracy
-                 performanceHistory: [ // Thêm điểm dữ liệu mới
-                   ...(model.performanceHistory ?? []),
-                   { date: new Date().toISOString(), metrics: { accuracy: (model.metrics.accuracy ?? 85) + Math.random() * 5 } } // Chỉ ví dụ accuracy
-                 ]
-             }
-             : model
-       ));
-      setRetrainingStatus(prev => ({ ...prev, [modelId]: false }));
-    }, 5000);
-  };
+    // --- Sửa: Tính toán danh sách ID các trạm có model ---
+    const stationIdsWithModels = useMemo(() => {
+        const ids = new Set<string>();
+        // Chỉ xem xét các model chưa bị xóa và có station_id
+        allFetchedModels.forEach(model => {
+            if (model.station_id && !model.deleted_at) {
+                ids.add(model.station_id);
+            }
+        });
+        return ids;
+    }, [allFetchedModels]);
 
-  const selectedModel = models.find(m => m.id === selectedModelId);
+    // --- Sửa: Lọc danh sách trạm để hiển thị trong Predict form ---
+    const stationsAvailableForPrediction = useMemo(() => {
+        // Lọc danh sách stations dựa trên những ID có model
+        return stations.filter(station => stationIdsWithModels.has(station.id));
+    }, [stations, stationIdsWithModels]);
 
-  const getStatusBadge = (status: AIModel['status']) => {
-    // ... (logic getStatusBadge giữ nguyên)
-     switch (status) {
-       case "active":
-         return <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Hoạt động</span>;
-       case "inactive":
-         return <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">Không hoạt động</span>;
-        case "training":
-            return <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">Đang huấn luyện</span>;
-       case "error":
-         return <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Lỗi</span>;
-       default:
-         return <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">Không xác định</span>;
-     }
-  }
 
-  if (isLoading) return <PageLoader message="Đang tải trang quản lý mô hình..." />;
+    // --- Effect xử lý lọc, sắp xếp, phân trang client-side (giữ nguyên) ---
+    // ... (useEffect for client-side processing) ...
+    useEffect(() => {
+        if (!isClient || isLoading) return;
 
-  return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex-1">
-        <div className="container py-6">
-           {/* Header: Title, Select, Button (giữ nguyên) */}
-           <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold">Quản lý Model AI</h1>
-                <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <Select value={selectedModelId} onValueChange={setSelectedModelId} disabled={models.length === 0}>
-                        <SelectTrigger className="w-full sm:w-[250px]">
-                        <SelectValue placeholder="Chọn model để quản lý" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {models.map(model => (
-                            <SelectItem key={model.id} value={model.id}>
-                            <div className="flex items-center gap-2">
-                                {model.type === 'Transformer' && <Cpu size={16} className="text-blue-500"/>}
-                                {model.type === 'LSTM' && <BarChartHorizontal size={16} className="text-green-500"/>}
-                                {model.type === 'Statistical' && <RefreshCw size={16} className="text-orange-500"/>}
-                                <span>{model.name} ({model.version})</span>
+        let processedModels = [...allFetchedModels];
+
+        // 1. Filtering
+        if (filterStationId !== 'all') {
+            processedModels = processedModels.filter(m => m.station_id === filterStationId);
+        }
+        if (filterStatus === 'deleted') {
+            processedModels = processedModels.filter(m => m.deleted_at !== null);
+        } else if (filterStatus !== 'all') {
+            processedModels = processedModels.filter(m => m.availability === (filterStatus === 'available') && m.deleted_at === null);
+        } else {
+            processedModels = processedModels.filter(m => m.deleted_at === null);
+        }
+
+        // 2. Sorting
+        processedModels.sort((a, b) => {
+            const valA = a[sortBy as keyof ModelAI];
+            const valB = b[sortBy as keyof ModelAI];
+
+            const isANull = valA === null || valA === undefined;
+            const isBNull = valB === null || valB === undefined;
+            if (isANull && isBNull) return 0;
+            if (isANull) return 1;
+            if (isBNull) return -1;
+
+            let comparison = 0;
+            if (sortBy === 'created_at' || sortBy === 'updated_at' || sortBy === 'trained_at') {
+                const dateA = new Date(valA as string);
+                const dateB = new Date(valB as string);
+                if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) comparison = 0;
+                else if (isNaN(dateA.getTime())) comparison = 1;
+                else if (isNaN(dateB.getTime())) comparison = -1;
+                else comparison = dateA.getTime() - dateB.getTime();
+            } else if (typeof valA === 'string' && typeof valB === 'string') {
+                comparison = valA.localeCompare(valB);
+            } else if (typeof valA === 'number' && typeof valB === 'number') {
+                comparison = valA - valB;
+            } else if (typeof valA === 'boolean' && typeof valB === 'boolean') {
+                comparison = (valA === valB) ? 0 : valA ? 1 : -1;
+            } else {
+                if (valA > valB) comparison = 1;
+                else if (valA < valB) comparison = -1;
+            }
+            return sortDesc ? comparison * -1 : comparison;
+        });
+
+        // 3. Pagination
+        setTotalItems(processedModels.length);
+        const calculatedOffset = (currentPage - 1) * itemsPerPage;
+        const calculatedLimit = itemsPerPage;
+        const paginatedModels = processedModels.slice(calculatedOffset, calculatedOffset + calculatedLimit);
+
+        setDisplayedModels(paginatedModels);
+
+        if (selectedModel && !paginatedModels.find(m => m.id === selectedModel.id)) {
+            setSelectedModel(null);
+        }
+        if (!selectedModel && paginatedModels.length > 0) {
+            setSelectedModel(paginatedModels[0]);
+        } else if (paginatedModels.length === 0) {
+            setSelectedModel(null);
+        }
+
+    }, [allFetchedModels, currentPage, itemsPerPage, filterStationId, filterStatus, sortBy, sortDesc, isClient, isLoading, selectedModel]);
+
+
+    // --- Handlers cho Pagination (giữ nguyên) ---
+    // ... (handlePageChange) ...
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+
+    // --- Handlers cho Filter/Sort (giữ nguyên) ---
+    // ... (handleFilterChange, handleSortChange, clearFilters) ...
+    const handleFilterChange = (type: 'station' | 'status', value: string) => {
+        if (type === 'station') setFilterStationId(value);
+        if (type === 'status') setFilterStatus(value);
+        setCurrentPage(1);
+    };
+    const handleSortChange = (type: 'field' | 'direction', value: string | boolean) => {
+        if (type === 'field') setSortBy(value as string);
+        if (type === 'direction') setSortDesc(value as boolean);
+        setCurrentPage(1);
+    };
+    const clearFilters = () => {
+        setFilterStationId('all');
+        setFilterStatus('all');
+        setSortBy('created_at');
+        setSortDesc(true);
+        setCurrentPage(1);
+    };
+
+
+    // --- Handlers Mở Modal (giữ nguyên) ---
+    // ... (openUpdateModal, openGlobalTrainModal, openGlobalPredictModal) ...
+    // Mở modal Update (gắn với model cụ thể)
+    const openUpdateModal = (model: ModelAI) => {
+        setCurrentModelForAction(model); // Cần model này để biết ID cần update
+        setError(null);
+        setUpdateFormData({
+            name: model.name,
+            description: model.description ?? '',
+            availability: model.availability
+        });
+        setIsUpdateModalOpen(true);
+    };
+
+    // Mở modal Train (hành động toàn cục)
+    const openGlobalTrainModal = () => {
+        setCurrentModelForAction(null); // Không có model context cụ thể
+        setError(null);
+        const today = new Date();
+        const dateTag = `${today.getDate().toString().padStart(2, '0')}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
+        setTrainFormData({ // Reset form, không prefill place_id
+            train_test_ratio: 0.7,
+            place_ids: [],
+            date_tag: dateTag
+        });
+        setIsTrainModalOpen(true);
+    };
+
+    // Mở modal Predict (hành động toàn cục)
+    const openGlobalPredictModal = () => {
+        setCurrentModelForAction(null); // Không có model context cụ thể
+        setError(null);
+        setPredictFormData({ // Reset form, không prefill place_id
+            num_step: 7,
+            freq_days: 7,
+            model_types: ['xgb', 'rf'],
+            place_ids: []
+        });
+        setIsPredictModalOpen(true);
+    };
+
+
+    // --- Handlers cho Form Input (giữ nguyên) ---
+    // ... (handleFormInputChange) ...
+    const handleFormInputChange = (
+        form: 'update' | 'train' | 'predict',
+        field: keyof UpdateFormData | keyof TrainFormData | keyof PredictFormData,
+        value: any
+    ) => {
+        if (form === 'update') {
+            setUpdateFormData(prev => ({ ...prev, [field]: value as never }));
+        } else if (form === 'train') {
+            if (field === 'place_ids') {
+                setTrainFormData(prev => ({
+                    ...prev,
+                    place_ids: prev.place_ids.includes(value)
+                        ? prev.place_ids.filter(id => id !== value)
+                        : [...prev.place_ids, value]
+                }));
+            } else {
+                setTrainFormData(prev => ({ ...prev, [field]: value as never }));
+            }
+        } else if (form === 'predict') {
+            if (field === 'place_ids') { // Xử lý place_ids (array) như cũ
+                setPredictFormData(prev => {
+                    const currentValues = prev.place_ids;
+                    return {
+                        ...prev,
+                        place_ids: currentValues.includes(value)
+                            ? currentValues.filter(id => id !== value)
+                            : [...currentValues, value]
+                    };
+                });
+            } else if (field === 'model_types') { // Xử lý khi RadioGroup thay đổi
+                // value ở đây là chuỗi đơn ('xgb' hoặc 'rf') được chọn
+                setPredictFormData(prev => ({
+                    ...prev,
+                    // Luôn đặt model_types thành một mảng chỉ chứa giá trị mới nhất được chọn
+                    model_types: [value]
+                }));
+            } else { // Xử lý các trường khác (num_step, freq_days)
+                setPredictFormData(prev => ({
+                    ...prev,
+                    [field]: value as never
+                }));
+            }
+        }
+    };
+
+
+    // --- Handlers cho Submit Forms (giữ nguyên) ---
+    // ... (handleTrainSubmit, handlePredictSubmit, handleUpdateSubmit) ...
+    const handleTrainSubmit = async () => {
+        const actionKey = 'global-train';
+        if (!trainFormData.date_tag) {
+            toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng nhập Date Tag." });
+            return;
+        }
+        if (trainFormData.train_test_ratio <= 0 || trainFormData.train_test_ratio >= 1) {
+            toast({ variant: "destructive", title: "Lỗi", description: "Train/Test Ratio phải nằm trong khoảng (0, 1)." });
+            return;
+        }
+        setIsProcessing(prev => ({ ...prev, [actionKey]: true }));
+        setError(null);
+        toast({ variant: "default", title: "Đang xử lý", description: "Đang gửi yêu cầu huấn luyện..." });
+        try {
+            const params: Parameters<typeof trainStationsModels>[0] = {
+                train_test_ratio: Number(trainFormData.train_test_ratio),
+                date_tag: trainFormData.date_tag,
+                place_ids: trainFormData.place_ids.length > 0 ? trainFormData.place_ids : undefined,
+            };
+            console.log(params)
+            const trainedModels = await trainStationsModels(params);
+            console.log(trainedModels)
+            toast({ variant: "success", title: "Thành công", description: `Yêu cầu huấn luyện thành công! ${trainedModels.length} model được xử lý.` });
+            setIsTrainModalOpen(false);
+            fetchAllModelsData();
+        } catch (err: any) {
+            console.error(`Lỗi khi huấn luyện:`, err);
+            setError({ title: "Lỗi Huấn Luyện", message: err.message || "Không thể bắt đầu huấn luyện." });
+            toast({ variant: "destructive", title: "Lỗi Huấn Luyện", description: err.message || "Không thể bắt đầu huấn luyện." });
+        } finally {
+            setIsProcessing(prev => ({ ...prev, [actionKey]: false }));
+        }
+    };
+
+    const handlePredictSubmit = async () => {
+        const actionKey = 'global-predict';
+        if (predictFormData.num_step < 1 || predictFormData.num_step > 14) {
+            toast({ variant: "destructive", title: "Lỗi", description: "Num Step phải từ 1 đến 14." });
+            return;
+        }
+        if (predictFormData.freq_days < 1 || predictFormData.freq_days > 14) {
+            toast({ variant: "destructive", title: "Lỗi", description: "Freq Days phải từ 1 đến 14." });
+            return;
+        }
+        if (predictFormData.model_types.length === 0) {
+            toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn một Model Type." });
+            return;
+        }
+        // Sửa: Thêm kiểm tra nếu bắt buộc chọn trạm
+        if (predictFormData.place_ids.length === 0) {
+            toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn ít nhất một trạm để dự đoán." });
+            return; // Ngăn submit nếu không chọn trạm nào
+        }
+
+        setIsProcessing(prev => ({ ...prev, [actionKey]: true }));
+        setError(null);
+        toast({ variant: "default", title: "Đang xử lý", description: "Đang gửi yêu cầu dự đoán..." });
+
+        try {
+            const params: Parameters<typeof predictStationsModels>[0] = {
+                num_step: Number(predictFormData.num_step),
+                freq_days: Number(predictFormData.freq_days),
+                model_types: predictFormData.model_types,
+                // Luôn gửi place_ids vì đã kiểm tra ở trên
+                place_ids: predictFormData.place_ids,
+            };
+            const status = await predictStationsModels(params);
+            if (status >= 200 && status < 300) {
+                toast({ variant: "success", title: "Thành công", description: "Yêu cầu dự đoán đã được gửi thành công." });
+                setIsPredictModalOpen(false);
+            } else {
+                throw new Error(`Server phản hồi với status ${status}`);
+            }
+        } catch (err: any) {
+            console.error(`Lỗi khi dự đoán:`, err);
+            setError({ title: "Lỗi Dự Đoán", message: err.message || "Không thể bắt đầu dự đoán." });
+            toast({ variant: "destructive", title: "Lỗi Dự Đoán", description: err.message || "Không thể bắt đầu dự đoán." });
+        } finally {
+            setIsProcessing(prev => ({ ...prev, [actionKey]: false }));
+        }
+    };
+
+    const handleUpdateSubmit = async () => {
+        if (!currentModelForAction) return;
+        const modelId = currentModelForAction.id;
+        const actionKey = `update-${modelId}`;
+        // Kiểm tra validation (giữ nguyên)
+        if (!updateFormData.name) {
+            toast({ variant: "destructive", title: "Lỗi", description: "Tên Model không được để trống." });
+            return;
+        }
+
+        setIsProcessing(prev => ({ ...prev, [actionKey]: true }));
+        setError(null);
+        toast({ variant: "default", title: "Đang xử lý", description: `Đang cập nhật model ${modelId}...` });
+
+        try {
+            // Dữ liệu gửi đi để cập nhật
+            const updates: Partial<ModelAI> = {
+                name: updateFormData.name,
+                description: updateFormData.description,
+                availability: updateFormData.availability,
+                // Lưu ý: updated_at sẽ do backend xử lý và được cập nhật chính xác khi fetchAllModelsData chạy
+            };
+
+            const status = await updateAIModel(updates, modelId);
+
+            if (status >= 200 && status < 300) {
+                toast({ variant: "success", title: "Thành công", description: `Model ${modelId} đã được cập nhật.` });
+                setIsUpdateModalOpen(false); // Đóng modal
+
+                // --- BẮT ĐẦU THAY ĐỔI ---
+                // 1. Cập nhật trực tiếp state selectedModel nếu model đang hiển thị chính là model vừa cập nhật
+                if (selectedModel && selectedModel.id === modelId) {
+                    setSelectedModel(prevSelectedModel => {
+                        if (!prevSelectedModel) return null; // Trường hợp hiếm gặp nhưng để an toàn
+                        // Tạo object mới bằng cách kết hợp state cũ và dữ liệu vừa cập nhật thành công
+                        return {
+                            ...prevSelectedModel, // Giữ lại các thuộc tính cũ
+                            ...updates           // Ghi đè các thuộc tính đã được cập nhật
+                            // updated_at sẽ được cập nhật chính xác ở bước fetch dưới đây
+                        };
+                    });
+                }
+                // --- KẾT THÚC THAY ĐỔI ---
+
+                // 2. Fetch lại toàn bộ dữ liệu để đảm bảo đồng bộ hoàn toàn với server
+                // (Bao gồm cả updated_at mới nhất và đảm bảo danh sách được sắp xếp/lọc đúng)
+                fetchAllModelsData();
+
+            } else {
+                // Xử lý lỗi server response (giữ nguyên)
+                throw new Error(`Server phản hồi với status ${status}`);
+            }
+        } catch (err: any) {
+            // Xử lý lỗi gọi API (giữ nguyên)
+            console.error(`Lỗi khi cập nhật model ${modelId}:`, err);
+            setError({ title: "Lỗi Cập Nhật", message: err.message || `Không thể cập nhật model ${modelId}.` });
+            toast({ variant: "destructive", title: "Lỗi Cập Nhật", description: err.message || `Không thể cập nhật model ${modelId}.` });
+        } finally {
+            // Kết thúc trạng thái xử lý (giữ nguyên)
+            setIsProcessing(prev => ({ ...prev, [actionKey]: false }));
+        }
+    };
+
+
+    // --- Handler cho Delete (giữ nguyên) ---
+    // ... (handleDelete) ...
+    const handleDelete = async (modelIdToDelete: string) => {
+        if (!modelIdToDelete) return;
+        const actionKey = `delete-${modelIdToDelete}`;
+        setIsProcessing(prev => ({ ...prev, [actionKey]: true }));
+        setError(null);
+        toast({ title: "Đang xử lý", description: `Đang xóa model ${modelIdToDelete}...` });
+        try {
+            const status = await deleteAIModel(modelIdToDelete);
+            if (status >= 200 && status < 300) {
+                toast({ title: "Thành công", description: `Model ${modelIdToDelete} đã được xóa.` });
+                if (selectedModel?.id === modelIdToDelete) {
+                    setSelectedModel(null);
+                }
+                fetchAllModelsData();
+            } else {
+                throw new Error(`Server phản hồi với status ${status}`);
+            }
+        } catch (err: any) {
+            console.error(`Lỗi khi xóa model ${modelIdToDelete}:`, err);
+            setError({ title: "Lỗi Xóa Model", message: err.message || `Không thể xóa model ${modelIdToDelete}.` });
+            toast({ variant: "destructive", title: "Lỗi Xóa Model", description: err.message || `Không thể xóa model ${modelIdToDelete}.` });
+        } finally {
+            setIsProcessing(prev => ({ ...prev, [actionKey]: false }));
+        }
+    };
+
+
+    // --- Helper Functions (giữ nguyên) ---
+    // ... (getStationName, getStatusBadge) ...
+    const getStationName = (stationId: string): string => {
+        const station = stations.find(s => s.id === stationId);
+        return station ? station.name : 'N/A';
+    };
+
+    const getStatusBadge = (model: ModelAI) => {
+        const isDeleting = isProcessing[`delete-${model.id}`];
+        if (isDeleting) {
+            return <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 animate-pulse">Đang xóa...</span>;
+        }
+        if (model.deleted_at) {
+            return <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">Đã xóa</span>;
+        }
+        if (model.availability) {
+            return <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Sẵn sàng</span>;
+        }
+        return <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Không sẵn sàng</span>;
+
+    };
+
+
+    // --- Render ---
+    if (!isClient) {
+        return <PageLoader message="Đang khởi tạo giao diện..." />;
+    }
+
+    // Tìm thông tin chi tiết của trạm đang được chọn (nếu có)
+    const selectedStationInfo = selectedModel ? stations.find(s => s.id === selectedModel.station_id) : null;
+
+
+    return (
+        <TooltipProvider>
+            <div className="flex min-h-screen flex-col">
+                <main className="flex-1 p-4 md:p-6">
+                    {/* --- Header (giữ nguyên) --- */}
+                    {/* ... (Header: Title, Global Buttons) ... */}
+                    <div className="mb-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+                        <h1 className="text-2xl font-bold md:text-3xl">Quản lý Model AI</h1>
+                        <div className="flex gap-2">
+                            <Button onClick={openGlobalTrainModal} disabled={isProcessing['global-train']}>
+                                <RefreshCw className={`mr-2 h-4 w-4 ${isProcessing['global-train'] ? 'animate-spin' : ''}`} /> Huấn luyện Models
+                            </Button>
+                            <Button onClick={openGlobalPredictModal} variant="outline" disabled={isProcessing['global-predict']}>
+                                <BrainCircuit className={`mr-2 h-4 w-4 ${isProcessing['global-predict'] ? 'animate-spin' : ''}`} /> Dự đoán Models
+                            </Button>
+                        </div>
+                    </div>
+
+
+                    {/* --- Filtering & Sorting Controls (giữ nguyên) --- */}
+                    {/* ... (Filter/Sort Card) ... */}
+                    <Card className="mb-4">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-lg">
+                                <SlidersHorizontal className="h-5 w-5" /> Bộ lọc & Sắp xếp
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-4 md:flex-row md:items-end">
+                            <div className="flex-1">
+                                <Label htmlFor="filter-station">Trạm Quan Trắc</Label>
+                                <Select value={filterStationId} onValueChange={(value) => handleFilterChange('station', value)}>
+                                    <SelectTrigger id="filter-station">
+                                        <SelectValue placeholder="Tất cả các trạm" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Tất cả các trạm</SelectItem>
+                                        {stations.map(station => (
+                                            <SelectItem key={station.id} value={station.id}>{station.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            </SelectItem>
-                        ))}
-                        {models.length === 0 && <SelectItem value="loading" disabled>Đang tải...</SelectItem>}
-                        </SelectContent>
-                    </Select>
-                    {selectedModel && (
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button disabled={retrainingStatus[selectedModelId] || selectedModel.status === 'training'}>
-                                    {retrainingStatus[selectedModelId] || selectedModel.status === 'training' ? (
-                                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <RefreshCw className="mr-2 h-4 w-4" />
-                                    )}
-                                Huấn luyện lại
+                            <div className="flex-1">
+                                <Label htmlFor="filter-status">Trạng thái</Label>
+                                <Select value={filterStatus} onValueChange={(value) => handleFilterChange('status', value)}>
+                                    <SelectTrigger id="filter-status">
+                                        <SelectValue placeholder="Tất cả trạng thái" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Tất cả</SelectItem>
+                                        {AVAILABLE_STATUSES.map(status => (
+                                            <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex-1">
+                                <Label htmlFor="sort-by">Sắp xếp theo</Label>
+                                <Select value={sortBy} onValueChange={(value) => handleSortChange('field', value)}>
+                                    <SelectTrigger id="sort-by">
+                                        <SelectValue placeholder="Chọn trường sắp xếp" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {SORTABLE_FIELDS.map(field => (
+                                            <SelectItem key={field.value} value={field.value}>{field.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-end gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => handleSortChange('direction', !sortDesc)}
+                                    className="h-10 w-10"
+                                >
+                                    {sortDesc ? <SortDesc className="h-5 w-5" /> : <SortAsc className="h-5 w-5" />}
+                                    <span className="sr-only">{sortDesc ? "Sắp xếp giảm dần" : "Sắp xếp tăng dần"}</span>
                                 </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                <AlertDialogTitle>Xác nhận huấn luyện lại Model?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Việc huấn luyện lại model <strong>{selectedModel?.name} ({selectedModel?.version})</strong> sẽ sử dụng dữ liệu mới nhất...
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Huỷ bỏ</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleRetrain(selectedModelId)} disabled={retrainingStatus[selectedModelId]}>
-                                        {retrainingStatus[selectedModelId] ? "Đang huấn luyện..." : "Bắt đầu huấn luyện"}
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={clearFilters} className="h-10 w-10">
+                                            <XCircle className="h-5 w-5 text-muted-foreground" />
+                                            <span className="sr-only">Xóa bộ lọc</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Xóa bộ lọc & sắp xếp</TooltipContent>
+                                </Tooltip>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+
+                    {/* --- Error Display (giữ nguyên) --- */}
+                    {/* ... (Error Alert) ... */}
+                    {error && (
+                        <Alert variant="destructive" className="mb-4">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>{error.title}</AlertTitle>
+                            <AlertDescription>{error.message}</AlertDescription>
+                        </Alert>
                     )}
-                </div>
-           </div>
 
-           {/* Tabs & Content */}
-           {selectedModel ? (
-             <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-               <TabsList className="mb-4">
-                 <TabsTrigger value="overview">Tổng quan</TabsTrigger>
-                 <TabsTrigger value="performance">Hiệu quả hoạt động</TabsTrigger>
-                 <TabsTrigger value="usage">Thống kê sử dụng</TabsTrigger>
-               </TabsList>
 
-               {/* Tab Tổng quan (giữ nguyên) */}
-               <TabsContent value="overview">
-                <Card>
-                   <CardHeader>
-                     <CardTitle>Thông tin Model: {selectedModel.name}</CardTitle>
-                     {/* Sử dụng useCase nếu có, nếu không dùng description */}
-                     <CardDescription>{selectedModel.useCase ?? selectedModel.description}</CardDescription>
-                   </CardHeader>
-                   <CardContent>
-                     {/* Chia thành các nhóm thông tin */}
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-
-                        {/* Nhóm 1: Thông tin cơ bản */}
-                        <div className="space-y-3 border-b md:border-b-0 md:border-r md:pr-8 pb-4 md:pb-0">
-                             <h4 className="text-sm font-semibold text-primary mb-2">Thông tin cơ bản</h4>
-                             <div className="grid grid-cols-[150px,1fr] gap-2 items-center"> {/* Cố định chiều rộng cột label */}
-                                 <div className="text-sm font-medium text-muted-foreground">Loại Model:</div>
-                                 <div>{selectedModel.type}</div>
-                             </div>
-                             <div className="grid grid-cols-[150px,1fr] gap-2 items-center">
-                                 <div className="text-sm font-medium text-muted-foreground">Phiên bản:</div>
-                                 <div>{selectedModel.version}</div>
-                             </div>
-                             <div className="grid grid-cols-[150px,1fr] gap-2 items-center">
-                                 <div className="text-sm font-medium text-muted-foreground">Trạng thái:</div>
-                                 <div>{getStatusBadge(selectedModel.status)}</div>
-                             </div>
-                             {selectedModel.deploymentDate && (
-                                <div className="grid grid-cols-[150px,1fr] gap-2 items-center">
-                                    <div className="text-sm font-medium text-muted-foreground">Ngày triển khai:</div>
-                                    <div>{selectedModel.deploymentDate}</div>
+                    {/* --- Main Content Area: List & Details (giữ nguyên layout 2 cột) --- */}
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                        {/* --- Model List Column (giữ nguyên) --- */}
+                        {/* ... (Model List rendering) ... */}
+                        <div className="lg:col-span-1 flex flex-col"> {/* Thêm flex flex-col để quản lý chiều cao */}
+                            <h2 className="mb-3 text-lg font-semibold flex-shrink-0">Danh sách Models ({totalItems})</h2> {/* Header không cuộn */}
+                            {isLoading ? (
+                                <div className="flex-grow flex items-center justify-center"> {/* Cho loader vào giữa nếu cần */}
+                                    <PageLoader message="Đang tải models..." />
                                 </div>
-                             )}
-                             {selectedModel.outputTarget && (
-                                <div className="grid grid-cols-[150px,1fr] gap-2 items-start">
-                                    <div className="text-sm font-medium text-muted-foreground">Mục tiêu đầu ra:</div>
-                                    <div>{selectedModel.outputTarget}</div>
-                                </div>
-                            )}
-                            {selectedModel.inputFeatures && selectedModel.inputFeatures.length > 0 && (
-                               <div className="grid grid-cols-[150px,1fr] gap-2 items-start">
-                                   <div className="text-sm font-medium text-muted-foreground">Đặc trưng đầu vào:</div>
-                                   {/* Hiển thị dạng danh sách hoặc tag nhỏ */}
-                                   <div className="flex flex-wrap gap-1">
-                                       {selectedModel.inputFeatures.map((feature, index) => (
-                                           <span key={index} className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                                               {feature}
-                                           </span>
-                                       ))}
-                                   </div>
-                               </div>
-                           )}
-                        </div>
+                            ) : displayedModels.length > 0 ? (
+                                // Container cho phần cuộn và phân trang
+                                <div className="flex flex-col flex-grow min-h-0">
+                                    {/* ---- BẮT ĐẦU KHU VỰC CUỘN ---- */}
+                                    <ScrollArea className="pr-4 flex-grow max-h-[600px] lg:max-h-[calc(100vh-300px)]"> {/* Đặt max-height và padding phải */}
+                                        {/* div này chỉ chứa danh sách các card */}
+                                        <div className="space-y-3">
+                                            {displayedModels.map(model => (
+                                                <Card
+                                                    key={model.id}
+                                                    className={`cursor-pointer transition-all hover:shadow-md ${selectedModel?.id === model.id ? 'border-primary ring-1 ring-primary' : 'border-border'}`}
+                                                    onClick={() => { setSelectedModel(model); setActiveTab('overview'); }}
+                                                >
+                                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3">
+                                                        <CardTitle className="text-sm font-medium flex items-center gap-2 truncate pr-2">
+                                                            <Cpu className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                            <span className="truncate" title={`${model.name} (${model.version})`}>{MODEL_DISPLAY_NAMES[model.name]} ({model.version})</span>
+                                                        </CardTitle>
+                                                        <div className="flex-shrink-0">{getStatusBadge(model)}</div>
+                                                    </CardHeader>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                    {/* ---- KẾT THÚC KHU VỰC CUỘN ---- */}
 
-                        {/* Nhóm 2: Thông tin huấn luyện & Hiệu suất chính */}
-                        <div className="space-y-3">
-                           <h4 className="text-sm font-semibold text-primary mb-2">Huấn luyện & Hiệu suất</h4>
-                            <div className="grid grid-cols-[180px,1fr] gap-2 items-center">
-                                 <div className="text-sm font-medium text-muted-foreground">Lần huấn luyện gần nhất:</div>
-                                 <div>{selectedModel.lastTrained}</div>
-                             </div>
-                              {selectedModel.lastTrainingDuration && (
-                                <div className="grid grid-cols-[180px,1fr] gap-2 items-center">
-                                    <div className="text-sm font-medium text-muted-foreground">Thời gian huấn luyện:</div>
-                                    <div>{selectedModel.lastTrainingDuration}</div>
+                                    {/* ---- Phân trang (Nằm ngoài khu vực cuộn) ---- */}
+                                    {totalPages > 1 && (
+                                        <div className="mt-4 flex justify-center flex-shrink-0"> {/* flex-shrink-0 để không bị co lại */}
+                                            <Pagination
+                                                currentPage={currentPage}
+                                                totalPages={totalPages}
+                                                onPageChange={handlePageChange}
+                                                siblingCount={0} // Giữ cho phân trang gọn
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                             )}
-                              {selectedModel.trainingDataSize && (
-                                <div className="grid grid-cols-[180px,1fr] gap-2 items-center">
-                                <div className="text-sm font-medium text-muted-foreground">Dữ liệu huấn luyện:</div>
-                                <div>{selectedModel.trainingDataSize}</div>
-                                </div>
-                             )}
-                             {/* Hiển thị các metric chính */}
-                              {selectedModel.metrics.accuracy !== undefined && (
-                                <div className="grid grid-cols-[180px,1fr] gap-2 items-center">
-                                    <div className="text-sm font-medium text-muted-foreground">Độ chính xác:</div>
-                                    <div className="font-semibold">{selectedModel.metrics.accuracy}%</div>
-                                </div>
-                               )}
-                               {selectedModel.metrics.mae !== undefined && (
-                                <div className="grid grid-cols-[180px,1fr] gap-2 items-center">
-                                    <div className="text-sm font-medium text-muted-foreground">MAE:</div>
-                                    <div className="font-semibold">{selectedModel.metrics.mae}</div>
-                                </div>
-                               )}
-                                {selectedModel.metrics.r2 !== undefined && (
-                                <div className="grid grid-cols-[180px,1fr] gap-2 items-center">
-                                    <div className="text-sm font-medium text-muted-foreground">R-squared:</div>
-                                    <div className="font-semibold">{selectedModel.metrics.r2}</div>
-                                </div>
-                               )}
-                               {/* Bạn có thể thêm các metric khác nếu muốn */}
-                        </div>
-
-                     </div>
-                   </CardContent>
-                 </Card>
-              </TabsContent>
-
-
-               {/* --- Tab Hiệu quả hoạt động --- */}
-               <TabsContent value="performance">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Chỉ số hiệu suất: {selectedModel.name}</CardTitle>
-                      <CardDescription>Phân tích chi tiết hiệu suất của mô hình</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        {/* Phần hiển thị các metric hiện tại (giữ nguyên) */}
-                        <div className="grid gap-4 md:grid-cols-3">
-                          {/* ... hiển thị các Card metric nhỏ ... */}
-                           {selectedModel.metrics.accuracy !== undefined && ( <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"><div className="text-sm font-medium text-muted-foreground">Độ chính xác</div><div className="mt-2 text-2xl font-bold">{selectedModel.metrics.accuracy}%</div></div> )}
-                           {selectedModel.metrics.precision !== undefined && ( <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"><div className="text-sm font-medium text-muted-foreground">Precision</div><div className="mt-2 text-2xl font-bold">{selectedModel.metrics.precision}%</div></div> )}
-                           {/* ... các metric khác ... */}
-                           {selectedModel.metrics.mae !== undefined && ( <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"><div className="text-sm font-medium text-muted-foreground">MAE</div><div className="mt-2 text-2xl font-bold">{selectedModel.metrics.mae}</div></div> )}
-
-                        </div>
-
-                        {/* --- Phần Biểu đồ --- */}
-                        <div className="rounded-lg border p-4">
-                          <h3 className="mb-4 text-lg font-medium">Hiệu suất theo thời gian</h3>
-                          <div className="h-72 w-full"> {/* Đặt chiều cao cố định cho container biểu đồ */}
-                            {isClient && performanceChartData.length > 0 ? (
-                              <Chart
-                                options={performanceChartOptions}
-                                series={performanceChartData}
-                                type="line" // Có thể đổi thành "area" nếu muốn
-                                height="100%"
-                                width="100%"
-                              />
                             ) : (
-                              // Hiển thị khi đang tải hoặc không có dữ liệu
-                              <div className="flex items-center justify-center h-full bg-muted rounded">
-                                <p className="text-muted-foreground">
-                                    {isClient ? "Không có dữ liệu lịch sử hiệu suất cho model này." : "Đang tải biểu đồ..."}
-                                </p>
-                              </div>
+                                // Hiển thị khi không có model
+                                <div className="mt-6 text-center text-muted-foreground border rounded-lg bg-card py-10 flex-grow flex items-center justify-center">
+                                    {allFetchedModels.length > 0 ? "Không tìm thấy model nào phù hợp." : "Không có model nào."}
+                                </div>
                             )}
-                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-               </TabsContent>
 
-               {/* --- Tab Thống kê sử dụng --- */}
-               <TabsContent value="usage">
-                   <Card>
-                   <CardHeader>
-                     <CardTitle>Thống kê sử dụng: {selectedModel.name}</CardTitle>
-                     <CardDescription>Số liệu sử dụng mô hình</CardDescription>
-                   </CardHeader>
-                   <CardContent>
-                      {/* Phần hiển thị các chỉ số sử dụng (giữ nguyên) */}
-                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
-                         {/* ... hiển thị các Card usage nhỏ ... */}
-                         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"><div className="text-sm font-medium text-muted-foreground">Tổng số yêu cầu</div><div className="mt-2 text-2xl font-bold">{selectedModel.usageStats.totalRequests.toLocaleString()}</div></div>
-                         {/* ... các stats khác ... */}
-                     </div>
 
-                      {/* --- Phần Biểu đồ sử dụng --- */}
-                      <div className="rounded-lg border p-4">
-                         <h3 className="mb-4 text-lg font-medium">Lượng sử dụng theo thời gian</h3>
-                          <div className="h-72 w-full">
-                             {isClient && usageChartData.length > 0 ? (
-                               <Chart
-                                 options={usageChartOptions}
-                                 series={usageChartData}
-                                 type="area" // Dùng area chart cho usage
-                                 height="100%"
-                                 width="100%"
-                               />
-                             ) : (
-                               <div className="flex items-center justify-center h-full bg-muted rounded">
-                                 <p className="text-muted-foreground">
-                                     {isClient ? "Không có dữ liệu lịch sử sử dụng." : "Đang tải biểu đồ..."}
-                                 </p>
-                               </div>
-                             )}
-                           </div>
-                       </div>
-                   </CardContent>
-                 </Card>
-              </TabsContent>
+                        {/* --- Model Details Column (giữ nguyên) --- */}
+                        {/* ... (Model Details rendering with Tabs) ... */}
+                        <div className="lg:col-span-2">
+                            <h2 className="mb-3 text-lg font-semibold">Chi tiết Model</h2>
+                            {selectedModel ? (
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <CardTitle className="text-xl">{MODEL_DISPLAY_NAMES[selectedModel.name]} ({selectedStationInfo?.name})</CardTitle>
+                                                <CardDescription>Phiên bản: {selectedModel.version} {getStatusBadge(selectedModel)}</CardDescription>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="outline" size="sm" onClick={() => openUpdateModal(selectedModel)} disabled={isProcessing[`update-${selectedModel.id}`]}>
+                                                            <Edit className="h-4 w-4" /> <span className="ml-1 hidden sm:inline">Sửa</span>
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Chỉnh sửa thông tin</TooltipContent>
+                                                </Tooltip>
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="destructive" size="sm" disabled={isProcessing[`delete-${selectedModel.id}`]}>
+                                                            <Trash2 className="h-4 w-4" /> <span className="ml-1 hidden sm:inline">Xóa</span>
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Xác nhận xóa Model?</DialogTitle>
+                                                            <DialogDescription>
+                                                                Hành động này sẽ xóa model <strong>{selectedModel.name} ({selectedModel.version})</strong>. Bạn có chắc chắn?
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <DialogFooter>
+                                                            <DialogClose asChild>
+                                                                <Button variant="outline" disabled={isProcessing[`delete-${selectedModel.id}`]}>Hủy</Button>
+                                                            </DialogClose>
+                                                            <Button
+                                                                variant="destructive"
+                                                                onClick={() => handleDelete(selectedModel.id)}
+                                                                disabled={isProcessing[`delete-${selectedModel.id}`]}
+                                                            >
+                                                                {isProcessing[`delete-${selectedModel.id}`] ? "Đang xóa..." : "Xác nhận xóa"}
+                                                            </Button>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+                                            <TabsList className="mb-4 grid w-full grid-cols-2">
+                                                <TabsTrigger value="overview"> <Info className="mr-2 h-4 w-4" /> Tổng quan</TabsTrigger>
+                                                <TabsTrigger value="station_info" disabled={!selectedModel.station_id}>
+                                                    <Building className="mr-2 h-4 w-4" />Thông tin Trạm
+                                                </TabsTrigger>
+                                            </TabsList>
 
-             </Tabs>
-           ) : (
-             // Hiển thị khi chưa chọn model (giữ nguyên)
-             <div className="text-center py-10">
-                <p className="text-muted-foreground">
-                    {models.length > 0 ? "Vui lòng chọn một model từ danh sách ở trên." : "Không có model nào để hiển thị."}
-                 </p>
-             </div>
-           )}
+                                            <TabsContent value="overview">
+                                                <div className="space-y-4 text-sm">
+                                                    <div>
+                                                        <Label className="text-xs font-semibold text-muted-foreground">Mô tả</Label>
+                                                        <p className="mt-1">{selectedModel.description || <span className="italic text-muted-foreground">Không có mô tả.</span>}</p>
+                                                    </div>
+                                                    <Separator />
+                                                    <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+                                                        <div>
+                                                            <Label className="text-xs font-semibold text-muted-foreground">ID Model</Label>
+                                                            <p className="mt-1 font-mono text-xs bg-muted px-2 py-0.5 rounded break-all">{selectedModel.id}</p>
+                                                        </div>
+                                                        <div>
+                                                            <Label className="text-xs font-semibold text-muted-foreground">Đường dẫn File</Label>
+                                                            <p className="mt-1 text-xs break-all">{selectedModel.file_path}</p>
+                                                        </div>
+                                                        <div>
+                                                            <Label className="text-xs font-semibold text-muted-foreground">Huấn luyện lúc</Label>
+                                                            <p className="mt-1">{selectedModel.trained_at ? new Date(selectedModel.trained_at).toLocaleString('vi-VN') : 'Chưa rõ'}</p>
+                                                        </div>
+                                                        <div>
+                                                            <Label className="text-xs font-semibold text-muted-foreground">Tạo lúc</Label>
+                                                            <p className="mt-1">{new Date(selectedModel.created_at).toLocaleString('vi-VN')}</p>
+                                                        </div>
+                                                        <div>
+                                                            <Label className="text-xs font-semibold text-muted-foreground">Cập nhật lúc</Label>
+                                                            <p className="mt-1">{new Date(selectedModel.updated_at).toLocaleString('vi-VN')}</p>
+                                                        </div>
+                                                        {selectedModel.deleted_at && (
+                                                            <div className="text-destructive">
+                                                                <Label className="text-xs font-semibold">Xóa lúc</Label>
+                                                                <p className="mt-1">{new Date(selectedModel.deleted_at).toLocaleString('vi-VN')}</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <Separator />
+                                                    <div>
+                                                        <Label className="text-xs font-semibold text-muted-foreground">Danh sách tham số</Label>
+                                                        {selectedModel.parameter_list && selectedModel.parameter_list.length > 0 ? (
+                                                            <div className="mt-1 flex flex-wrap gap-1">
+                                                                {selectedModel.parameter_list.map((param, index) => (
+                                                                    <span key={index} className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                                                                        {param}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="mt-1 italic text-muted-foreground">Không có.</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </TabsContent>
+
+                                            <TabsContent value="station_info">
+                                                {selectedStationInfo ? (
+                                                    <div className="space-y-3 text-sm">
+                                                        <div className="flex items-center gap-2">
+                                                            <Building className="h-4 w-4 text-muted-foreground" />
+                                                            <strong>Trạm:</strong> {selectedStationInfo.name}
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Info className="h-4 w-4 text-muted-foreground" />
+                                                            <strong>ID Trạm:</strong> <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">{selectedStationInfo.id}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                                                            <strong>Vị trí:</strong> {selectedStationInfo.location}
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Globe className="h-4 w-4 text-muted-foreground" />
+                                                            <strong>Quốc gia:</strong> {selectedStationInfo.country}
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <List className="h-4 w-4 text-muted-foreground" />
+                                                            <strong>Tọa độ:</strong> Lat: {selectedStationInfo.latitude?.toFixed(6)}, Long: {selectedStationInfo.longitude?.toFixed(6)}
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                                                            <strong>Ngày tạo trạm:</strong> {new Date(selectedStationInfo.createdAt).toLocaleString('vi-VN')}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-muted-foreground italic">Model này không được liên kết với trạm nào hoặc không tìm thấy thông tin trạm.</p>
+                                                )}
+                                            </TabsContent>
+                                        </Tabs>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                <div className="flex h-60 items-center justify-center rounded-lg border border-dashed">
+                                    <p className="text-muted-foreground">Chọn một model từ danh sách bên trái để xem chi tiết.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* --- Modals --- */}
+                    {/* Update Modal (giữ nguyên) */}
+                    {/* ... (Update Modal Dialog) ... */}
+                    <Dialog open={isUpdateModalOpen} onOpenChange={setIsUpdateModalOpen}>
+                        <DialogContent className="sm:max-w-[480px]">
+                            <DialogHeader>
+                                <DialogTitle>Cập nhật Model: {currentModelForAction?.name ? (MODEL_DISPLAY_NAMES[currentModelForAction?.name]) : ""}</DialogTitle>
+                                <DialogDescription>Chỉnh sửa thông tin chi tiết của model.</DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="update-name">Tên Model</Label>
+                                    <Input id="update-name" value={updateFormData.name} onChange={(e) => handleFormInputChange('update', 'name', e.target.value)} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="update-description">Mô tả</Label>
+                                    <textarea
+                                        id="update-description"
+                                        value={updateFormData.description}
+                                        onChange={(e) => handleFormInputChange('update', 'description', e.target.value)}
+                                        className="h-48 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        placeholder="Nhập mô tả cho model..."
+                                    />
+                                </div>
+                                <div className="flex items-center space-x-2 pt-2">
+                                    <Checkbox id="update-availability" checked={updateFormData.availability} onCheckedChange={(checked) => handleFormInputChange('update', 'availability', !!checked)} />
+                                    <Label htmlFor="update-availability" className="font-normal">Sẵn sàng (Availability)</Label>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild><Button variant="outline" disabled={isProcessing[`update-${currentModelForAction?.id}`]}>Hủy</Button></DialogClose>
+                                <Button type="submit" onClick={handleUpdateSubmit} disabled={isProcessing[`update-${currentModelForAction?.id}`]}>
+                                    {isProcessing[`update-${currentModelForAction?.id}`] ? "Đang lưu..." : "Lưu thay đổi"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+
+                    {/* Train Modal (giữ nguyên) */}
+                    {/* ... (Train Modal Dialog) ... */}
+                    {/* Huấn luyện Models */}
+<Dialog open={isTrainModalOpen} onOpenChange={setIsTrainModalOpen}>
+  <DialogContent className="max-w-screen-md p-6">
+    <DialogHeader>
+      <DialogTitle>Huấn luyện Models</DialogTitle>
+      <DialogDescription>Cấu hình tham số cho quá trình huấn luyện.</DialogDescription>
+    </DialogHeader>
+    <div className="grid gap-4 py-4">
+      <div className="grid grid-cols-[150px_1fr] items-center gap-4">
+        <Label htmlFor="train-ratio" className="text-right">Tỷ lệ Train/Test</Label>
+        <Input
+          id="train-ratio"
+          type="number"
+          step="0.05"
+          min="0.1"
+          max="0.9"
+          value={trainFormData.train_test_ratio}
+          onChange={(e) => handleFormInputChange('train', 'train_test_ratio', e.target.value)}
+        />
+      </div>
+
+      <div className="grid grid-cols-[150px_1fr] items-center gap-4">
+        <Label htmlFor="train-date-tag" className="text-right">Phiên bản</Label>
+        <Input
+          id="train-date-tag"
+          value={trainFormData.date_tag}
+          onChange={(e) => handleFormInputChange('train', 'date_tag', e.target.value)}
+          placeholder="ddmmyy"
+        />
+      </div>
+
+      <div className="grid grid-cols-[150px_1fr] items-start gap-4">
+        <Label className="text-right pt-2">Chọn Trạm</Label>
+        <div className="space-y-2 w-full">
+          <ScrollArea className="h-72 w-full rounded-md border p-2">
+            <div className="space-y-2">
+              {stations.length > 0 ? (
+                stations.map((station) => (
+                  <div key={station.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`train-station-${station.id}`}
+                      checked={trainFormData.place_ids.includes(station.id)}
+                      onCheckedChange={() => handleFormInputChange('train', 'place_ids', station.id)}
+                    />
+                    <Label htmlFor={`train-station-${station.id}`} className="font-normal">
+                      {station.name}
+                    </Label>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground">Đang tải trạm...</p>
+              )}
+            </div>
+          </ScrollArea>
+          <p className="text-xs text-muted-foreground">Để trống nếu huấn luyện tất cả trạm.</p>
         </div>
-      </main>
+      </div>
     </div>
-  );
+    <DialogFooter>
+      <DialogClose asChild>
+        <Button variant="outline" disabled={isProcessing['global-train']}>Hủy</Button>
+      </DialogClose>
+      <Button type="submit" onClick={handleTrainSubmit} disabled={isProcessing['global-train']}>
+        {isProcessing['global-train'] ? "Đang huấn luyện..." : "Bắt đầu huấn luyện"}
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+                    {/* Predict Modal (Toàn cục) - Sửa phần chọn Trạm */}
+                    <Dialog open={isPredictModalOpen} onOpenChange={setIsPredictModalOpen}>
+  <DialogContent className="max-w-screen-md p-6">
+    <DialogHeader>
+      <DialogTitle>Dự đoán Models</DialogTitle>
+      <DialogDescription>Cấu hình tham số cho quá trình dự đoán.</DialogDescription>
+    </DialogHeader>
+    <div className="grid gap-4 py-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="predict-num-step">Num Step (1-14)</Label>
+          <Input
+            id="predict-num-step"
+            type="number"
+            min="1"
+            max="14"
+            value={predictFormData.num_step}
+            onChange={(e) => handleFormInputChange('predict', 'num_step', e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="predict-freq-days">Freq Days (1-14)</Label>
+          <Input
+            id="predict-freq-days"
+            type="number"
+            min="1"
+            max="14"
+            value={predictFormData.freq_days}
+            onChange={(e) => handleFormInputChange('predict', 'freq_days', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-[150px_1fr] items-start gap-4">
+        <Label htmlFor="model-type-group" className="text-right pt-2">Model Type</Label>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Chọn loại model sẽ sử dụng để dự đoán (chọn một).</p>
+          <RadioGroup
+            id="model-type-group"
+            value={predictFormData.model_types[0] || ''}
+            onValueChange={(newValue) => handleFormInputChange('predict', 'model_types', newValue)}
+            className="flex flex-wrap gap-x-4 gap-y-2"
+          >
+            {MODEL_TYPES_OPTIONS.map((type) => (
+              <div key={type} className="flex items-center space-x-2">
+                <RadioGroupItem value={type} id={`predict-type-${type}`} />
+                <Label htmlFor={`predict-type-${type}`} className="font-normal">{MODEL_DISPLAY_NAMES[type]}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-[150px_1fr] items-start gap-4">
+        <Label className="text-right pt-2">Chọn Trạm</Label>
+        <div className="space-y-2 w-full">
+          <ScrollArea className="h-72 w-full rounded-md border p-2">
+            <div className="space-y-2">
+              {stationsAvailableForPrediction.length > 0 ? (
+                stationsAvailableForPrediction.map((station) => (
+                  <div key={station.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`predict-station-${station.id}`}
+                      checked={predictFormData.place_ids.includes(station.id)}
+                      onCheckedChange={() => handleFormInputChange('predict', 'place_ids', station.id)}
+                    />
+                    <Label htmlFor={`predict-station-${station.id}`} className="font-normal">
+                      {station.name}
+                    </Label>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground">Không có trạm nào có model AI liên kết để dự đoán.</p>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
+    </div>
+    <DialogFooter>
+      <DialogClose asChild>
+        <Button variant="outline" disabled={isProcessing['global-predict']}>Hủy</Button>
+      </DialogClose>
+      <Button type="submit" onClick={handlePredictSubmit} disabled={isProcessing['global-predict']}>
+        {isProcessing['global-predict'] ? "Đang dự đoán..." : "Bắt đầu dự đoán"}
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+                </main>
+            </div>
+        </TooltipProvider>
+    );
 }

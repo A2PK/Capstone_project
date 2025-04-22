@@ -16,7 +16,9 @@
 .logo img {
     margin: 0 auto;
 }
-
+.apexcharts-legend-series:has(span.apexcharts-legend-text:empty) {
+    display: none !important; /* Dùng !important nếu cần để ghi đè style của thư viện */
+  }
 .miniicons {
     height: calc(100vh - 150px);
 }

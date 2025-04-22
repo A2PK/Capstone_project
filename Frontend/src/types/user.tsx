@@ -1,16 +1,22 @@
+import { PaginParam } from "./station2";
+
 export interface User {
   id: string;
+  createdAt: string;
+  updatedAt: string;
+  username: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: string; // You might consider using a more specific type like 'user' | 'admin' | 'officer' if the roles are fixed
-  createdAt: string; // Or potentially number or Date if you plan to convert it immediately
-  updatedAt: string; // Or potentially number or Date
-  username: string;
+  role: string; // Hoặc cụ thể hơn: 'admin' | 'officer' | ...
   isActive: boolean;
-  lastLoginAt: string; // Or potentially number or Date
-  phone: string;
-  address: string;
-  age: number;
-  profilePic: string;
+  phone?: string | null; // Thêm ? hoặc | null nếu có thể thiếu
+  address?: string | null;
+  age?: number | null;
+  profilePic?: string | null;
+}
+
+export interface getUsers {
+  users: User[],
+  paginationInfo: PaginParam
 }

@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/hooks/use-toast"
 import { UserCircle, Upload } from "lucide-react"
-
+import { updateUser } from "@/lib/user"
+import { User } from "@/types/user"
 export default function EditProfilePage() {
   
   const router = useRouter()

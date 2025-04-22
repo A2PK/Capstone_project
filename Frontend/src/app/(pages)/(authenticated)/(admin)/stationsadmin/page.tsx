@@ -1,455 +1,671 @@
+// File: src/app/stationsadmin/page.tsx
 "use client";
 
-import { Pagination } from "@/components/pagination";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import "leaflet/dist/leaflet.css";
-import StationDetails from "@/components/stationsDetails";
+import React, { useEffect, useState, useMemo, ChangeEvent, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-import Chartline from "@/components/linechart";
-import { Station } from "@/types/station";
-import { getStatusTextColor } from "@/lib/utils";
-import PageLoader from "@/components/pageloader";
+import { useSearchParams, useRouter } from 'next/navigation'; // Hook để đọc URL search params
+import { format } from 'date-fns';
+import L from 'leaflet';
+import { Station, DataPoint, QueryOptions, Indicator } from "@/types/station2"; // Đảm bảo đường dẫn đúng
+import { getStations, getDataPointsOfStationById } from "@/lib/station"; // Đảm bảo đường dẫn đúng
+import { getStatusTextColor } from "@/lib/utils"; // Đảm bảo đường dẫn đúng
+
+// Import các UI components
+import { Pagination } from "@/components/pagination2"; // Đảm bảo đường dẫn đúng
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Đảm bảo đường dẫn đúng
+import { Input } from "@/components/ui/input"; // Đảm bảo đường dẫn đúng
+
+// Import các components tùy chỉnh
+import StationDetails from "@/components/stationsDetails"; // Đảm bảo đường dẫn đúng
+import Chartline from "@/components/linechart"; // Đảm bảo đường dẫn đúng
+import PageLoader from "@/components/pageloader"; // Đảm bảo đường dẫn đúng
+import MapUpdater from '@/components/MapUpdater'; // Đảm bảo đường dẫn đúng
+
+// Import CSS cho Leaflet
+import "leaflet/dist/leaflet.css";
+
+// --- Dynamic Imports cho các component của Leaflet (chỉ chạy phía client) ---
 const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), { ssr: false });
 const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), { ssr: false });
 const MarkerClusterGroup = dynamic(() => import("react-leaflet-cluster"), { ssr: false });
 
-const stations: Station[] = [
-    {
-      name: "Tân An",
-      lat: 10.535,
-      lng: 106.413,
-      wqi: 37,
-      status: "Nguy hiểm",
-      recommendation: "WQI nguy hiểm, cần xử lý nguồn nước khẩn cấp",
-      time: "10:20, Thg 3, 2025",
-      trend: [25, 30, 34, 37, 33, 39, 42, 40, 45, 47, 44, 49, 46, 50, 48],
-      prediction: [50, 53, 55, 58, 60, 62, 65, 68, 70, 72, 74, 75, 78, 80, 82],
-      feature: [
-        {
-          name: "pH",
-          trend: [6.0, 6.1, 6.3, 6.2, 6.4, 6.5, 6.3, 6.6, 6.7, 6.8, 6.5, 6.9, 7.0, 6.8, 7.1],
-          prediction: [7.0, 7.1, 7.2, 7.3, 7.2, 7.4, 7.5, 7.5, 7.6, 7.7, 7.8, 7.9, 8.0, 8.0, 8.1],
-        },
-        {
-          name: "NH4",
-          trend: [1.2, 1.5, 1.8, 2.0, 1.7, 2.2, 2.4, 2.1, 2.5, 2.7, 2.6, 2.9, 3.0, 2.8, 3.1],
-          prediction: [3.0, 3.2, 3.3, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.2, 4.3, 4.4, 4.5, 4.6, 4.8],
-        },
-        {
-          name: "DO",
-          trend: [4.5, 4.3, 4.0, 3.8, 4.1, 3.9, 3.7, 4.0, 4.2, 4.3, 4.1, 4.4, 4.5, 4.6, 4.7],
-          prediction: [4.8, 4.9, 5.0, 5.1, 5.0, 5.2, 5.3, 5.4, 5.4, 5.5, 5.6, 5.6, 5.7, 5.8, 6.0],
-        },
-      ],
-    },
-    {
-      name: "Mỹ Tho",
-      lat: 10.36,
-      lng: 106.365,
-      wqi: 78,
-      status: "Tốt",
-      recommendation: "WQI tốt, cần theo dõi thường xuyên",
-      time: "10:20, Thg 3, 2025",
-      trend: [68, 70, 72, 74, 73, 76, 78, 77, 80, 82, 81, 84, 85, 87, 89],
-      prediction: [90, 91, 92, 93, 94, 95, 96, 97, 97, 98, 99, 99, 100, 100, 100],
-      feature: [
-        {
-          name: "pH",
-          trend: [6.8, 6.9, 7.0, 7.1, 7.0, 7.2, 7.3, 7.2, 7.4, 7.5, 7.4, 7.6, 7.7, 7.8, 7.9],
-          prediction: [8.0, 8.0, 8.1, 8.2, 8.2, 8.3, 8.4, 8.4, 8.5, 8.6, 8.6, 8.7, 8.8, 8.8, 8.9],
-        },
-        {
-          name: "NH4",
-          trend: [0.8, 0.9, 1.0, 1.1, 1.0, 1.2, 1.3, 1.2, 1.4, 1.5, 1.4, 1.6, 1.7, 1.8, 1.9],
-          prediction: [1.9, 2.0, 2.1, 2.2, 2.2, 2.3, 2.4, 2.5, 2.6, 2.6, 2.7, 2.8, 2.9, 3.0, 3.0],
-        },
-        {
-          name: "DO",
-          trend: [6.0, 6.2, 6.3, 6.4, 6.3, 6.5, 6.6, 6.7, 6.8, 6.8, 6.9, 7.0, 7.1, 7.1, 7.2],
-          prediction: [7.2, 7.3, 7.4, 7.5, 7.5, 7.6, 7.7, 7.7, 7.8, 7.9, 7.9, 8.0, 8.1, 8.2, 8.2],
-        },
-      ],
-    },
-    {
-      name: "Bến Tre",
-      lat: 10.241,
-      lng: 106.375,
-      wqi: 92,
-      status: "Rất tốt",
-      recommendation: "WQI rất tốt, đảm bảo an toàn sinh hoạt",
-      time: "10:19, Thg 3, 2025",
-      trend: [85, 87, 88, 89, 90, 91, 92, 91, 93, 94, 95, 96, 97, 98, 99],
-      prediction: [99, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100],
-      feature: [
-        {
-          name: "pH",
-          trend: [7.2, 7.3, 7.4, 7.4, 7.5, 7.6, 7.7, 7.6, 7.8, 7.9, 7.9, 8.0, 8.0, 8.1, 8.2],
-          prediction: [8.2, 8.3, 8.3, 8.4, 8.4, 8.5, 8.6, 8.6, 8.7, 8.8, 8.8, 8.9, 8.9, 9.0, 9.0],
-        },
-        {
-          name: "NH4",
-          trend: [0.6, 0.7, 0.8, 0.8, 0.9, 1.0, 1.0, 1.0, 1.1, 1.2, 1.2, 1.3, 1.3, 1.4, 1.4],
-          prediction: [1.4, 1.5, 1.5, 1.6, 1.6, 1.7, 1.7, 1.8, 1.8, 1.9, 1.9, 2.0, 2.0, 2.1, 2.1],
-        },
-        {
-          name: "DO",
-          trend: [7.0, 7.1, 7.2, 7.2, 7.3, 7.4, 7.5, 7.4, 7.6, 7.7, 7.7, 7.8, 7.9, 8.0, 8.0],
-          prediction: [8.0, 8.1, 8.2, 8.2, 8.3, 8.4, 8.4, 8.5, 8.5, 8.6, 8.7, 8.7, 8.8, 8.9, 8.9],
-        },
-      ],
-    },
-    {
-        name: "Vĩnh Long",
-        lat: 10.253,
-        lng: 105.972,
-        wqi: 75,
-        status: "Tốt",
-        recommendation: "WQI tốt, có thể sử dụng nước sinh hoạt",
-        time: "10:19, Thg 3, 2025",
-        trend: [65, 68, 70, 72, 74, 73, 75, 76, 78, 80, 82, 81, 84, 85, 87],
-        prediction: [87, 88, 89, 90, 91, 92, 93, 94, 95, 95, 96, 97, 98, 99, 100],
-        feature: [
-          {
-            name: "pH",
-            trend: [6.9, 7.0, 7.1, 7.1, 7.2, 7.3, 7.4, 7.4, 7.5, 7.6, 7.7, 7.7, 7.8, 7.9, 8.0],
-            prediction: [8.0, 8.1, 8.2, 8.3, 8.3, 8.4, 8.5, 8.6, 8.6, 8.7, 8.8, 8.8, 8.9, 9.0, 9.0],
-          },
-          {
-            name: "NH4",
-            trend: [1.0, 1.1, 1.2, 1.2, 1.3, 1.4, 1.4, 1.5, 1.6, 1.6, 1.7, 1.8, 1.8, 1.9, 2.0],
-            prediction: [2.0, 2.1, 2.2, 2.3, 2.3, 2.4, 2.5, 2.5, 2.6, 2.7, 2.8, 2.8, 2.9, 3.0, 3.0],
-          },
-          {
-            name: "DO",
-            trend: [5.5, 5.6, 5.7, 5.7, 5.8, 5.9, 6.0, 6.0, 6.1, 6.2, 6.3, 6.3, 6.4, 6.5, 6.5],
-            prediction: [6.6, 6.7, 6.7, 6.8, 6.9, 6.9, 7.0, 7.1, 7.1, 7.2, 7.3, 7.3, 7.4, 7.5, 7.5],
-          },
-        ],
-      },
-      {
-        name: "Cần Thơ",
-        lat: 10.033,
-        lng: 105.783,
-        wqi: 88,
-        status: "Rất tốt",
-        recommendation: "WQI rất tốt, đảm bảo an toàn sử dụng",
-        time: "10:18, Thg 3, 2025",
-        trend: [80, 82, 83, 85, 86, 88, 89, 90, 91, 93, 94, 95, 96, 97, 98],
-        prediction: [98, 99, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100],
-        feature: [
-          {
-            name: "pH",
-            trend: [7.0, 7.1, 7.2, 7.2, 7.3, 7.4, 7.5, 7.5, 7.6, 7.7, 7.7, 7.8, 7.9, 8.0, 8.0],
-            prediction: [8.0, 8.1, 8.2, 8.3, 8.3, 8.4, 8.5, 8.5, 8.6, 8.7, 8.7, 8.8, 8.9, 9.0, 9.0],
-          },
-          {
-            name: "NH4",
-            trend: [0.9, 1.0, 1.1, 1.1, 1.2, 1.3, 1.3, 1.4, 1.5, 1.5, 1.6, 1.7, 1.7, 1.8, 1.9],
-            prediction: [1.9, 2.0, 2.1, 2.2, 2.2, 2.3, 2.4, 2.4, 2.5, 2.6, 2.6, 2.7, 2.8, 2.9, 3.0],
-          },
-          {
-            name: "DO",
-            trend: [6.0, 6.1, 6.2, 6.2, 6.3, 6.4, 6.5, 6.5, 6.6, 6.7, 6.7, 6.8, 6.9, 7.0, 7.0],
-            prediction: [7.0, 7.1, 7.2, 7.3, 7.3, 7.4, 7.5, 7.5, 7.6, 7.7, 7.7, 7.8, 7.9, 8.0, 8.0],
-          },
-        ],
-      },
-      {
-        name: "Trà Vinh",
-        lat: 9.934,
-        lng: 106.342,
-        wqi: 62,
-        status: "Trung bình",
-        recommendation: "WQI trung bình, cần giám sát thêm",
-        time: "10:18, Thg 3, 2025",
-        trend: [50, 52, 55, 57, 60, 58, 62, 63, 65, 67, 68, 70, 72, 73, 75],
-        prediction: [75, 76, 77, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90],
-        feature: [
-          {
-            name: "pH",
-            trend: [6.2, 6.3, 6.4, 6.4, 6.5, 6.6, 6.7, 6.7, 6.8, 6.9, 6.9, 7.0, 7.1, 7.2, 7.3],
-            prediction: [7.3, 7.4, 7.5, 7.6, 7.6, 7.7, 7.8, 7.8, 7.9, 8.0, 8.0, 8.1, 8.2, 8.2, 8.3],
-          },
-          {
-            name: "NH4",
-            trend: [1.5, 1.6, 1.7, 1.7, 1.8, 1.9, 1.9, 2.0, 2.1, 2.1, 2.2, 2.3, 2.3, 2.4, 2.5],
-            prediction: [2.5, 2.6, 2.7, 2.8, 2.8, 2.9, 3.0, 3.0, 3.1, 3.2, 3.3, 3.3, 3.4, 3.5, 3.5],
-          },
-          {
-            name: "DO",
-            trend: [4.8, 4.9, 5.0, 5.0, 5.1, 5.2, 5.3, 5.3, 5.4, 5.5, 5.5, 5.6, 5.7, 5.8, 5.8],
-            prediction: [5.8, 5.9, 6.0, 6.1, 6.1, 6.2, 6.3, 6.3, 6.4, 6.5, 6.5, 6.6, 6.7, 6.8, 6.8],
-          },
-        ],
-      },
-      {
-        name: "Long Xuyên",
-        lat: 10.371,
-        lng: 105.432,
-        wqi: 45,
-        status: "Kém",
-        recommendation: "WQI thấp, cần xử lý trước khi sử dụng",
-        time: "10:18, Thg 3, 2025",
-        trend: [40, 42, 43, 44, 45, 46, 47, 47, 48, 49, 50, 51, 51, 52, 53],
-        prediction: [53, 54, 55, 55, 56, 57, 58, 58, 59, 60, 61, 62, 63, 64, 65],
-        feature: [
-          {
-            name: "pH",
-            trend: [6.0, 6.1, 6.2, 6.2, 6.3, 6.4, 6.5, 6.5, 6.6, 6.7, 6.7, 6.8, 6.9, 6.9, 7.0],
-            prediction: [7.0, 7.1, 7.2, 7.2, 7.3, 7.4, 7.5, 7.5, 7.6, 7.7, 7.7, 7.8, 7.9, 7.9, 8.0],
-          },
-          {
-            name: "NH4",
-            trend: [2.0, 2.1, 2.2, 2.2, 2.3, 2.4, 2.5, 2.5, 2.6, 2.7, 2.8, 2.8, 2.9, 3.0, 3.0],
-            prediction: [3.1, 3.2, 3.3, 3.3, 3.4, 3.5, 3.6, 3.6, 3.7, 3.8, 3.9, 3.9, 4.0, 4.1, 4.2],
-          },
-          {
-            name: "DO",
-            trend: [4.5, 4.6, 4.7, 4.7, 4.8, 4.9, 5.0, 5.0, 5.1, 5.2, 5.2, 5.3, 5.4, 5.5, 5.5],
-            prediction: [5.5, 5.6, 5.7, 5.7, 5.8, 5.9, 6.0, 6.0, 6.1, 6.2, 6.2, 6.3, 6.4, 6.5, 6.5],
-          },
-        ],
-      },
-  ];
 
-
-let redIcon: any, blueIcon: any, createClusterCustomIcon: any;
-
+// --- Định nghĩa Icons cho Leaflet (chỉ chạy phía client) ---
+let redIcon: L.Icon | undefined, blueIcon: L.Icon | undefined, createClusterCustomIcon: ((cluster: any) => L.DivIcon) | undefined;
 if (typeof window !== "undefined") {
-  const { Icon, divIcon, point } = require("leaflet");
+    // Đảm bảo Leaflet chỉ được require ở client-side
+    const LGlobal = require("leaflet");
 
-  redIcon = new Icon({
-    iconUrl: "/red_one.png",
-    iconSize: [38, 38],
-  });
-
-  blueIcon = new Icon({
-    iconUrl: "/blue_one.png",
-    iconSize: [38, 38],
-  });
-
-  createClusterCustomIcon = (cluster: any) => {
-    return divIcon({
-      html: `<span style="background-color: #333; height: 2em; width: 2em; color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.2rem; box-shadow: 0 0 0px 5px #fff;">${cluster.getChildCount()}</span>`,
-      className: "custom-marker-cluster",
-      iconSize: point(33, 33, true),
+    // Icon màu đỏ cho trạm không được chọn
+    redIcon = new LGlobal.Icon({
+        iconUrl: "/red_one.png", // Đường dẫn tương đối từ thư mục /public
+        iconSize: [38, 38] as L.PointTuple,
+        iconAnchor: [19, 38] as L.PointTuple,
+        popupAnchor: [0, -38] as L.PointTuple,
     });
-  };
+
+    // Icon màu xanh cho trạm đang được chọn
+    blueIcon = new LGlobal.Icon({
+        iconUrl: "/blue_one.png", // Đường dẫn tương đối từ thư mục /public
+        iconSize: [38, 38] as L.PointTuple,
+        iconAnchor: [19, 38] as L.PointTuple,
+        popupAnchor: [0, -38] as L.PointTuple,
+    });
+
+    // Hàm tạo icon tùy chỉnh cho các cụm marker
+    createClusterCustomIcon = (cluster: any): L.DivIcon => {
+        const count = cluster.getChildCount();
+        const style = `
+      background-color: rgba(51, 51, 51, 0.8);
+      height: 2.5em;
+      width: 2.5em;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 1rem;
+      font-weight: bold;
+      box-shadow: 0 0 5px rgba(0,0,0,0.5);
+      border: 2px solid #fff;
+    `;
+        return LGlobal.divIcon({
+            html: `<span style="${style}">${count}</span>`,
+            className: "custom-marker-cluster",
+            iconSize: LGlobal.point(40, 40, true),
+        });
+    };
 }
 
+
+// --- Hàm hỗ trợ ---
+
+// Hàm xác định trạng thái chất lượng nước từ chỉ số WQI
+function deriveStatusFromWqi(wqi: number | null | undefined): string {
+    if (wqi === null || wqi === undefined || isNaN(wqi)) {
+        return "Không xác định";
+    }
+    // Dựa trên QCVN 08-MT:2015/BTNMT (ví dụ)
+    if (wqi > 91) return "Rất Tốt";
+    if (wqi > 76) return "Tốt";
+    if (wqi > 51) return "Trung Bình";
+    if (wqi > 26) return "Kém";
+    if (wqi >= 0) return "Rất Kém";
+    return "Không xác định";
+}
+
+// Hàm định dạng thời gian quan trắc
+function formatMonitoringTime(timeString: string | undefined | null): string {
+    if (!timeString) return "N/A";
+    try {
+        const date = new Date(timeString);
+        if (isNaN(date.getTime())) {
+            console.error("Invalid date format received:", timeString);
+            return timeString; // Trả về chuỗi gốc nếu không hợp lệ
+        }
+        return format(date, 'HH:mm, dd/MM/yyyy'); // Định dạng giờ:phút, ngày/tháng/năm
+    } catch (e) {
+        console.error("Failed to format time:", timeString, e);
+        return timeString; // Trả về chuỗi gốc nếu có lỗi
+    }
+}
+
+// --- Component chính ---
 export default function StationsPage() {
-  const [selectedStation, setSelectedStation] = useState(stations[0]);
-  const [isLoading, setIsLoading] = useState(true);
-      useEffect(() => {
-              // Simulate loading delay (e.g., fetching data)
-              const timeout = setTimeout(() => {
-                setIsLoading(false);
-              }, 1000); // 1.5s delay
-              return () => clearTimeout(timeout);
-            }, []);
-          
-  
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+    // --- State Variables ---
+    const [stations, setStations] = useState<Station[]>([]); // Danh sách tất cả trạm
+    const [selectedStation, setSelectedStation] = useState<Station | null>(null); // Trạm đang được chọn
+    const [selectedStationDataPoints, setStationDataPoints] = useState<DataPoint[]>([]); // Dữ liệu gốc của trạm được chọn (nếu cần)
+    const [historicalDataPoints, setHistoricalDataPoints] = useState<DataPoint[]>([]); // Dữ liệu lịch sử
+    // *** THAY ĐỔI: State mới để lưu dữ liệu dự đoán đã nhóm theo source ***
+    const [groupedPredictionDataPoints, setGroupedPredictionDataPoints] = useState<Map<string, DataPoint[]>>(new Map());
+    const [latestDataPoint, setLatestDataPoint] = useState<DataPoint | null>(null); // Điểm dữ liệu lịch sử mới nhất
+    const [isLoadingStations, setIsLoadingStations] = useState<boolean>(true); // Trạng thái tải danh sách trạm
+    const [isLoadingDataPoints, setIsLoadingDataPoints] = useState<boolean>(false); // Trạng thái tải dữ liệu chi tiết của trạm
+    const [error, setError] = useState<string | null>(null); // Lỗi (chung hoặc khi tải dữ liệu trạm)
+    const [selectedFeature, setSelectedFeature] = useState<string>("pH"); // Chỉ số đang chọn để hiển thị trên biểu đồ
+    const [currentPage, setCurrentPage] = useState<number>(1); // Trang hiện tại của bảng
+    const [searchTerm, setSearchTerm] = useState<string>(""); // Từ khóa tìm kiếm trong bảng
+    const [initialSelectionAttempted, setInitialSelectionAttempted] = useState(false); // Cờ đánh dấu đã thử chọn trạm từ URL hay chưa
 
-  const handlePageChange = (page: any) => setCurrentPage(page);
+    // --- Constants ---
+    const itemsPerPage = 5; // Số trạm trên mỗi trang của bảng
+    const initialMapCenter: L.LatLngExpression = [10.8231, 106.6297]; // Tọa độ trung tâm bản đồ mặc định (TP.HCM)
+    const initialMapZoom = 10; // Mức zoom bản đồ mặc định
+    const SELECTED_STATION_ZOOM = 14; // Mức zoom khi chọn một trạm
 
-  const getMonthLabels = () => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const now = new Date().getMonth(); // Get current month index (0-based)
+    // --- Hook để lấy search params từ URL ---
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    // --- Data Fetching Effects ---
 
-    return [
-      months[(now - 3 + 12) % 12],
-      months[(now - 2 + 12) % 12],
-      months[(now - 1 + 12) % 12],
-      "Tháng này",
-      months[(now + 1) % 12],
-      months[(now + 2) % 12],
-      months[(now + 3) % 12],
-    ];
-  };
-  const labels = getMonthLabels();
+    // Effect: Tải danh sách tất cả các trạm khi component được mount lần đầu
+    useEffect(() => {
+        setIsLoadingStations(true);
+        setError(null);
+        setInitialSelectionAttempted(false); // Reset cờ khi tải lại danh sách
+        getStations({ limit: 1000 }) // Lấy nhiều trạm, cân nhắc pagination ở backend nếu quá lớn
+            .then(data => {
+                setStations(data);
+                // Việc chọn trạm ban đầu (nếu có ID từ URL) sẽ được xử lý ở useEffect khác
+            })
+            .catch(err => {
+                console.error("Failed to fetch stations:", err);
+                setError("Không thể tải danh sách trạm quan trắc. Vui lòng thử lại.");
+            })
+            .finally(() => {
+                setIsLoadingStations(false);
+            });
+    }, []); // Mảng dependency rỗng = chỉ chạy 1 lần khi mount
 
-  const nowIndex = Math.floor(labels.length / 2); // Find the index of "Now" in the labels array
-  const defaultFeature =
-    selectedStation.trend && selectedStation.prediction
-      ? "WQI"
-      : selectedStation.feature.length > 0
-      ? selectedStation.feature[0].name
-      : null;
+    // --- Event Handlers ---
 
-  const [selectedFeature, setSelectedFeature] = useState<string | null>(
-    defaultFeature
-  );
+    // Hàm xử lý khi chọn một trạm (từ bảng hoặc map)
+    // Sử dụng useCallback để tối ưu, vì hàm này là dependency của useEffect khác
+    const handleSelectStation = useCallback((station: Station) => {
+        // Chỉ xử lý nếu chọn một trạm khác với trạm đang chọn
+        if (selectedStation?.id !== station.id) {
+            console.log(`Selecting station: ${station.name} (ID: ${station.id})`);
+            setSelectedStation(station); // Cập nhật state trạm được chọn
 
-  const handleFeatureChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedFeature(event.target.value);
-  };
-  const selectedData =
-    selectedFeature === "WQI"
-      ? selectedStation.trend && selectedStation.prediction
-        ? { trend: selectedStation.trend, prediction: selectedStation.prediction }
-        : null
-      : selectedStation.feature.find((f) => f.name === selectedFeature);
+            // Tìm vị trí của trạm trong danh sách gốc để tính toán trang
+            const stationIndex = stations.findIndex(s => s.id === station.id);
+            if (stationIndex !== -1) {
+                // Tính trang mục tiêu (bắt đầu từ 1)
+                const targetPage = Math.ceil((stationIndex + 1) / itemsPerPage);
+                // setCurrentPage(targetPage); // Cập nhật trang hiện tại của bảng
+            } else {
+                 // setCurrentPage(1); // Nếu không tìm thấy, về trang 1
+            }
+             const newUrl = `/stationsadmin?id=${station.id}`;
+             router.push(newUrl, { scroll: false });
+        }
+    }, [selectedStation?.id, stations, itemsPerPage, router]); // Dependencies của useCallback
 
-      if (isLoading) return <PageLoader message="Đang tải trang trạm quan trắc..." />;
-  return (
-    <div className="flex flex-1 overflow-hidden"> {/* Sidebar-aware container */}
-      {/* Main Content */}
-      <div className="flex flex-col flex-grow overflow-hidden space-y-4 p-4">
-        {/* Header */}
-        <header className="flex justify-between items-center border-b pb-2">
-          <h1 className="text-2xl font-bold">Trạm Quan Trắc</h1>
+    // *** Effect MỚI: Xử lý chọn trạm dựa trên tham số 'id' từ URL ***
+    useEffect(() => {
+        if (!isLoadingStations && stations.length > 0 && searchParams && !selectedStation && !initialSelectionAttempted) {
+            const stationIdFromUrl = searchParams.get('id');
+            let stationToSelect: Station | undefined = undefined;
 
-        </header>
+            if (stationIdFromUrl) {
+                stationToSelect = stations.find(s => s.id === stationIdFromUrl);
+                if (stationToSelect) {
+                    console.log(`Found station from URL parameter "id": ${stationToSelect.name}`);
+                } else {
+                    console.warn(`Station ID "${stationIdFromUrl}" from URL parameter "id" not found.`);
+                }
+            } else {
+                const firstKey = searchParams.keys().next().value;
+                if (firstKey) {
+                    console.warn(`URL parameter "id" not found. Attempting to use first query key "${firstKey}" as ID.`);
+                    stationToSelect = stations.find(s => s.id === firstKey);
+                    if (stationToSelect) {
+                        console.log(`Found station from URL (first key fallback): ${stationToSelect.name}`);
+                    } else {
+                        console.warn(`Station ID "${firstKey}" from first URL query key not found.`);
+                    }
+                }
+            }
 
-        {/* Map & Table */}
-        <div className="flex flex-grow gap-4 min-h-[60vh] overflow-hidden">
-          {/* Map Section */}
-          <div className="flex-grow min-w-0"> {/* Fills remaining space */}
-            <MapContainer
-              center={[10.535, 106.413]}
-              zoom={10}
-              style={{ height: "100%", width: "100%", borderRadius: "1.5rem" }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {createClusterCustomIcon && (
-                <MarkerClusterGroup iconCreateFunction={createClusterCustomIcon}>
-                  {stations.map((station, index) => (
-                    <Marker
-                      key={index}
-                      position={[station.lat, station.lng]}
-                      icon={selectedStation.name === station.name ? blueIcon : redIcon}
-                      eventHandlers={{
-                        click: () => setSelectedStation(station),
-                        mouseover: (e) => e.target.openPopup(), // Mở popup khi hover
-                        mouseout: (e) => e.target.closePopup(), // Đóng popup khi rời chuột
-                      }}
-                    >
-                      <Popup>
-                        <div className="p-2 rounded-lg bg-white max-w-xs min-w-[200px] border">
-                          <h3 className="text-lg font-bold">{station.name}</h3>
-                          <p>WQI: <span className="font-bold text-blue-500">{station.wqi}</span></p>
-                          <p className={`${station.status === "Nguy hiểm" ? "text-red-500"
-                            : station.status === "Tốt" ? "text-green-800"
-                              : "text-blue-500"
-                            }`}>
-                            Trạng thái: {station.status}
-                          </p>
-                          <p className="text-xs text-gray-500">{station.time}</p>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  ))}
-                </MarkerClusterGroup>
-              )}
-            </MapContainer>
-          </div>
+            if (stationToSelect) {
+                handleSelectStation(stationToSelect);
+            }
+            setInitialSelectionAttempted(true);
+        }
+    }, [
+        stations,
+        searchParams,
+        selectedStation,
+        isLoadingStations,
+        initialSelectionAttempted,
+        handleSelectStation
+    ]);
 
-          {/* Table Section */}
-          <div className="w-full md:w-1/3 max-w-sm overflow-auto p-2 min-w-[250px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Trạm</TableHead>
-                  <TableHead>WQI</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stations
-                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                  .map((station, index) => {
-                    const isSelected = selectedStation.name === station.name;
-                    return (
-                      <TableRow
-                        key={index}
-                        onClick={() => setSelectedStation(station)}
-                        className={`cursor-pointer transition-colors 
-                ${isSelected ? "bg-blue-200" : "hover:bg-gray-100"}`}
-                        style={isSelected ? { pointerEvents: "none" } : {}}
-                      >
-                        <TableCell className="font-medium">{station.name}</TableCell>
-                        <TableCell>{station.wqi}</TableCell>
-                        <TableCell
-                          className={getStatusTextColor(station.status)}
-                        >
-                          {station.status}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-              </TableBody>
-            </Table>
+    // *** THAY ĐỔI TRONG useEffect TẢI DỮ LIỆU CHI TIẾT ***
+    // Effect: Tải dữ liệu chi tiết (data points) khi `selectedStation` thay đổi
+    useEffect(() => {
+        if (!selectedStation) {
+            setStationDataPoints([]);
+            setHistoricalDataPoints([]);
+            // THAY ĐỔI: Reset state mới
+            setGroupedPredictionDataPoints(new Map());
+            setLatestDataPoint(null);
+            setError(null);
+            return;
+        }
 
-            {/* Thêm margin-top để phân trang không bị sát với bảng */}
-            <div className="mt-3">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={Math.ceil(stations.length / itemsPerPage)}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          </div>
+        setIsLoadingDataPoints(true);
+        setError(null);
+        setStationDataPoints([]);
+        setHistoricalDataPoints([]);
+        // THAY ĐỔI: Reset state mới
+        setGroupedPredictionDataPoints(new Map());
+        setLatestDataPoint(null);
 
-        </div>
+        const queryOptions: QueryOptions = { limit: 200, sortBy: "monitoring_time", sortDesc: true };
 
-        {/* Detail Section */}
-        <div className="flex flex-col items-center">
-          {selectedStation && <StationDetails selectedStation={selectedStation} />}
-        </div>
-        {/* <Chartline trend={selectedStation.trend} prediction={selectedStation.prediction} title="chất lượng nước WQI"/>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {selectedStation.feature.map((feature, idx) => (
-            <div key={idx} className="w-full">
-              {/* <h2 className="text-lg font-semibold text-center">{feature.name}</h2> */}
-              {/* <Chartline trend={feature.trend} prediction={feature.prediction} title={feature.name}/>
-            </div>
-          ))}
-        </div> */} 
-        <div>
-      {selectedStation.feature.length > 0 || selectedStation.trend ? (
-        <>
-          {/* Feature Selection Dropdown */}
-          <div className="flex justify-center mb-4">
-            <select
-              value={selectedFeature || ""}
-              onChange={handleFeatureChange}
-              className="border p-2 rounded-md"
-            >
-              {selectedStation.trend && selectedStation.prediction && (
-                <option value="WQI">Chất lượng nước WQI</option>
-              )}
-              {selectedStation.feature.map((feature, idx) => (
-                <option key={idx} value={feature.name}>
-                  Chỉ số {feature.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        getDataPointsOfStationById(selectedStation.id, queryOptions)
+            .then(data => {
+                setStationDataPoints(data); // Lưu dữ liệu gốc (nếu cần)
 
-          {/* Display Selected Chart */}
-          {selectedData ? (
-            <Chartline
-              trend={selectedData.trend}
-              prediction={selectedData.prediction}
-              title={selectedFeature!}
-            />
-          ) : null}
-        </>
-      ) : (
-        <div className="flex justify-center items-center h-40 bg-gray-200 text-red-600 font-semibold rounded-lg">
-          There is no data for this station
-        </div>
-      )}
-    </div>
-      </div>
-    </div>
-  );
+                const historical: DataPoint[] = [];
+                // THAY ĐỔI: Sử dụng Map để nhóm dự đoán theo source
+                const predictionsBySource = new Map<string, DataPoint[]>();
+
+                data.forEach(dp => {
+                    try {
+                        // Validate timestamp ngay từ đầu
+                        const monitoringDate = new Date(dp.monitoringTime);
+                        if (isNaN(monitoringDate.getTime())) {
+                            console.warn("Invalid monitoringTime found, skipping DataPoint:", dp.monitoringTime, "for ID:", dp.id);
+                            return; // Bỏ qua điểm dữ liệu này
+                        }
+
+                        if (dp.observationType === 'OBSERVATION_TYPE_PREDICTED') {
+                            const source = dp.source || "Unknown"; // Gán source mặc định nếu thiếu
+                            if (!predictionsBySource.has(source)) {
+                                predictionsBySource.set(source, []);
+                            }
+                            // ?.push() an toàn hơn nếu get trả về undefined (dù không nên xảy ra với logic này)
+                            predictionsBySource.get(source)?.push(dp);
+                        } else {
+                            historical.push(dp);
+                        }
+                    } catch (e) {
+                         console.error("Error processing raw data point:", dp, e);
+                    }
+                });
+
+                // Điểm lịch sử mới nhất là điểm đầu tiên trong mảng historical (do đã sort desc từ API)
+                const latestHistorical = historical.length > 0 ? historical[0] : null;
+
+                // Sắp xếp lịch sử tăng dần (ASC)
+                const sortedHistoricalAsc = [...historical].sort((a, b) => new Date(a.monitoringTime).getTime() - new Date(b.monitoringTime).getTime());
+
+                // Sắp xếp từng nhóm dự đoán tăng dần (ASC)
+                const sortedGroupedPredictions = new Map<string, DataPoint[]>();
+                predictionsBySource.forEach((points, source) => {
+                    const sortedPoints = [...points].sort((a, b) => new Date(a.monitoringTime).getTime() - new Date(b.monitoringTime).getTime());
+                    sortedGroupedPredictions.set(source, sortedPoints);
+                });
+
+                console.log("Processed Historical Data (ASC):", sortedHistoricalAsc.length);
+                console.log("Processed Grouped Prediction Data (ASC):", sortedGroupedPredictions);
+
+                // Cập nhật state
+                setHistoricalDataPoints(sortedHistoricalAsc);
+                // THAY ĐỔI: Cập nhật state mới
+                setGroupedPredictionDataPoints(sortedGroupedPredictions);
+                setLatestDataPoint(latestHistorical); // Cập nhật điểm dữ liệu mới nhất
+                setSelectedFeature("pH"); // Reset về WQI khi chọn trạm mới
+            })
+            .catch(err => {
+                console.error(`Failed to fetch data points for station ${selectedStation.id}:`, err);
+                setError(`Không thể tải dữ liệu cho trạm ${selectedStation.name}.`);
+                // Đảm bảo xóa dữ liệu khi có lỗi
+                setLatestDataPoint(null);
+                setHistoricalDataPoints([]);
+                 // THAY ĐỔI: Reset state mới
+                setGroupedPredictionDataPoints(new Map());
+            })
+            .finally(() => {
+                // Kết thúc trạng thái tải
+                setIsLoadingDataPoints(false);
+            });
+    }, [selectedStation]); // Dependency: Chạy lại effect này mỗi khi `selectedStation` thay đổi
+
+
+    // --- Memoized Calculations (Tính toán được ghi nhớ để tối ưu) ---
+
+    // Lọc danh sách trạm dựa trên từ khóa tìm kiếm
+    const filteredStations = useMemo(() => {
+        if (!searchTerm) {
+            return stations; // Trả về tất cả nếu không có từ khóa
+        }
+        const lowerCaseSearch = searchTerm.toLowerCase();
+        return stations.filter(station =>
+            station.name.toLowerCase().includes(lowerCaseSearch) // Lọc theo tên trạm
+        );
+    }, [stations, searchTerm]); // Tính lại khi `stations` hoặc `searchTerm` thay đổi
+
+    // Tạo danh sách các trạm duy nhất dựa trên tọa độ để tránh trùng lặp marker trên map
+    const uniqueStations = useMemo(() => {
+        const coordMap = new Map<string, Station>();
+        stations.forEach((station) => {
+            // Kiểm tra tọa độ hợp lệ
+            if (typeof station.latitude === 'number' && typeof station.longitude === 'number' && !isNaN(station.latitude) && !isNaN(station.longitude)) {
+                const coordKey = `${station.latitude.toFixed(5)},${station.longitude.toFixed(5)}`; // Tạo key từ tọa độ (làm tròn)
+                if (!coordMap.has(coordKey)) {
+                    coordMap.set(coordKey, station); // Chỉ thêm nếu tọa độ chưa tồn tại
+                }
+            } else {
+                console.warn(`Station ${station.id} (${station.name}) has invalid coordinates:`, station.latitude, station.longitude);
+            }
+        });
+        return Array.from(coordMap.values()); // Chuyển Map thành Array
+    }, [stations]); // Tính lại khi `stations` thay đổi
+
+    // Tính toán thông tin chi tiết (WQI, status, recommendation) cho trạm đang chọn
+    const selectedStationInfo = useMemo(() => {
+        if (!latestDataPoint) {
+            // Trả về giá trị mặc định nếu không có dữ liệu mới nhất
+            return { wqi: null, status: "Không xác định", time: "N/A", recommendation: "Không có dữ liệu mới nhất." };
+        }
+        const wqi = latestDataPoint.wqi;
+        const status = deriveStatusFromWqi(wqi);
+        let recommendation = "Chất lượng nước tốt."; // Khuyến nghị mặc định
+
+        // Điều chỉnh khuyến nghị dựa trên trạng thái
+        if (status === "Rất Kém") recommendation = "Nước ô nhiễm nặng, chỉ thích hợp cho giao thông thủy và các mục đích tương đương. Cần có biện pháp xử lý và cảnh báo.";
+        else if (status === "Kém") recommendation = "Chất lượng nước kém, chỉ sử dụng cho mục đích giao thông thủy và các mục đích tương đương khác.";
+        else if (status === "Trung Bình") recommendation = "Chất lượng nước trung bình, sử dụng cho mục đích tưới tiêu và các mục đích tương đương khác.";
+        else if (status === "Tốt") recommendation = "Chất lượng nước tốt, có thể sử dụng cho mục đích cấp nước sinh hoạt nhưng cần các biện pháp xử lý phù hợp.";
+        else if (status === "Rất Tốt") recommendation = "Chất lượng nước rất tốt, sử dụng tốt cho mục đích cấp nước sinh hoạt.";
+
+        return {
+            wqi: wqi ?? "N/A", // Hiển thị "N/A" nếu WQI là null/undefined
+            status: status,
+            time: formatMonitoringTime(latestDataPoint.monitoringTime), // Định dạng thời gian
+            recommendation: recommendation
+        };
+    }, [latestDataPoint]); // Tính lại khi `latestDataPoint` thay đổi
+
+    // Xác định các chỉ số thành phần có sẵn để chọn trên biểu đồ
+    const availableFeatures = useMemo(() => {
+        const desiredFeatures = ['pH', 'DO', 'N-NO2', 'N-NH4', 'P-PO4', 'TSS', 'COD', 'EC', 'AH']; // Danh sách chỉ số mong muốn và thứ tự
+        if (!latestDataPoint || !latestDataPoint.features || latestDataPoint.features.length === 0) {
+            return []; // Không có chỉ số nếu không có dữ liệu hoặc mảng features rỗng
+        }
+        // Lấy tên các chỉ số duy nhất có trong điểm dữ liệu mới nhất
+        const actualFeatureNames = new Set(latestDataPoint.features.map(f => f.name).filter((name): name is string => !!name));
+        // Chỉ trả về những chỉ số mong muốn mà thực sự có trong dữ liệu
+        return desiredFeatures.filter(desiredName => actualFeatureNames.has(desiredName));
+    }, [latestDataPoint]); // Tính lại khi `latestDataPoint` thay đổi
+
+    // *** THAY ĐỔI TRONG useMemo chuẩn bị dữ liệu cho Chartline ***
+    const chartInputData = useMemo(() => {
+        // Chỉ xử lý nếu có dữ liệu lịch sử hoặc dự đoán
+        if (historicalDataPoints.length === 0 && groupedPredictionDataPoints.size === 0) return null;
+
+        // Trả về dữ liệu thô đã sắp xếp và nhóm, Chartline sẽ xử lý chi tiết hơn
+        return {
+            historicalDataPoints: historicalDataPoints,         // Dữ liệu lịch sử đã sắp xếp ASC
+            groupedPredictionDataPoints: groupedPredictionDataPoints, // Dữ liệu dự đoán đã nhóm và sắp xếp ASC
+            selectedFeature: selectedFeature                   // Chỉ số đang được chọn
+        };
+    }, [historicalDataPoints, groupedPredictionDataPoints, selectedFeature]); // Dependencies
+
+
+    // Hàm xử lý khi thay đổi trang của bảng
+    const handlePageChange = (page: number) => {
+        // Tính tổng số trang dựa trên danh sách đã lọc
+        const currentTotalPages = Math.ceil(filteredStations.length / itemsPerPage);
+        // Đảm bảo trang nằm trong giới hạn hợp lệ
+        if (page > 0 && page <= (currentTotalPages > 0 ? currentTotalPages : 1) ) {
+            setCurrentPage(page);
+        }
+    };
+
+    // Hàm xử lý khi thay đổi chỉ số hiển thị trên biểu đồ
+    const handleFeatureChange = (event: ChangeEvent<HTMLSelectElement>) => {
+        setSelectedFeature(event.target.value);
+    };
+
+    // Hàm xử lý khi thay đổi nội dung ô tìm kiếm
+    const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(event.target.value);
+        setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+    };
+
+    // --- Render Logic ---
+
+    // Hiển thị loader chính nếu đang tải danh sách trạm ban đầu
+    if (isLoadingStations) {
+        return <PageLoader message="Đang tải danh sách trạm..." />;
+    }
+
+    // Hiển thị lỗi nếu tải danh sách trạm thất bại và không có trạm nào
+    if (error && stations.length === 0 && !isLoadingStations) {
+        return <div className="flex justify-center items-center h-screen text-red-600 font-semibold p-4">{error}</div>;
+    }
+
+    // Tính toán các biến phân trang dựa trên danh sách đã lọc (filteredStations)
+    const totalPages = Math.ceil(filteredStations.length / itemsPerPage);
+    // Đảm bảo trang hiện tại không vượt quá tổng số trang (an toàn khi lọc làm giảm số trang)
+    const safeCurrentPage = Math.max(1, Math.min(currentPage, totalPages > 0 ? totalPages : 1));
+    // Lấy danh sách trạm cho trang hiện tại
+    const paginatedStations = filteredStations.slice(
+        (safeCurrentPage - 1) * itemsPerPage,
+        safeCurrentPage * itemsPerPage
+    );
+
+    // Trả về JSX để render giao diện
+    return (
+        <div className="flex flex-1 overflow-hidden"> {/* Container chính, chiếm hết không gian flex */}
+            <div className="flex flex-col flex-grow overflow-y-auto space-y-4 p-4 bg-gray-50"> {/* Khu vực nội dung cuộn được */}
+
+                {/* Header của trang */}
+                <header className="flex justify-between items-center border-b pb-2 mb-4 bg-white p-4 rounded-lg shadow-sm">
+                    <h1 className="text-2xl font-bold text-gray-800">Trạm Quan Trắc Chất Lượng Nước</h1>
+                    {/* Hiển thị lỗi nếu có lỗi khi tải dữ liệu chi tiết của trạm đang chọn */}
+                    {error && !isLoadingDataPoints && selectedStation && <span className="text-sm text-red-500">{error}</span>}
+                 </header>
+
+                 {/* Layout chứa Map và Bảng */}
+                <div className="flex flex-col md:flex-row flex-grow gap-4 min-h-[60vh]">
+
+                    {/* Khu vực bản đồ */}
+                    <div className="flex-grow md:w-2/3 lg:w-3/4 min-w-0 relative z-10 h-[50vh] md:h-auto border rounded-lg shadow-md overflow-hidden">
+                        {typeof window !== 'undefined' && (
+                            <MapContainer
+                                key="my-leaflet-map"
+                                center={initialMapCenter}
+                                zoom={initialMapZoom}
+                                style={{ height: "100%", width: "100%" }}
+                                scrollWheelZoom={true}
+                            >
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                />
+                                <MapUpdater station={selectedStation} zoomLevel={SELECTED_STATION_ZOOM} />
+
+                                {createClusterCustomIcon && uniqueStations.length > 0 && (
+                                    <MarkerClusterGroup
+                                        chunkedLoading
+                                        iconCreateFunction={createClusterCustomIcon}
+                                        maxClusterRadius={60}
+                                    >
+                                        {uniqueStations.map((station) => {
+                                            const isValidPosition = typeof station.latitude === 'number' && typeof station.longitude === 'number';
+                                            if (!isValidPosition) return null;
+                                            const isSelected = selectedStation?.id === station.id;
+                                            return (
+                                                <Marker
+                                                    key={station.id}
+                                                    position={[station.latitude, station.longitude]}
+                                                    icon={isSelected ? blueIcon : redIcon}
+                                                    eventHandlers={{
+                                                        click: () => handleSelectStation(station),
+                                                    }}
+                                                    zIndexOffset={isSelected ? 1000 : 0}
+                                                >
+                                                    <Popup minWidth={180}>
+                                                        <div className="text-sm">
+                                                            <h3 className="text-md font-bold mb-1">{station.name}</h3>
+                                                            <p className="text-xs text-gray-600 mb-1">
+                                                                {station.location || `(${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)})`}
+                                                            </p>
+                                                            {isSelected && latestDataPoint && !isLoadingDataPoints && !error && (
+                                                                <>
+                                                                    <hr className="my-1" />
+                                                                    <p>WQI: <span className="font-bold text-blue-600">{selectedStationInfo.wqi}</span></p>
+                                                                    <p className={`${getStatusTextColor(selectedStationInfo.status)}`}>Trạng thái: {selectedStationInfo.status}</p>
+                                                                    <p className="text-xs text-gray-500 mt-1">Lúc: {selectedStationInfo.time}</p>
+                                                                </>
+                                                            )}
+                                                            {isSelected && isLoadingDataPoints && (<p className="text-xs text-gray-500 italic mt-1">Đang tải dữ liệu...</p>)}
+                                                            {isSelected && !isLoadingDataPoints && error && (<p className="text-xs text-red-500 italic mt-1">{error}</p>)}
+                                                            {isSelected && !isLoadingDataPoints && !latestDataPoint && !error && (<p className="text-xs text-orange-500 italic mt-1">Không có dữ liệu mới.</p>)}
+                                                            {!isSelected && (<p className="text-xs text-blue-500 italic mt-2">Nhấn để xem chi tiết</p>)}
+                                                         </div>
+                                                     </Popup>
+                                                 </Marker>
+                                             );
+                                         })}
+                                     </MarkerClusterGroup>
+                                 )}
+                             </MapContainer>
+                         )}
+                     </div> {/* Kết thúc khu vực bản đồ */}
+
+                     {/* Khu vực bảng danh sách trạm */}
+                    <div className="w-full md:w-1/3 lg:w-1/4 p-0 min-w-[300px] flex flex-col border rounded-lg shadow-md bg-white">
+                         {/* Ô tìm kiếm */}
+                        <div className="p-3 border-b">
+                            <Input
+                                type="text"
+                                placeholder="Tìm kiếm theo tên trạm..."
+                                value={searchTerm}
+                                onChange={handleSearchChange}
+                                className="w-full text-sm"
+                             />
+                         </div>
+
+                         {/* Khu vực bảng có thể cuộn */}
+                        <div className="flex-grow overflow-y-auto">
+                            <Table>
+                                {/* Header của bảng */}
+                                <TableHeader className="sticky top-0 bg-gray-100 z-10 shadow-sm"><TableRow><TableHead className="py-2 px-3 text-sm font-semibold text-gray-600">Tên Trạm</TableHead><TableHead className="text-right py-2 px-3 text-sm font-semibold text-gray-600">Vị Trí</TableHead></TableRow></TableHeader>
+                                <TableBody>
+                                    {isLoadingStations ? (
+                                         <TableRow><TableCell colSpan={2} className="text-center text-gray-500 py-4">Đang tải trạm...</TableCell></TableRow>
+                                     ) : paginatedStations.length > 0 ? (
+                                         paginatedStations.map((station) => {
+                                             const isSelected = selectedStation?.id === station.id;
+                                             return (
+                                                 <TableRow
+                                                     key={station.id}
+                                                     onClick={() => handleSelectStation(station)}
+                                                     className={`cursor-pointer transition-colors duration-150 ${isSelected ? "bg-blue-100 hover:bg-blue-200" : "hover:bg-gray-50"}`}
+                                                 >
+                                                     <TableCell className={`font-medium py-2 px-3 text-sm ${isSelected ? 'text-blue-800' : ''}`}>{station.name}</TableCell>
+                                                     <TableCell className="text-right text-xs text-gray-500 py-2 px-3">
+                                                         {station.location || (typeof station.latitude === 'number' && typeof station.longitude === 'number' ? `(${station.latitude.toFixed(2)}, ${station.longitude.toFixed(2)})` : 'Không rõ')}
+                                                     </TableCell>
+                                                 </TableRow>
+                                             );
+                                         })
+                                     ) : (
+                                          <TableRow><TableCell colSpan={2} className="text-center text-gray-500 py-4">{(searchTerm && filteredStations.length === 0) ? 'Không tìm thấy trạm phù hợp.' : 'Không có trạm nào.'}</TableCell></TableRow>
+                                      )}
+                                  </TableBody>
+                              </Table>
+                          </div> {/* Kết thúc khu vực bảng cuộn */}
+
+                         {/* Khu vực phân trang */}
+                         {totalPages > 1 && (
+                            <div className="mt-auto p-2 border-t bg-gray-50">
+                                <Pagination
+                                    currentPage={safeCurrentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={handlePageChange}
+                                    siblingCount={0}
+                                />
+                            </div>
+                         )}
+                     </div> {/* Kết thúc khu vực bảng */}
+                </div> {/* Kết thúc layout Map và Bảng */}
+
+                 {/* Khu vực chi tiết trạm */}
+                <div className="w-full mt-6">
+                     {isLoadingDataPoints && selectedStation && (
+                         <PageLoader message={`Đang tải dữ liệu chi tiết cho trạm ${selectedStation.name}...`} />
+                     )}
+                    {!isLoadingDataPoints && selectedStation && latestDataPoint && !error && (
+                        <StationDetails
+                            selectedStation={{
+                                ...(selectedStation as Station),
+                                ...selectedStationInfo
+                            }}
+                            latestDataPoint={latestDataPoint}
+                            availableFeatures={availableFeatures}
+                        />
+                    )}
+                    {!isLoadingDataPoints && selectedStation && !latestDataPoint && !error && (
+                         <div className="text-center text-gray-600 mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg shadow-sm">Không có dữ liệu đo gần đây cho trạm {selectedStation.name}.</div>
+                    )}
+                    {!isLoadingDataPoints && selectedStation && error && (
+                         <div className="text-center text-red-600 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm">{error}</div>
+                    )}
+                    {!selectedStation && !isLoadingStations && stations.length > 0 && (
+                         <div className="text-center text-gray-500 mt-4 p-4 bg-gray-100 border rounded-lg shadow-sm">Chọn một trạm trên bản đồ hoặc từ bảng bên trái để xem chi tiết và biểu đồ.</div>
+                     )}
+                     {!isLoadingStations && stations.length === 0 && error && (
+                         <div className="text-center text-red-600 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm">Không thể tải danh sách trạm. Vui lòng kiểm tra kết nối và thử lại.</div>
+                     )}
+                </div> {/* Kết thúc khu vực chi tiết trạm */}
+
+                 {/* Khu vực biểu đồ */}
+                <div className="mt-6 w-full p-4 border rounded-lg shadow-md bg-white">
+                    <h2 className="text-xl font-semibold mb-4 text-center text-gray-700">Biểu đồ diễn biến chất lượng nước</h2>
+                    {isLoadingDataPoints && selectedStation && (
+                         <div className="h-80 flex justify-center items-center bg-gray-50 rounded-lg"><p className="text-gray-500 italic">Đang tải dữ liệu biểu đồ...</p></div>
+                     )}
+                     {!isLoadingDataPoints && selectedStation && (
+                         <>
+                             {!error ? (
+                                 <>
+                                     {/* Kiểm tra xem có dữ liệu đầu vào cho biểu đồ không */}
+                                    {(chartInputData && (chartInputData.historicalDataPoints.length > 0 || chartInputData.groupedPredictionDataPoints.size > 0)) ? (
+                                         <>
+                                             {/* Dropdown chọn chỉ số */}
+                                            <div className="flex justify-center mb-4">
+                                                <select
+                                                     value={selectedFeature}
+                                                     onChange={handleFeatureChange}
+                                                     className="border rounded-md p-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out text-sm"
+                                                     aria-label="Chọn chỉ số hiển thị trên biểu đồ"
+                                                 >
+                                                     
+                                                     {availableFeatures.map((featureName) => (
+                                                         <option key={featureName} value={featureName}>Chỉ số {featureName}</option>
+                                                     ))}
+                                                     <option value="WQI">Chỉ số chất lượng nước (WQI)</option>
+                                                     {availableFeatures.length === 0 && latestDataPoint && <option disabled>Không có chỉ số thành phần</option>}
+                                                 </select>
+                                             </div>
+                                             {/* Component biểu đồ - Truyền props mới */}
+                                            <div className="relative h-100"> {/* Tăng chiều cao biểu đồ */}
+                                                <Chartline
+                                                     // *** THAY ĐỔI: Truyền props mới ***
+                                                     historicalDataPoints={chartInputData.historicalDataPoints}
+                                                     groupedPredictionDataPoints={chartInputData.groupedPredictionDataPoints}
+                                                     selectedFeature={chartInputData.selectedFeature}
+                                                     title={`${selectedFeature === 'WQI' ? 'WQI' : `Chỉ số ${selectedFeature}`}`}
+                                                 />
+                                             </div>
+                                         </>
+                                     ) : (
+                                         /* Thông báo nếu không có đủ dữ liệu để vẽ */
+                                         <div className="flex justify-center items-center h-60 bg-gray-50 text-gray-600 font-semibold rounded-lg mt-4 p-4">Không có đủ dữ liệu (lịch sử hoặc dự đoán) để vẽ biểu đồ cho trạm này.</div>
+                                     )}
+                                 </>
+                             ) : (
+                                  /* Hiển thị lỗi nếu có lỗi xảy ra khi tải dữ liệu */
+                                  <div className="flex justify-center items-center h-60 bg-red-50 text-red-700 font-semibold rounded-lg mt-4 p-4 border border-red-200">{error}</div>
+                              )}
+                          </>
+                      )}
+                      {!selectedStation && (
+                           <div className="flex justify-center items-center h-60 bg-gray-50 text-gray-500 font-semibold rounded-lg mt-4 p-4">Vui lòng chọn một trạm để xem biểu đồ.</div>
+                       )}
+                 </div> {/* Kết thúc khu vực biểu đồ */}
+
+             </div> {/* Kết thúc khu vực nội dung chính */}
+         </div> // Kết thúc container chính
+     );
 }

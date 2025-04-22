@@ -22,7 +22,7 @@ export default function DashboardLayout({
         <TooltipProvider>
           <Sidebar />
         </TooltipProvider>
-        <main className="flex-1 p-6 bg-gray-50">
+        <main className="flex-1 p-1 bg-gray-50">
         <Suspense fallback={<PageLoader />}>
   {children}
 </Suspense>

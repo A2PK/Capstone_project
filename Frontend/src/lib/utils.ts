@@ -20,3 +20,33 @@ export const getStatusTextColor = (status: string) => {
       return "text-gray-800";
   }
 };
+export const getDonvi = (featureName: string): string => { // <<< THÊM export const
+  if (!featureName) {
+    return "";
+  }
+
+  const normalizedFeature = featureName.toUpperCase().trim();
+
+  switch (normalizedFeature) {
+    case "DO":
+      return "mg/l";
+    case "EC":
+      // Sử dụng LaTeX: $\mu$S/cm
+      return "µS/cm";
+    case "N-NO2":
+    case "N-NH4":
+    case "P-PO4":
+    case "TSS":
+    case "COD":
+      return "mg/l";
+    case "AH":
+      return "CFU/ml";
+    case "PH":
+    case "WQI":
+      return "";
+    // Thêm các case khác nếu cần
+    default:
+      // console.warn(`Không tìm thấy đơn vị cho chỉ số: ${featureName}`);
+      return "";
+  }
+};
