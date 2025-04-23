@@ -446,9 +446,9 @@ const Chartline: React.FC<ChartlineProps> = ({
             },
         };
     }, [
-        chartData, isFullscreen, chartType, predictWeeks, title, selectedFeature,
-        getBaseName, isConnector, isHistory, // Include memoized helpers
-        SERIES_DISPLAY_NAMES // Include the constant
+        chartData,  chartType, title, selectedFeature,
+        getBaseName, isConnector, isHistory // Include memoized helpers
+         // Include the ,constantisFullscreen, predictWeeks,SERIES_DISPLAY_NAMES
     ]);
 
     // --- Other useMemo hooks need checking too ---

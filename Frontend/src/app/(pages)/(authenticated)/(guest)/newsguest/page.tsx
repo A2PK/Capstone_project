@@ -136,20 +136,29 @@ const NewsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayedNews.map((item, index) => (
           <Link key={index} href="/newsguestdetail" className="block h-full">
-            <Card className="hover:shadow-lg transition-shadow flex flex-col h-full">
-              <Image
-                src={item.imageUrl}
-                alt={item.title}
-                className="w-full h-64 object-cover rounded-t-md"
-              />
-              <CardHeader className="flex-grow">
-                <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 mb-2">{item.description}</p>
-                <p className="text-xs text-gray-500">{item.date}</p>
-              </CardContent>
-            </Card>
+            <Card className="hover:shadow-lg transition-shadow flex flex-col h-full overflow-hidden"> {/* Added overflow-hidden to Card */}
+
+{/* 1. Parent div MUST have position and dimensions */}
+<div className="relative w-full h-64"> {/* Ensure 'relative' is here */}
+    <Image
+        src={item.imageUrl}
+        alt={item.title}
+        fill // Use fill prop
+        style={{ objectFit: "cover" }} // Control fit with style
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // Keep sizes prop
+        // 2. REMOVE w-full, h-64, object-cover from className. Keep rounding if desired.
+        className="rounded-t-md" // Optional: Keep if you want image corners rounded directly
+    />
+</div>
+
+<CardHeader className="flex-grow">
+    <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
+</CardHeader>
+<CardContent>
+    <p className="text-sm text-gray-600 mb-2">{item.description}</p>
+    <p className="text-xs text-gray-500">{item.date}</p>
+</CardContent>
+</Card>
           </Link>
         ))}
       </div>

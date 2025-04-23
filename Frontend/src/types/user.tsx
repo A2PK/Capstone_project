@@ -8,9 +8,9 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: string; // Hoặc cụ thể hơn: 'admin' | 'officer' | ...
+  role: string; // 'admin' | 'officer' 
   isActive: boolean;
-  phone?: string | null; // Thêm ? hoặc | null nếu có thể thiếu
+  phone?: string | null; 
   address?: string | null;
   age?: number | null;
   profilePic?: string | null;

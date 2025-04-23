@@ -2,7 +2,7 @@ import { getUsers, User} from "@/types/user";
 import { QueryOptions } from "@/types/station2";
 import axios from "axios";
 
-export async function getAllUsers(options: QueryOptions = {}): Promise<getUsers> {
+export async function getAllUsers(token: string, options: QueryOptions = {}): Promise<getUsers> {
     try {
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users` 
