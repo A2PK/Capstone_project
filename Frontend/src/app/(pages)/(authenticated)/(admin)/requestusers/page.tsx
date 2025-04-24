@@ -617,7 +617,13 @@ export default function AdminRequestsPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <Button onClick={() => { setActiveRequestId(null); setAlertAction(null); }}>Hủy</Button>
+                    <AlertDialogCancel onClick={() => {
+                // Vẫn nên reset state khi hủy để đảm bảo logic nhất quán
+                setActiveRequestId(null);
+                setAlertAction(null);
+            }}>
+                Hủy
+            </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleUpdateRequestStatus}
                             // Style action button based on alertAction
