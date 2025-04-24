@@ -14,34 +14,38 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Pagination } from "@/components/pagination"; // Component Pagination đã tùy chỉnh
-import { AlertConfigModal, type AlertConfiguration, type MetricAlertConfig, alertableMetrics } from '@/components/alert-modal';
+import { Pagination } from "@/components/pagination";
+// *** QUAN TRỌNG: Bạn cần tạo hoặc cập nhật component AlertConfigModal ***
+import { AlertConfigModal } from '@/components/alert-modal'; // Giả định đường dẫn đúng
 import PageLoader from "@/components/pageloader";
 
 // --- Icons ---
 import { CalendarIcon, SettingsIcon, DownloadIcon, ChevronDown, ArrowUp, ArrowDown } from "lucide-react";
 
 // --- Libs & Hooks ---
-import { cn, getDonvi, getStatusTextColor } from "@/lib/utils"; // Giả định getStatusTextColor tồn tại
+import { cn, getDonvi, getStatusTextColor } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 // --- API & Types ---
-import { Station, DataPoint, Indicator, QueryOptions } from "@/types/station2"; // Types từ backend
-import { getStations, getDataPointsOfStationById, getAllDataPoints, getAllDataPointsByStationID } from "@/lib/station"; // API functions
+import { Station, DataPoint, Indicator, QueryOptions } from "@/types/station2";
+import { getStations, getAllDataPoints } from "@/lib/station";
+// --- Threshold Imports ---
+import {
+    getAllThresholdConfigs,
+    updateThresholdConfigs,
+    createThresholdConfigs,
+    deleteThresholdConfigs
+} from "@/lib/threshold";
+import { Thresholds, ElementRange, CreateElementRangeDto, CreateThresholdsDto, DeleteThresholdsDto } from "@/types/threshold"; // Đảm bảo types đúng
 
 // --- Font Import ---
 import "../../../../fonts/times"; // Đảm bảo font được import đúng cách
 
 // --- Constants ---
+// Danh sách các header cho bảng (bao gồm cả WQI nếu muốn hiển thị)
 const metricHeaders = ["pH", "EC", "DO", "N-NH4", "N-NO2", "P-PO4", "TSS", "COD", "AH", "WQI"];
-const metricKeysForAlert = metricHeaders
-    .map(h => h.toLowerCase() as keyof AlertConfiguration)
-    .filter(key => alertableMetrics.includes(key));
-
-const initialAlertConfig = alertableMetrics.reduce<AlertConfiguration>((acc, key) => {
-    acc[key] = { min: null, max: null };
-    return acc;
-}, {} as AlertConfiguration);
+// Danh sách tên element hợp lệ để cấu hình ngưỡng (Lấy từ yêu cầu của bạn, loại bỏ WQI và AH nếu không cần)
+const validThresholdElementNames = ["AH","pH", "EC", "DO", "N-NH4", "N-NO2", "P-PO4", "TSS", "COD"];
 
 // --- Helper Functions ---
 function deriveStatusFromWqi(wqi: number | null | undefined): string {
@@ -63,25 +67,24 @@ function deriveRecommendationFromWqi(wqi: number | null | undefined): string {
     if (status === "Tốt") return "Chất lượng nước tốt, có thể dùng cho cấp nước sinh hoạt (cần xử lý).";
     if (status === "Rất Tốt") return "Chất lượng nước rất tốt, sử dụng tốt cho cấp nước sinh hoạt.";
     return "Không có khuyến nghị.";
-}//HH:mm, 
+}
 
 function formatMonitoringTimestamp(timeString: string | undefined | null): string {
     if (!timeString) return "N/A";
     try {
         const date = parseISO(timeString);
         if (!isValidDate(date)) return timeString;
-        return format(date, 'dd/MM/yyyy');
+        //return format(date, 'HH:mm, dd/MM/yyyy'); // Giữ lại giờ phút nếu cần
+         return format(date, 'dd/MM/yyyy');
     } catch (e) { return timeString; }
 }
 
 // --- Types ---
-// Type cho cấu hình sắp xếp
 interface SortConfig {
-    key: string; // Key để sort (có thể là key của DataPoint hoặc tên metricHeader)
+    key: string;
     direction: 'ascending' | 'descending';
 }
 
-// Interface cho dữ liệu hiển thị (kết hợp Station và DataPoint)
 interface DisplayRowData extends DataPoint {
     stationName: string;
     stationLocation: string;
@@ -93,6 +96,7 @@ interface DisplayRowData extends DataPoint {
 export default function Realtimedata() {
     // --- State ---
     const [isLoading, setIsLoading] = useState(true);
+    const [isProcessing, setIsProcessing] = useState(false); // State loading cho các thao tác API (CUD)
     const [error, setError] = useState<string | null>(null);
     const [allStations, setAllStations] = useState<Station[]>([]);
     const [stationMap, setStationMap] = useState<Map<string, Station>>(new Map());
@@ -100,12 +104,15 @@ export default function Realtimedata() {
     const [displayData, setDisplayData] = useState<DisplayRowData[]>([]);
     const [filteredDisplayData, setFilteredDisplayData] = useState<DisplayRowData[]>([]);
 
+    // --- Threshold State ---
+    const [thresholdConfigs, setThresholdConfigs] = useState<ElementRange[]>([]); // State lưu threshold configs từ backend
+
     // Filters
     const [date, setDate] = useState<DateRange | undefined>(undefined);
     const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
-    // Sorting - Mặc định sort theo thời gian mới nhất
+    // Sorting
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'monitoringTime', direction: 'descending' });
 
     // Pagination
@@ -118,49 +125,59 @@ export default function Realtimedata() {
 
     // Other Hooks
     const { toast } = useToast();
-    const [alertConfig, setAlertConfig] = useState<AlertConfiguration>(initialAlertConfig);
 
-    // --- Data Fetching ---
+    // --- Data Fetching (Initial Load) ---
+    const fetchData = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            // Fetch Stations
+            const stationsPromise = getStations({ limit: 1000 });
+            // Fetch DataPoints
+            const dataPointsPromise = getAllDataPoints({
+                options: {
+                    filters: { observation_type: 'actual' },
+                    sortBy: 'monitoring_time',
+                    sortDesc: true,
+                    limit: 10000 // Consider backend pagination for large datasets
+                }
+            });
+            // --- Fetch Thresholds ---
+            const thresholdsPromise = getAllThresholdConfigs(); // Gọi API lấy threshold
+
+            // Wait for all promises to resolve
+            const [stations, dataPointsResponse, fetchedThresholds] = await Promise.all([
+                stationsPromise,
+                dataPointsPromise,
+                thresholdsPromise
+            ]);
+
+            // Process Stations
+            setAllStations(stations);
+            const newStationMap = new Map(stations.map(s => [s.id, s]));
+            setStationMap(newStationMap);
+
+            // Process DataPoints
+            setAllDataPoints(dataPointsResponse);
+
+            // Process Thresholds
+            setThresholdConfigs(fetchedThresholds);
+            console.log("Fetched Thresholds:", fetchedThresholds); // Log để kiểm tra
+
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : "Lỗi không xác định khi tải dữ liệu.";
+            console.error("Failed to fetch initial data:", err);
+            setError(errorMsg);
+            toast({ variant: "destructive", title: "Lỗi tải dữ liệu", description: errorMsg });
+        } finally {
+            setIsLoading(false);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [toast]); // Dependency on toast
+
     useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                // Fetch Stations
-                const stations = await getStations({ limit: 1000 });
-                setAllStations(stations);
-                const newStationMap = new Map(stations.map(s => [s.id, s]));
-                setStationMap(newStationMap);
-
-                // Fetch DataPoints (CẦN TỐI ƯU HÓA - Fetch tất cả ban đầu chỉ là giải pháp tạm)
-                const response = await getAllDataPoints({
-                    options: {
-                        // Áp dụng filter ngay trên backend
-                        filters: {
-                            observation_type: 'actual' // Hoặc giá trị đúng cho "không phải predicted"
-                            // Có thể thêm filter ngày mặc định nếu backend hỗ trợ
-                            // monitoring_time_gte: 'YYYY-MM-DDTHH:mm:ssZ' // Ví dụ: Lấy dữ liệu 7 ngày gần nhất
-                        },
-                        sortBy: 'monitoring_time', // Sắp xếp sẵn trên backend
-                        sortDesc: true,
-                        limit: 10000 // Lấy một lượng lớn ban đầu, hoặc dùng phân trang backend
-                        // offset: 0 // Nếu dùng phân trang backend
-                    }
-                });
-                setAllDataPoints(response);
-
-            } catch (err) {
-                const errorMsg = err instanceof Error ? err.message : "Lỗi không xác định khi tải dữ liệu.";
-                console.error("Failed to fetch initial data:", err);
-                setError(errorMsg);
-                toast({ variant: "destructive", title: "Lỗi tải dữ liệu", description: errorMsg });
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [fetchData]);
 
     // --- Data Combination ---
     useEffect(() => {
@@ -168,7 +185,6 @@ export default function Realtimedata() {
             setDisplayData([]);
             return;
         }
-        // Map DataPoints to DisplayRowData
         const combinedData = allDataPoints.map(dp => {
             const station = stationMap.get(dp.stationId);
             const wqi = dp.wqi;
@@ -209,9 +225,7 @@ export default function Realtimedata() {
             return stationMatch && statusMatch && dateMatch;
         });
         setFilteredDisplayData(dataToFilter);
-        // Đặt lại trang về 1 khi filter thay đổi, TRỪ KHI chỉ có displayData thay đổi (tránh reset khi data refresh)
-        // Điều này hơi phức tạp, tạm thời luôn reset về 1 để đơn giản
-        setCurrentPage(1);
+        setCurrentPage(1); // Reset page on filter change
     }, [displayData, date, selectedStationId, selectedStatus]);
 
     useEffect(() => {
@@ -219,9 +233,7 @@ export default function Realtimedata() {
     }, [applyFilters]);
 
     // --- Sorting Logic ---
-    // --- Sorting Logic ---
-    const getSortValue = (item: DisplayRowData, key: string): number | string | Date | null => {
-        // Xử lý các key đặc biệt trước
+    const getSortValue = useCallback((item: DisplayRowData, key: string): number | string | Date | null => {
         if (key === 'monitoringTime') {
             try { return parseISO(item.monitoringTime); } catch { return null; }
         }
@@ -231,36 +243,28 @@ export default function Realtimedata() {
         let potentialValue: any = null;
         const keyLower = key.toLowerCase();
 
-        // Ưu tiên item.wqi nếu key là 'wqi'
         if (keyLower === 'wqi') {
             potentialValue = item.wqi;
         }
 
-        // Nếu không tìm thấy trực tiếp hoặc key khác, kiểm tra features
         if (potentialValue === null || potentialValue === undefined) {
             const indicator = item.features.find(f => f.name.toLowerCase() === keyLower) ||
-                item.features.find(f => f.name.toLowerCase().includes(keyLower));
+                              item.features.find(f => f.name.toLowerCase().includes(keyLower));
             if (indicator) {
                 potentialValue = indicator.value ?? indicator.textualValue;
             }
         }
 
-        // Xác định các key nên là số
-        const numericKeys = ["wqi", "ph", "ec", "do", "nh4", "no2", "po4", "tss", "cod"]; // Kiểm tra lại nếu AH là số
+        const numericKeys = ["wqi", "ph", "ec", "do", "n-nh4", "n-no2", "p-po4", "tss", "cod"]; // AH is often text
 
-        // Nếu key thuộc nhóm số, cố gắng ép kiểu số
         if (numericKeys.includes(keyLower)) {
-            if (potentialValue === null || potentialValue === undefined || potentialValue === '') {
-                return null;
-            }
-            const numValue = parseFloat(String(potentialValue));
-            return isNaN(numValue) ? null : numValue; // Trả về số hoặc null nếu không hợp lệ
-        }
-        // Nếu không phải key số, trả về dạng chuỗi hoặc null
-        else {
+             if (potentialValue === null || potentialValue === undefined || potentialValue === '') return null;
+             const numValue = parseFloat(String(potentialValue));
+             return isNaN(numValue) ? null : numValue;
+        } else {
             return potentialValue !== null && potentialValue !== undefined ? String(potentialValue) : null;
         }
-    };
+    }, []);
 
     const sortedData = useMemo(() => {
         let sortableItems = [...filteredDisplayData];
@@ -278,10 +282,8 @@ export default function Realtimedata() {
                 } else if (typeof valueA === 'number' && typeof valueB === 'number') {
                     comparison = valueA - valueB;
                 } else if (typeof valueA === 'string' && typeof valueB === 'string') {
-                    comparison = valueA.localeCompare(valueB, 'vi'); // Sort tiếng Việt
+                    comparison = valueA.localeCompare(valueB, 'vi');
                 }
-                // Add cases for other types if necessary
-
                 return sortConfig.direction === 'ascending' ? comparison : -comparison;
             });
         }
@@ -297,8 +299,7 @@ export default function Realtimedata() {
         setDate(undefined);
         setSelectedStationId(null);
         setSelectedStatus(null);
-        setSortConfig({ key: 'monitoringTime', direction: 'descending' }); // Reset sort về mặc định
-        // applyFilters sẽ tự chạy lại
+        setSortConfig({ key: 'monitoringTime', direction: 'descending' });
     };
 
     const handlePageChange = (page: number) => {
@@ -307,29 +308,39 @@ export default function Realtimedata() {
 
     const handleSelectDate: SelectRangeEventHandler = (range) => {
         setDate(range);
-        // applyFilters sẽ tự chạy lại
     };
 
     const handleSort = (key: string) => {
         setSortConfig(prevConfig => {
             let direction: 'ascending' | 'descending' = 'ascending';
-            if (prevConfig && prevConfig.key === key && prevConfig.direction === 'ascending') {
+            if (prevConfig?.key === key && prevConfig.direction === 'ascending') {
                 direction = 'descending';
             }
-            // Mặc định descending cho thời gian khi click lần đầu hoặc khi đang sort cột khác
-            if (key === 'monitoringTime' && (!prevConfig || prevConfig.key !== key || prevConfig.direction === 'ascending')) {
-                direction = 'descending';
+            if (key === 'monitoringTime' && (prevConfig?.key !== key || prevConfig.direction === 'ascending')) {
+                 direction = 'descending';
             }
             return { key, direction };
         });
-        setCurrentPage(1); // Reset về trang 1 khi sort
+        setCurrentPage(1);
     };
 
-    // --- Alert Checking ---
-    const isValueOutOfRange = useCallback((indicator: Indicator | undefined, metricKey: keyof AlertConfiguration): boolean => {
-        if (!indicator || !alertConfig[metricKey]) return false;
-        const config = alertConfig[metricKey];
-        // Cố gắng lấy giá trị số từ value hoặc textualValue
+    // --- Alert Checking (Uses Backend Thresholds) ---
+    const isValueOutOfRange = useCallback((indicator: Indicator | undefined, metricKey: string): boolean => {
+        if (!indicator || !thresholdConfigs || thresholdConfigs.length === 0) {
+            return false; // No indicator or thresholds not loaded
+        }
+
+        const keyLower = metricKey.toLowerCase(); // Normalize key
+
+        // Find config from backend data
+        const config = thresholdConfigs.find(c => c.elementName.toLowerCase() === keyLower);
+
+        if (!config) {
+            // console.log(`No threshold config found for: ${metricKey}`);
+            return false; // No config for this metric
+        }
+
+        // Get numeric value from indicator
         let value: number | undefined;
         if (typeof indicator.value === 'number') {
             value = indicator.value;
@@ -338,55 +349,61 @@ export default function Realtimedata() {
             if (!isNaN(parsed)) value = parsed;
         }
 
-        if (value === undefined) return false; // Không có giá trị số để so sánh
+        if (value === undefined) return false; // No comparable value
 
-        const { min, max } = config;
-        if (min !== null && value < min) return true;
-        if (max !== null && value > max) return true;
-        return false;
-    }, [alertConfig]);
-    const filteredHeaders = metricHeaders.filter(header => header.toLowerCase() !== 'wqi');
+        // Compare with backend min/max
+        const { minValue, maxValue } = config;
+        // console.log(`Checking ${metricKey} (value: ${value}) against config:`, config);
+
+        if (minValue !== null && value < minValue) return true;
+        if (maxValue !== null && value > maxValue) return true;
+
+        return false; // Within range or no valid range defined
+    }, [thresholdConfigs]); // Dependency on backend thresholds
+
     // --- Export Functions ---
     const handleExportXLSX = () => {
         if (sortedData.length === 0) {
             toast({ variant: "warning", title: "Không có dữ liệu để xuất." }); return;
         }
+        // Filter out WQI and AH from headers if they are not regular metrics for columns
+        const exportHeaders = metricHeaders.filter(h => !['WQI', 'AH'].includes(h)); // Adjust as needed
         const dataForExport = sortedData.map(item => {
             const row: Record<string, any> = {
                 'Place': item.stationId,
                 'Trạm': item.stationName,
                 'Vị trí': item.stationLocation,
                 'Thời gian': formatMonitoringTimestamp(item.monitoringTime),
-                'Trạng thái': item.status,
-                'Khuyến nghị': item.recommendation,
-                'WQI': item.wqi,
             };
-
-
-            // Bây giờ lặp qua mảng đã được lọc
-            filteredHeaders.forEach(header => {
+            // Add metric values
+            exportHeaders.forEach(header => {
                 const keyLower = header.toLowerCase();
-                let indicator = item.features.find(f => f.name.toLowerCase() === keyLower);
-                if (!indicator) indicator = item.features.find(f => f.name.toLowerCase().includes(keyLower));
+                let indicator = item.features.find(f => f.name.toLowerCase() === keyLower) || item.features.find(f => f.name.toLowerCase().includes(keyLower));
                 row[header] = indicator ? (indicator.value ?? indicator.textualValue ?? 'N/A') : 'N/A';
             });
+            // Add WQI, Status, Recommendation at the end
+             row['WQI'] = item.wqi ?? 'N/A';
+             row['Trạng thái'] = item.status;
+             row['Khuyến nghị'] = item.recommendation;
             return row;
         });
-        const ws = XLSX.utils.json_to_sheet(dataForExport, { header: ["Place", "Trạm", "Vị trí", "Thời gian", ...filteredHeaders, "WQI", "Trạng thái", "Khuyến nghị"] }); // Chỉ định thứ tự header
-        const cols = Object.keys(dataForExport[0]).map(key => ({ wch: key === 'Khuyến nghị' ? 50 : (key === 'Trạm' || key === 'Vị trí' ? 25 : 12) }));
+
+        const headerOrder = ["Place", "Trạm", "Vị trí", "Thời gian", ...exportHeaders, "WQI", "Trạng thái", "Khuyến nghị"];
+        const ws = XLSX.utils.json_to_sheet(dataForExport, { header: headerOrder });
+        const cols = headerOrder.map(key => ({ wch: key === 'Khuyến nghị' ? 50 : (key === 'Trạm' || key === 'Vị trí' ? 25 : 12) }));
         ws['!cols'] = cols;
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "DuLieuQuanTrac");
-        XLSX.writeFile(wb, "du_lieu_quan_trac.csv");
+        XLSX.writeFile(wb, "du_lieu_quan_trac.xlsx"); // Use .xlsx
         setIsExportOpen(false);
     };
 
     const handleExportPDF = () => {
-        if (sortedData.length === 0) {
+         if (sortedData.length === 0) {
             toast({ variant: "warning", title: "Không có dữ liệu để xuất." }); return;
         }
         const doc = new jsPDF({ orientation: "landscape" });
-        doc.setFont("timr45w", "normal");
+        doc.setFont("timr45w", "normal"); // Make sure this font is loaded correctly
         const pageWidth = doc.internal.pageSize.width;
         const pageHeight = doc.internal.pageSize.height;
         const margin = 10;
@@ -408,19 +425,26 @@ export default function Realtimedata() {
             doc.text(filterText.join(" | "), margin, margin + 25);
         }
 
-
+        // Use all metricHeaders for the PDF table if desired
         const tableHeaders = ["TT", "Trạm", "Thời gian", ...metricHeaders, "Trạng thái", "Khuyến nghị"];
         const tableBody = sortedData.map((item, index) => {
             const rowData: (string | number | null)[] = [
-                index + 1, // Số thứ tự
-                item.stationName, // + (item.stationLocation ? `\n(${item.stationLocation})` : ''), // Thêm vị trí nếu cần
+                index + 1,
+                item.stationName,
                 formatMonitoringTimestamp(item.monitoringTime),
             ];
             metricHeaders.forEach(header => {
-                const keyLower = header.toLowerCase();
-                let indicator = item.features.find(f => f.name.toLowerCase() === keyLower);
-                if (!indicator) indicator = item.features.find(f => f.name.toLowerCase().includes(keyLower));
-                rowData.push(indicator ? (indicator.value ?? indicator.textualValue ?? 'N/A') : 'N/A');
+                 const keyLower = header.toLowerCase();
+                 let value: any = 'N/A';
+                 if (header === 'WQI') {
+                     value = item.wqi ?? 'N/A';
+                 } else {
+                     let indicator = item.features.find(f => f.name.toLowerCase() === keyLower) || item.features.find(f => f.name.toLowerCase().includes(keyLower));
+                     value = indicator ? (indicator.value ?? indicator.textualValue ?? 'N/A') : 'N/A';
+                 }
+                 // Optional: Format numbers
+                 if (typeof value === 'number') value = value.toFixed(header === 'WQI' ? 1 : 2);
+                 rowData.push(value);
             });
             rowData.push(item.status, item.recommendation);
             return rowData;
@@ -428,7 +452,7 @@ export default function Realtimedata() {
 
         autoTable(doc, {
             startY: margin + 30,
-            styles: { font: "timr45w", fontSize: 8, cellPadding: 1.5, overflow: 'linebreak' }, // Kích hoạt linebreak
+            styles: { font: "timr45w", fontSize: 8, cellPadding: 1.5, overflow: 'linebreak' },
             head: [tableHeaders],
             body: tableBody,
             theme: "grid",
@@ -437,12 +461,12 @@ export default function Realtimedata() {
                 0: { cellWidth: 8, halign: 'center' }, // TT
                 1: { cellWidth: 25 }, // Trạm
                 2: { cellWidth: 18 }, // Thời gian
+                // WQI column index (3 + metricHeaders.length - 1)
+                [2 + metricHeaders.findIndex(h => h === 'WQI') + 1]: { halign: 'center' }, // Center WQI values if needed
                 [tableHeaders.length - 1]: { cellWidth: 50 }, // Khuyến nghị
                 [tableHeaders.length - 2]: { cellWidth: 18 }, // Trạng thái
-                // Các cột chỉ số còn lại sẽ tự động điều chỉnh
             },
             didDrawPage: function (data) {
-                // Footer
                 doc.setFontSize(8);
                 doc.text(`Trang ${data.pageNumber}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
             },
@@ -453,12 +477,84 @@ export default function Realtimedata() {
         setIsExportOpen(false);
     };
 
-    // --- Alert Config Save Handler ---
-    const handleSaveAlertConfig = (newConfig: AlertConfiguration) => {
-        setAlertConfig(newConfig);
-        toast({ variant: "success", title: "Đã lưu cấu hình cảnh báo." });
-        setIsAlertModalOpen(false);
-    };
+    // --- Threshold API Handlers (Passed to Modal) ---
+    const handleFetchThresholds = useCallback(async () => {
+        // console.log("Refetching thresholds..."); // Debug
+        try {
+            const fetchedThresholds = await getAllThresholdConfigs();
+            setThresholdConfigs(fetchedThresholds);
+            // console.log("Refetched Thresholds:", fetchedThresholds); // Debug
+        } catch (error) {
+            console.error("Failed to refetch thresholds:", error);
+            toast({ variant: "destructive", title: "Lỗi", description: "Không thể tải lại cấu hình ngưỡng." });
+        }
+    }, [toast]);
+
+    const handleUpdateAllThresholds = useCallback(async (updatedConfigs: ElementRange[]) => {
+        setIsProcessing(true); // Show processing state
+        // console.log("Updating thresholds with:", updatedConfigs); // Debug
+        try {
+            const payload: Thresholds = { configs: updatedConfigs.filter(c => c.id) }; // Ensure only configs with ID are sent for update
+             if (payload.configs.length === 0) {
+                 toast({ variant: "default", title: "Thông tin", description: "Không có thay đổi nào để cập nhật." });
+                 setIsAlertModalOpen(false);
+                 return;
+             }
+            await updateThresholdConfigs(payload);
+            toast({ variant: "success", title: "Thành công", description: "Đã cập nhật cấu hình ngưỡng." });
+            await handleFetchThresholds();
+            setIsAlertModalOpen(false);
+        } catch (error: any) {
+            console.error("Failed to update thresholds:", error);
+            toast({ variant: "destructive", title: "Lỗi cập nhật ngưỡng", description: error.message || "Vui lòng thử lại." });
+        } finally {
+            setIsProcessing(false);
+        }
+    }, [toast, handleFetchThresholds]);
+
+    const handleCreateThreshold = useCallback(async (newConfigData: CreateElementRangeDto) => {
+        setIsProcessing(true);
+        // console.log("Creating threshold:", newConfigData); // Debug
+        try {
+            // Validate basic data
+            if (!newConfigData.elementName) throw new Error("Tên chỉ số không được để trống.");
+            // More specific validation can be added here (e.g., min < max)
+
+            const payload: CreateThresholdsDto = { configs: [newConfigData] };
+            await createThresholdConfigs(payload);
+            toast({ variant: "success", title: "Thành công", description: `Đã tạo ngưỡng cho ${newConfigData.elementName}.` });
+            await handleFetchThresholds();
+            // Keep modal open or close based on UX preference
+            // setIsAlertModalOpen(false);
+        } catch (error: any) {
+            console.error("Failed to create threshold:", error);
+            toast({ variant: "destructive", title: "Lỗi tạo ngưỡng", description: error.message || "Vui lòng thử lại." });
+        } finally {
+            setIsProcessing(false);
+        }
+    }, [toast, handleFetchThresholds]);
+
+    const handleDeleteThreshold = useCallback(async (idToDelete: string, elementName: string) => {
+        // Confirmation dialog
+        if (!window.confirm(`Bạn có chắc chắn muốn xóa cấu hình ngưỡng cho "${elementName}" không?`)) {
+            return;
+        }
+        setIsProcessing(true);
+        // console.log(`Deleting threshold ID: ${idToDelete} (${elementName})`); // Debug
+        try {
+            const payload: DeleteThresholdsDto = { ids: [idToDelete], hardDelete: false }; // Default to soft delete
+            await deleteThresholdConfigs(payload);
+            toast({ variant: "success", title: "Thành công", description: `Đã xóa ngưỡng cho ${elementName}.` });
+            await handleFetchThresholds();
+            // Keep modal open or close based on UX preference
+        } catch (error: any) {
+            console.error("Failed to delete threshold:", error);
+            toast({ variant: "destructive", title: "Lỗi xóa ngưỡng", description: error.message || "Vui lòng thử lại." });
+        } finally {
+            setIsProcessing(false);
+        }
+    }, [toast, handleFetchThresholds]);
+
 
     // --- Dropdown Options ---
     const uniqueStationsForFilter = useMemo(() => {
@@ -476,7 +572,7 @@ export default function Realtimedata() {
         <Button
             variant="ghost"
             onClick={() => handleSort(sortKey)}
-            className="px-2 py-1 h-auto -ml-2 hover:bg-gray-200 font-semibold text-gray-700"
+            className="px-2 py-1 h-auto -ml-2 hover:bg-gray-200 font-semibold text-gray-700" // Adjusted styling
         >
             {label}
             {sortConfig?.key === sortKey && (
@@ -484,16 +580,14 @@ export default function Realtimedata() {
                     ? <ArrowUp className="ml-1 h-4 w-4 text-blue-600" />
                     : <ArrowDown className="ml-1 h-4 w-4 text-blue-600" />
             )}
-            {/* Add default unsorted icon maybe? */}
-            {/* {sortConfig?.key !== sortKey && <ArrowUpDown className="ml-1 h-4 w-4 opacity-30" />} */}
         </Button>
     );
-
+    console.log("Dữ liệu truyền vào Modal (thresholdConfigs):", thresholdConfigs); 
     // --- Main Render ---
-    if (isLoading && displayData.length === 0) return <PageLoader message="Đang tải dữ liệu ban đầu..." />; // Cập nhật thông báo
+    if (isLoading && displayData.length === 0) return <PageLoader message="Đang tải dữ liệu ban đầu..." />;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 p-4 md:p-6"> {/* Added some padding */}
             {/* Header */}
             <header className="flex flex-wrap items-center justify-between gap-4 py-4 border-b">
                 <h1 className="text-2xl font-bold whitespace-nowrap">Dữ Liệu Quan Trắc</h1>
@@ -511,11 +605,14 @@ export default function Realtimedata() {
                         </PopoverContent>
                     </Popover>
                     {/* Action Buttons */}
-                    <Button variant="outline" onClick={handleResetFilter}>Reset</Button>
-                    <Button variant="outline" onClick={() => setIsAlertModalOpen(true)}><SettingsIcon className="mr-2 h-4 w-4" />Cảnh báo</Button>
+                    <Button variant="outline" onClick={handleResetFilter} disabled={isProcessing}>Reset</Button>
+                    <Button variant="outline" onClick={() => setIsAlertModalOpen(true)} disabled={isProcessing}>
+                        <SettingsIcon className="mr-2 h-4 w-4" />
+                        Cấu hình Ngưỡng
+                    </Button>
                     {/* Export */}
                     <div className="relative">
-                        <Button variant="outline" onClick={() => setIsExportOpen(!isExportOpen)}>
+                        <Button variant="outline" onClick={() => setIsExportOpen(!isExportOpen)} disabled={isProcessing || sortedData.length === 0}>
                             <DownloadIcon className="mr-2 h-4 w-4" />Xuất File<ChevronDown size={16} className={`ml-1 transition-transform ${isExportOpen ? 'rotate-180' : ''}`} />
                         </Button>
                         {isExportOpen && (
@@ -533,16 +630,17 @@ export default function Realtimedata() {
                 <Table className="min-w-full whitespace-nowrap text-sm">
                     <TableHeader className="bg-gray-50">
                         <TableRow>
-                            {/* Station Filter Dropdown */}
+                             {/* Station Filter Dropdown */}
                             <TableHead className={cn(
                                 "sticky left-0 bg-gray-50 z-10 px-3 py-2",
-                                "w-[280px]" // <-- THÊM CLASS WIDTH Ở ĐÂY (Ví dụ: 220px)
+                                "w-[220px] md:w-[280px]" // Responsive width
                             )}>
                                 <DropdownMenu>
-                                    <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer hover:text-blue-600 font-semibold">
-                                        Trạm <ChevronDown size={14} />
+                                    <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer hover:text-blue-600 font-semibold w-full text-left">
+                                        {selectedStationId ? stationMap.get(selectedStationId)?.name ?? 'Chọn Trạm' : 'Tất cả trạm'}
+                                        <ChevronDown size={14} className="ml-auto" />
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="max-h-[300px] overflow-y-auto">
+                                    <DropdownMenuContent className="max-h-[300px] overflow-y-auto w-[--radix-dropdown-menu-trigger-width]">
                                         <DropdownMenuItem onSelect={() => setSelectedStationId(null)}>Tất cả trạm</DropdownMenuItem>
                                         {uniqueStationsForFilter.map((station) => (
                                             <DropdownMenuItem key={station.id} onSelect={() => setSelectedStationId(station.id)}>{station.name}</DropdownMenuItem>
@@ -551,124 +649,120 @@ export default function Realtimedata() {
                                 </DropdownMenu>
                             </TableHead>
                             {/* Other Headers */}
-                            <TableHead className="px-3 py-2">Chi tiết</TableHead>
-                            <TableHead className="px-3 py-2"><SortableHeader sortKey="monitoringTime" label="Thời gian" /></TableHead>
+                            <TableHead className="px-3 py-2 text-center w-[80px]">Chi tiết</TableHead> {/* Fixed width for details */}
+                            <TableHead className="px-3 py-2 w-[130px]"><SortableHeader sortKey="monitoringTime" label="Thời gian" /></TableHead>
                             {metricHeaders.map((header) => {
-                                // Lấy đơn vị trước
                                 const unit = getDonvi(header);
-
                                 return (
-                                    <TableHead key={header} className="text-center px-3 py-2">
-                                        {/* Bọc nội dung bằng div để dễ dàng sắp xếp */}
-                                        <div className="flex flex-col items-center"> {/* Sắp xếp theo cột, căn giữa */}
-                                            {/* Phần tên header (vẫn có thể sort) */}
-                                            <SortableHeader
-                                                sortKey={header}
-                                                label={header} // Chỉ truyền tên header cho SortableHeader
-                                            // Bạn có thể cần thêm class vào đây nếu SortableHeader không chiếm đủ rộng
-                                            // className="w-full" // Ví dụ
-                                            />
-
-                                            {/* Phần đơn vị (chỉ hiển thị nếu có) */}
-                                            {unit && ( // Chỉ render nếu unit không rỗng
-                                                <span className="text-xs font-normal opacity-75 mt-0.5"> {/* Kiểu chữ nhỏ hơn, mờ hơn, có chút margin top */}
-                                                    ({unit}) {/* Hiển thị đơn vị trong ngoặc đơn */}
-                                                </span>
+                                    <TableHead key={header} className="text-center px-2 py-2 w-[80px]"> {/* Adjust width as needed */}
+                                        <div className="flex flex-col items-center">
+                                            <SortableHeader sortKey={header} label={header}/>
+                                            {unit && (
+                                                <span className="text-xs font-normal opacity-75 mt-0.5">({unit})</span>
                                             )}
                                         </div>
                                     </TableHead>
                                 );
                             })}
                             {/* Status Filter Dropdown */}
-                            <TableHead className="px-3 py-1">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer hover:text-blue-600 font-semibold">
-                                        Trạng thái <ChevronDown size={14} />
+                            <TableHead className="px-3 py-1 w-[150px]">
+                                 <DropdownMenu>
+                                    <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer hover:text-blue-600 font-semibold w-full text-left">
+                                        {selectedStatus ? selectedStatus : 'Trạng thái'}
+                                        <ChevronDown size={14} className="ml-auto"/>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="max-h-[270px] overflow-y-auto">
-                                        <DropdownMenuItem onSelect={() => setSelectedStatus(null)}>Tất cả trạng thái</DropdownMenuItem>
+                                    <DropdownMenuContent className="max-h-[270px] overflow-y-auto w-[--radix-dropdown-menu-trigger-width]">
+                                        <DropdownMenuItem onSelect={() => setSelectedStatus(null)}> Trạng thái</DropdownMenuItem>
                                         {uniqueStatusesForFilter.map((status) => (
                                             <DropdownMenuItem key={status} onSelect={() => setSelectedStatus(status)}>{status}</DropdownMenuItem>
                                         ))}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableHead>
-                            <TableHead className="min-w-[230px] px-3 py-1">Khuyến cáo</TableHead>
+                            <TableHead className="min-w-[200px] px-3 py-1">Khuyến cáo</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isLoading && paginatedData.length === 0 && ( // Show loader inside table only if loading and no data yet
+                        {(isLoading && paginatedData.length === 0) && (
                             <TableRow><TableCell colSpan={metricHeaders.length + 5} className="text-center h-24">Đang tải dữ liệu...</TableCell></TableRow>
                         )}
-                        {!isLoading && paginatedData.length === 0 && ( // Show no data message if not loading and no data
-                            <TableRow><TableCell colSpan={metricHeaders.length + 5} className="text-center h-24">{error ? error : "Không tìm thấy dữ liệu phù hợp."}</TableCell></TableRow>
+                        {(!isLoading && paginatedData.length === 0) && (
+                            <TableRow><TableCell colSpan={metricHeaders.length + 5} className="text-center h-24">{error ? `Lỗi: ${error}` : "Không tìm thấy dữ liệu phù hợp."}</TableCell></TableRow>
                         )}
                         {paginatedData.map((row) => {
-                            // Alert logic remains the same
+                            // Recalculate alert status for row highlighting using the new function
                             let isRowAlerted = false;
-                            const alertStatusPerCell: boolean[] = metricHeaders.map(header => {
-                                const metricKey = header.toLowerCase() as keyof AlertConfiguration;
-                                const indicator = row.features.find(f => f.name.toLowerCase() === metricKey) || row.features.find(f => f.name.toLowerCase().includes(metricKey));
-                                const outOfRange = isValueOutOfRange(indicator, metricKey);
-                                if (outOfRange) isRowAlerted = true;
-                                return outOfRange;
+                            metricHeaders.forEach(header => {
+                                const keyLower = header.toLowerCase();
+                                if(header !== 'WQI' && header !== 'AH') { // Only check metrics that have thresholds
+                                    const indicator = row.features.find(f => f.name.toLowerCase() === keyLower) || row.features.find(f => f.name.toLowerCase().includes(keyLower));
+                                    if (isValueOutOfRange(indicator, header)) {
+                                        isRowAlerted = true;
+                                    }
+                                }
                             });
+
                             return (
                                 <TableRow key={row.id} className={cn("hover:bg-gray-50", isRowAlerted && "bg-yellow-50 hover:bg-yellow-100")}>
+                                    {/* Station Cell */}
                                     <TableCell className={cn(
                                         "sticky left-0 bg-white dark:bg-gray-800 z-10 font-medium px-3 py-2",
-                                        "w-[230px]", // <-- THÊM CLASS WIDTH (Giống TableHead)
-                                        "whitespace-normal", // <-- CHO PHÉP XUỐNG DÒNG
-                                        "break-words" // <-- TÙY CHỌN: Ngắt từ nếu cần
+                                        "w-[220px] md:w-[280px]", // Match header width
+                                        "whitespace-normal",
+                                        "break-words",
+                                         isRowAlerted && "bg-yellow-50 hover:bg-yellow-100" // Ensure sticky cell also gets row highlight
                                     )}>
                                         {row.stationName}
-                                        <p className="text-xs text-gray-500 font-normal mt-1">{row.stationLocation}</p>
+                                        <p className="text-xs text-gray-500 font-normal mt-1">{row.stationLocation || "Không có vị trí"}</p>
                                     </TableCell>
-                                    <TableCell className="px-3 py-2">
-                                        <Link href={`/stationsadmin?id=${row.stationId}`} passHref>
-                                            <Button size="sm" variant="link" className="h-auto p-0 text-blue-600 hover:underline">Xem</Button>
+                                    {/* Details Cell */}
+                                    <TableCell className="px-3 py-2 text-center">
+                                        <Link href={`/stationsadmin?id=${row.stationId}`}>
+                                            Xem
                                         </Link>
                                     </TableCell>
+                                    {/* Time Cell */}
                                     <TableCell className="px-3 py-2">{formatMonitoringTimestamp(row.monitoringTime)}</TableCell>
+                                    {/* Metric Cells */}
                                     {metricHeaders.map((header, metricIndex) => {
                                         const keyLower = header.toLowerCase();
-                                        let value: string | number | null = 'N/A'; // Khởi tạo giá trị mặc định
+                                        let value: string | number | null = 'N/A';
+                                        let indicator: Indicator | undefined;
 
-                                        // ---- THÊM LOGIC KIỂM TRA HEADER Ở ĐÂY ----
                                         if (header === 'WQI') {
-                                            // Nếu header là WQI, lấy giá trị trực tiếp từ row.wqi
-                                            value = typeof row.wqi === 'number' ? row.wqi.toFixed(1) : 'N/A'; // Làm tròn 1 chữ số thập phân
+                                            value = typeof row.wqi === 'number' ? row.wqi.toFixed(1) : 'N/A';
+                                            // WQI typically doesn't have min/max thresholds to check
                                         } else {
-                                            // Nếu là các header khác, tìm trong features như cũ
-                                            let indicator = row.features.find(f => f.name.toLowerCase() === keyLower);
-                                            if (!indicator) {
-                                                indicator = row.features.find(f => f.name.toLowerCase().includes(keyLower));
-                                            }
+                                            indicator = row.features.find(f => f.name.toLowerCase() === keyLower)
+                                                     || row.features.find(f => f.name.toLowerCase().includes(keyLower));
                                             if (indicator) {
-                                                // Ưu tiên value số, sau đó đến textualValue
                                                 value = indicator.value ?? indicator.textualValue ?? 'N/A';
-                                                // Có thể thêm làm tròn cho các chỉ số khác nếu cần
                                                 if (typeof value === 'number') {
-                                                    value = value.toFixed(2); // Ví dụ làm tròn 2 chữ số
+                                                    value = value.toFixed(2); // Standard 2 decimal places
                                                 }
                                             }
                                         }
-                                        // ------------------------------------------
+
+                                        // Check if this specific cell is out of range
+                                        const isCellOutOfRange = header !== 'WQI' && header !== 'AH' && isValueOutOfRange(indicator, header);
 
                                         return (
                                             <TableCell
                                                 key={metricIndex}
                                                 className={cn(
-                                                    "text-center px-2 py-2", // Căn giữa giá trị chỉ số
-                                                    alertStatusPerCell[metricIndex] && "bg-red-100 font-bold text-red-800" // Highlight cell nếu out of range
+                                                    "text-center px-2 py-2",
+                                                    // Apply highlight if cell value is out of range
+                                                    isCellOutOfRange && "bg-red-100 font-bold text-red-700"
                                                 )}
                                             >
-                                                {value} {/* Hiển thị giá trị đã xử lý */}
+                                                {value}
                                             </TableCell>
                                         );
                                     })}
+                                    {/* Status Cell */}
                                     <TableCell className={cn("px-3 py-2", getStatusTextColor(row.status))}>{row.status}</TableCell>
-                                    <TableCell className="whitespace-normal px-3 py-2">{row.recommendation}</TableCell>
+                                    {/* Recommendation Cell */}
+                                    <TableCell className="whitespace-normal px-3 py-2 text-xs">{row.recommendation}</TableCell>
                                 </TableRow>
                             );
                         })}
@@ -677,7 +771,7 @@ export default function Realtimedata() {
             </div>
 
             {/* Footer */}
-            {(sortedData.length > 0) && !isLoading && ( // Chỉ hiển thị footer khi có dữ liệu và không loading
+            {(sortedData.length > 0) && !isLoading && (
                 <footer className="mt-6 flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-4">
                     {/* Items per page */}
                     <div className="flex items-center order-2 sm:order-1">
@@ -698,8 +792,18 @@ export default function Realtimedata() {
                 </footer>
             )}
 
-            {/* Alert Modal */}
-            <AlertConfigModal isOpen={isAlertModalOpen} onClose={() => setIsAlertModalOpen(false)} initialConfig={alertConfig} onSave={handleSaveAlertConfig} />
+            {/* Alert Modal (Threshold Config Modal) */}
+            {/* *** QUAN TRỌNG: Component này cần được bạn TẠO MỚI hoặc CẬP NHẬT *** */}
+            <AlertConfigModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                currentThresholds={thresholdConfigs} // Pass current thresholds
+                onUpdate={handleUpdateAllThresholds} // Pass update handler
+                onCreate={handleCreateThreshold}     // Pass create handler
+                onDelete={handleDeleteThreshold}     // Pass delete handler
+                validElementNames={validThresholdElementNames} // Pass valid element names for configuration
+                isProcessing={isProcessing} // Pass processing state for disabling buttons inside modal
+            />
         </div>
     );
 }

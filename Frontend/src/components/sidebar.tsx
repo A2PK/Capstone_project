@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Home, Newspaper, Monitor, Database, Inbox } from "lucide-react"
+import { Home, Newspaper, Monitor, Database, Inbox , MessagesSquare} from "lucide-react"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 export default function Sidebar() {
@@ -9,6 +9,7 @@ export default function Sidebar() {
     { href: "/dashboardofficer/stations", icon: <Monitor />, label: "Trạm quan trắc" },
     { href: "/dashboardofficer/realtimedata", icon: <Database />, label: "Dữ liệu thực" },
     { href: "/dashboardofficer/request", icon: <Inbox />, label: "Yêu cầu" },
+    { href: "/chat", icon: <MessagesSquare />, label: "Trò chuyện" },
   ]
 
   return (

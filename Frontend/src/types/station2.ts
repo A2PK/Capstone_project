@@ -41,9 +41,9 @@ export interface QueryOptions {
     offset?: number;
     sortBy?: string;
     sortDesc?: boolean;
-    // filters?: string;
     includeDeleted?: boolean;
   }
+  // filters?: string;
   export  interface FilterOptions {
     observation_type?: string;
     source?: string;

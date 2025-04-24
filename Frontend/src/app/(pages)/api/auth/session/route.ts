@@ -20,12 +20,12 @@ export async function GET(req: NextRequest) {
             }
 
             // Trả về JSON với NextResponse
-            return NextResponse.json({ isLoggedIn: true, user: userData }, { status: 200 });
+            return NextResponse.json({ isLoggedIn: true, user: userData, token: accessToken }, { status: 200 });
 
         } else {
             // Nếu không có access token -> Người dùng chưa đăng nhập
             console.log("App Route Handler: /api/auth/session - No access token found.");
-            return NextResponse.json({ isLoggedIn: false, user: null }, { status: 200 }); // Trả về 200 theo logic cũ, nhưng 401 có thể hợp lý hơn
+            return NextResponse.json({ isLoggedIn: false, user: null , token: null }, { status: 200 }); // Trả về 200 theo logic cũ, nhưng 401 có thể hợp lý hơn
         }
     } catch (error) {
         console.error("App Route Handler: /api/auth/session error:", error);

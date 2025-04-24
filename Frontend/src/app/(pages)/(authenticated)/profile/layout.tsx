@@ -23,7 +23,7 @@ function Unauthorized() {
       <div>
         <h1 className="text-3xl font-bold text-red-600 mb-4">Unauthorized Access</h1>
         <p className="text-lg text-gray-700">You do not have permission to view this page.</p>
-        <p className="text-sm text-gray-500 mt-2">Only users with 'admin' or 'officer' roles can access this area.</p>
+        <p className="text-sm text-gray-500 mt-2">Only users with {'"'}admin{'"'} or {'"'}officer{'"'} roles can access this area.</p>
         {/* Optional: Link về trang chủ hoặc trang login */}
         <a href="/" className="text-blue-600 hover:underline mt-4 inline-block">Go to Homepage</a>
       </div>

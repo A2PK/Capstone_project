@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Home, Newspaper, Cpu, Monitor, Database, Inbox,Users } from "lucide-react"
+import { Home, Newspaper, Cpu, Monitor, Database, Inbox,Users, MessagesSquare } from "lucide-react"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 export default function SidebarAdmin() {
@@ -11,6 +11,7 @@ export default function SidebarAdmin() {
     { href: "/requestusers", icon: <Inbox />, label: "Yêu cầu từ người dùng" },
     { href: "/usersadmin", icon: <Users />, label: "Quản lý người dùng" },
     { href: "/modelmanage", icon: <Cpu />, label: "Quản lý model AI" },
+    { href: "/chat", icon: <MessagesSquare />, label: "Trò chuyện" },
   ]
 
   return (

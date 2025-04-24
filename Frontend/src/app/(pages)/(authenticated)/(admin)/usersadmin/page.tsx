@@ -103,7 +103,7 @@ export default function UsersAdminPage() {
         // Thêm filters, sortBy, sortDesc nếu API hỗ trợ và UI có
         // filters: { email: searchTerm } // Ví dụ nếu muốn search API theo email
       };
-      const response = await getAllUsers(options); // Gọi API thật
+      const response = await getAllUsers("nothing",options); // Gọi API thật
       setUsers(response.users);
       setPaginationInfo(response.paginationInfo);
       setCurrentPage(page); // Cập nhật trang hiện tại

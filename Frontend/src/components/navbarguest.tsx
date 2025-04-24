@@ -18,7 +18,6 @@ export default function Navbar() {
     <nav className="bg-white shadow-md border-b border-gray-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo Section */}
           <div className="flex items-center">
             <Image
               src={logo}

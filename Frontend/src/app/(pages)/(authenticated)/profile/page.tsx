@@ -1,11 +1,11 @@
 // src/app/dashboard/profile/page.tsx (hoặc đường dẫn tương ứng)
 
-"use client"
+"use client";
 
-import { useEffect, useState, ChangeEvent, FormEvent } from "react";
+import React, { useEffect, useState, ChangeEvent, FormEvent } from "react"; // Added React import
 import Link from "next/link";
-import { format } from 'date-fns'; // Để format ngày tháng
-
+import { format, parseISO, isValid as isValidDate } from 'date-fns'; // Để format ngày tháng
+import { useSearchParams, useRouter } from "next/navigation";
 // Components UI (Shadcn)
 import PageLoader from "@/components/pageloader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,14 +14,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea for notification list
+import { Badge } from "@/components/ui/badge"; // Import Badge for read status
 
 // Icons (lucide-react)
-import { UserCircle, Mail, MapPin, Briefcase, Calendar, AlertCircle, Loader2 } from "lucide-react";
+import { UserCircle, Mail, MapPin, Briefcase, Calendar, AlertCircle, Loader2, Bell, Info, Check } from "lucide-react";
 
 // Logic & Types
-import type { User } from '@/types/user'; // Import kiểu User
-import { updateUser } from '@/lib/user';   // *** Import hàm cập nhật user ***
-import { useToast } from "@/hooks/use-toast"; // *** Import hook toast từ đường dẫn custom ***
+import type { User } from '@/types/user';
+import { Notification as NotificationData } from '@/types/notification'; // Use Notification type
+import { updateUser } from '@/lib/user';
+import { findNotificationsByUserId, markAsReadNotifications, getAllNotifications } from '@/lib/notification'; // Import notification API functions
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 // --- Component hiển thị lỗi ---
 function ErrorDisplay({ message }: { message: string }) {
@@ -43,7 +48,19 @@ function ErrorDisplay({ message }: { message: string }) {
     </div>
   );
 }
-
+function timeAgo(dateString: string): string {
+  try {
+      const date = parseISO(dateString);
+      if (!isValidDate(date)) return dateString;
+      const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+      let interval = seconds / 31536000; if (interval > 1) return `${Math.floor(interval)} năm`;
+      interval = seconds / 2592000; if (interval > 1) return `${Math.floor(interval)} tháng`;
+      interval = seconds / 86400; if (interval > 1) return `${Math.floor(interval)} ngày`;
+      interval = seconds / 3600; if (interval > 1) return `${Math.floor(interval)} giờ`;
+      interval = seconds / 60; if (interval > 1) return `${Math.floor(interval)} phút`;
+      return seconds < 10 ? `vài giây` : `${Math.floor(seconds)} giây`;
+  } catch { return dateString; }
+}
 // --- Kiểu dữ liệu cho state form input ---
 interface ProfileFormData {
     firstName: string;
@@ -59,69 +76,85 @@ interface AccountFormData {
 
 // --- Component Chính: ProfilePage ---
 export default function ProfilePage() {
+  const searchParams = useSearchParams(); // Hook để đọc query params
+  const router = useRouter();
   // ---- State ----
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); // Trạng thái đang lưu
-  const [userData, setUserData] = useState<User | null>(null); // Dữ liệu user fetch về
-  const [error, setError] = useState<string | null>(null); // Lỗi fetch hoặc lưu
-  const { toast } = useToast(); // Hook để hiển thị thông báo
+  const initialTab = searchParams.get('tab') || 'profile';
+  const [activeTab, setActiveTab] = useState(initialTab);
+    const [isSaving, setIsSaving] = useState(false);
+    const [userData, setUserData] = useState<User | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [token, setToken] = useState<string | null>(null); // Store token
+    const { toast } = useToast();
 
-  // State cho các form input (quản lý giá trị nhập liệu)
-  const [profileForm, setProfileForm] = useState<ProfileFormData>({
-    firstName: '',
-    lastName: '',
-    address: '',
-    age: '',
-  });
-  const [accountForm, setAccountForm] = useState<AccountFormData>({
-    email: '',
-    phone: '',
-  });
+    const [profileForm, setProfileForm] = useState<ProfileFormData>({ firstName: '', lastName: '', address: '', age: '' });
+    const [accountForm, setAccountForm] = useState<AccountFormData>({ email: '', phone: '' });
 
-  // ---- Data Fetching ----
-  useEffect(() => {
-    const fetchUserData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch('/api/auth/session'); // Gọi API lấy session/user data
-        if (!response.ok) {
-          throw new Error(`Lỗi mạng: ${response.status}`);
+    // ---- State for Notifications ----
+    const [notifications, setNotifications] = useState<NotificationData[]>([]);
+    const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+    const [notificationError, setNotificationError] = useState<string | null>(null);
+
+    // ---- Data Fetching (User & Token) ----
+    useEffect(() => {
+        const fetchUserDataAndToken = async () => {
+            setIsLoading(true);
+            setError(null);
+            setNotificationError(null); // Reset notification error too
+            try {
+                const response = await fetch('/api/auth/session');
+                if (!response.ok) throw new Error(`Lỗi mạng: ${response.status}`);
+                const data: { isLoggedIn: boolean; user: User | null; token: string | null } = await response.json();
+
+                if (data.isLoggedIn && data.user && data.token) {
+                    setUserData(data.user);
+                    setToken(data.token); // <-- Store the token
+                    // Initialize forms
+                    setProfileForm({ firstName: data.user.firstName ?? '', lastName: data.user.lastName ?? '', address: data.user.address ?? '', age: data.user.age?.toString() ?? '' });
+                    setAccountForm({ email: data.user.email ?? '', phone: data.user.phone ?? '' });
+                } else {
+                    console.warn("ProfilePage: User not logged in or user/token data not found.");
+                    setError("Bạn chưa đăng nhập hoặc không tìm thấy thông tin người dùng/token.");
+                }
+            } catch (e: any) {
+                console.error("ProfilePage: Failed to fetch user data/token:", e);
+                setError(e.message || "Đã xảy ra lỗi khi tải thông tin.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchUserDataAndToken();
+    }, []);
+
+    // ---- Data Fetching (Notifications) ----
+    useEffect(() => {
+        // Fetch notifications only if we have user data and token
+        if (userData && token) {
+            const fetchNotifications = async () => {
+                setIsLoadingNotifications(true);
+                setNotificationError(null);
+                try {
+                    // Fetch more notifications here, e.g., limit 50, sorted newest first
+                    console.log(token, userData)
+                    const fetchedNotifications = await getAllNotifications(token, {
+                        limit: 50,
+                        sortBy: 'created_at',
+                        sortDesc: true,
+                        // includeDeleted: false // optional: don't show deleted ones
+                    });
+                    setNotifications(fetchedNotifications || []);
+                } catch (err: any) {
+                    console.error("ProfilePage: Failed to fetch notifications:", err);
+                    setNotificationError(err.message || "Không thể tải danh sách thông báo.");
+                    setNotifications([]); // Clear on error
+                } finally {
+                    setIsLoadingNotifications(false);
+                }
+            };
+            fetchNotifications();
         }
-        const data = await response.json();
-
-        if (data.isLoggedIn && data.user) {
-          setUserData(data.user);
-          // Khởi tạo giá trị ban đầu cho các state form từ userData
-          setProfileForm({
-              firstName: data.user.firstName ?? '',
-              lastName: data.user.lastName ?? '',
-              address: data.user.address ?? '',
-              age: data.user.age?.toString() ?? '', // Chuyển number sang string
-          });
-          setAccountForm({
-              email: data.user.email ?? '',
-              phone: data.user.phone ?? '',
-          });
-        } else {
-          // Trường hợp không đăng nhập hoặc API không trả về user
-          console.warn("ProfilePage: User not logged in or user data not found from API.");
-          setError("Bạn chưa đăng nhập hoặc không tìm thấy thông tin người dùng.");
-          // Optional: Chuyển hướng về trang login
-          // import { useRouter } from 'next/navigation';
-          // const router = useRouter();
-          // router.push('/auth/login');
-        }
-      } catch (e: any) {
-        console.error("ProfilePage: Failed to fetch user data:", e);
-        setError(e.message || "Đã xảy ra lỗi khi tải thông tin.");
-      } finally {
-        setIsLoading(false); // Kết thúc loading
-      }
-    };
-
-    fetchUserData();
-  }, []); // Chạy 1 lần khi component mount
+    }, [userData, token]); 
 
   // ---- Input Change Handlers ----
   const handleProfileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +166,12 @@ export default function ProfilePage() {
       const { id, value } = e.target;
       setAccountForm(prev => ({ ...prev, [id]: value }));
   };
-
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Tùy chọn: Cập nhật URL để đồng bộ, nhưng không reload trang
+    const newUrl = `/profile?tab=${value}`;
+    router.push(newUrl, { scroll: false }); // scroll: false để không cuộn lên đầu trang
+};
   // ---- Save Handlers ----
   // Lưu thông tin cá nhân
   const handleSaveProfile = async (e: FormEvent) => {
@@ -214,7 +252,35 @@ export default function ProfilePage() {
           setIsSaving(false);
       }
   };
+  const handleMarkOneAsRead = async (notificationId: string) => {
+    if (!token) return;
+    // Find the notification client-side
+    const notification = notifications.find(n => n.id === notificationId);
+    if (!notification || notification.read) return; // Already read or not found
 
+    // Optimistic UI update
+    setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
+
+    try {
+        await markAsReadNotifications(token, [notificationId]); // Call API
+        console.log(`Marked notification ${notificationId} as read on server.`);
+        // No need to refetch usually, optimistic update is sufficient
+    } catch (error) {
+        console.error(`Failed to mark notification ${notificationId} as read on server:`, error);
+        toast({ variant: "destructive", title: "Lỗi", description: "Không thể cập nhật trạng thái thông báo." });
+        // Revert optimistic update on failure
+        setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: false } : n));
+    }
+};
+
+// --- Get Notification Icon (Copy from Navbar or share via utils) ---
+const getNotificationIcon = (notification: NotificationData) => {
+    const titleLower = notification.title.toLowerCase(); const descLower = notification.description.toLowerCase();
+    if (titleLower.includes('cảnh báo') || descLower.includes('cảnh báo') || titleLower.includes('alert') || titleLower.includes('warning')) return <AlertCircle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />;
+    if (titleLower.includes('cập nhật') || descLower.includes('cập nhật') || titleLower.includes('update') || titleLower.includes('huấn luyện')) return <Info className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />;
+    if (titleLower.includes('thành công') || descLower.includes('thành công') || titleLower.includes('hoàn thành')) return <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />;
+    return <Bell className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />;
+};
   // ---- Conditional Rendering ----
   if (isLoading) return <PageLoader message="Đang tải trang thông tin cá nhân..." />;
   if (error) return <ErrorDisplay message={error} />; // Hiển thị lỗi nếu có
@@ -283,11 +349,12 @@ export default function ProfilePage() {
 
         {/* ---- Cột Nội dung chính (Tabs) ---- */}
         <div className="flex-1">
-          <Tabs defaultValue="profile" className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             {/* Tabs List */}
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="profile">Thông tin cá nhân</TabsTrigger>
               <TabsTrigger value="account">Tài khoản</TabsTrigger>
+              <TabsTrigger value="notifications">Thông báo</TabsTrigger>
               <TabsTrigger value="security">Bảo mật</TabsTrigger>
             </TabsList>
 
@@ -341,7 +408,63 @@ export default function ProfilePage() {
                   </Card>
               </form>
             </TabsContent>
-
+            <TabsContent value="notifications" className="mt-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Thông báo của bạn</CardTitle>
+                                    <CardDescription>Danh sách các thông báo gần đây.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {isLoadingNotifications ? (
+                                        <div className="flex justify-center items-center p-6">
+                                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                        </div>
+                                    ) : notificationError ? (
+                                        <p className="text-red-600 text-center">{notificationError}</p>
+                                    ) : notifications.length === 0 ? (
+                                        <p className="text-muted-foreground text-center italic py-4">Không có thông báo nào.</p>
+                                    ) : (
+                                        <ScrollArea className="h-[400px] pr-4"> {/* Adjust height as needed */}
+                                            <ul className="space-y-4">
+                                                {notifications.map((noti) => (
+                                                    <li
+                                                        key={noti.id}
+                                                        className={cn(
+                                                            "flex items-start gap-3 p-3 border rounded-md transition-colors",
+                                                            noti.read ? "border-gray-200 dark:border-gray-700" : "border-blue-300 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800"
+                                                        )}
+                                                    >
+                                                        <div className="mt-1">
+                                                            {getNotificationIcon(noti)}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className={cn("font-semibold text-sm", !noti.read && "text-blue-800 dark:text-blue-200")}>{noti.title}</p>
+                                                            <p className="text-sm text-muted-foreground mt-0.5">{noti.description}</p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">{timeAgo(noti.createdAt)} trước</p>
+                                                        </div>
+                                                        {!noti.read && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-auto px-2 py-1 text-xs"
+                                                                onClick={() => handleMarkOneAsRead(noti.id)}
+                                                                title="Đánh dấu đã đọc"
+                                                            >
+                                                                <Check className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </ScrollArea>
+                                    )}
+                                </CardContent>
+                                {/* Optional: Add Footer with actions like "Mark all as read" */}
+                                <CardFooter className="border-t px-6 py-4">
+                                    <Button variant="outline" size="sm">Đánh dấu tất cả đã đọc</Button>
+                                </CardFooter>
+                            </Card>
+                        </TabsContent>
              {/* ---- Tab Content: Tài khoản ---- */}
             <TabsContent value="account" className="mt-6">
                <form onSubmit={handleSaveAccount}>

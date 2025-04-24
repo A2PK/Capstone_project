@@ -809,10 +809,10 @@ export default function ModelManagement() {
                                                             <Label className="text-xs font-semibold text-muted-foreground">ID Model</Label>
                                                             <p className="mt-1 font-mono text-xs bg-muted px-2 py-0.5 rounded break-all">{selectedModel.id}</p>
                                                         </div>
-                                                        <div>
+                                                        {/* <div>
                                                             <Label className="text-xs font-semibold text-muted-foreground">Đường dẫn File</Label>
                                                             <p className="mt-1 text-xs break-all">{selectedModel.file_path}</p>
-                                                        </div>
+                                                        </div> */}
                                                         <div>
                                                             <Label className="text-xs font-semibold text-muted-foreground">Huấn luyện lúc</Label>
                                                             <p className="mt-1">{selectedModel.trained_at ? new Date(selectedModel.trained_at).toLocaleString('vi-VN') : 'Chưa rõ'}</p>
@@ -871,7 +871,7 @@ export default function ModelManagement() {
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <List className="h-4 w-4 text-muted-foreground" />
-                                                            <strong>Tọa độ:</strong> Lat: {selectedStationInfo.latitude?.toFixed(6)}, Long: {selectedStationInfo.longitude?.toFixed(6)}
+                                                            <strong>Tọa độ:</strong> Vĩ độ: {selectedStationInfo.latitude?.toFixed(6)}, kinh độ: {selectedStationInfo.longitude?.toFixed(6)}
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <CalendarDays className="h-4 w-4 text-muted-foreground" />

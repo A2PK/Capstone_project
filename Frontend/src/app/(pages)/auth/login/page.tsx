@@ -54,8 +54,8 @@ export default function LoginPage() {
     if (state.type === "success" && state.user) {
       toast({
         variant: "success",
-        title: "Login Successful",
-        description: state.value[0] || `Welcome back, ${state.user.firstName}!`, // Có thể dùng tên user
+        title: "Đăng nhập thành công !",
+        description: state.value[0] || `Chào mừng, ${state.user.firstName}!`, // Có thể dùng tên user
       });
 
       try {
