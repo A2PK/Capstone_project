@@ -21,7 +21,7 @@ import axios from 'axios'; // Import axios để kiểm tra lỗi
 // Interface này phải khớp với định nghĩa trong file user.ts
 
 
-const UNSEEN_POLLING_INTERVAL = 5000; // Thời gian poll tin nhắn chưa đọc (ms)
+const UNSEEN_POLLING_INTERVAL = 2000; // Thời gian poll tin nhắn chưa đọc (ms)
 
 const ChatLayout = () => {
     // State từ hook xác thực

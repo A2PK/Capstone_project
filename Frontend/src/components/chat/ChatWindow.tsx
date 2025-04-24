@@ -22,7 +22,7 @@ interface ChatWindowProps {
   token: string | null; // Có thể là null nếu chưa đăng nhập xong
 }
 
-const POLLING_INTERVAL = 5000; // Thời gian poll tin nhắn mới (ms)
+const POLLING_INTERVAL = 2000; // Thời gian poll tin nhắn mới (ms)
 const MESSAGE_FETCH_LIMIT = 40; // Số lượng tin nhắn fetch mỗi lần
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, chatPartner, token }) => {
