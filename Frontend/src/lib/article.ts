@@ -108,11 +108,20 @@ export async function deleteArticle(
         throw new Error("Failed to delete article");
     }
 }
-
+interface EditArticle {
+    badge:string,
+content: string,
+fileIds: {
+    ids: string[]
+},
+pictureUrl: string,
+title: string
+}
+//Omit<Article, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>
 export async function updateArticle(
     token: string | null | undefined,
     id: string, 
-    data: Partial<Omit<Article, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>> 
+    data: Partial<EditArticle> 
 ): Promise<Article> { 
     if (!token) {
         console.error("updateArticle: Auth token is missing.");
@@ -146,3 +155,14 @@ export async function updateArticle(
         throw new Error("Failed to update article");
     }
 }
+
+export const generateProxyUrl = (fileUrl: string) => {
+    if (!fileUrl || typeof fileUrl !== 'string') {
+      console.warn('generateProxyUrl nhận được fileUrl không hợp lệ:', fileUrl);
+      return '';
+    }
+    console.log(fileUrl)
+    const apiRouteBasePath = '/api/auth/proxy-file';
+    const encodedFileUrl = encodeURIComponent(fileUrl);
+    return `${apiRouteBasePath}?url=${encodedFileUrl}`;
+  };

@@ -173,7 +173,7 @@ interface getfilesParambyFileIds {
     }
   }
 
-  export async function importFileToDataBase(token: string | null | undefined, fileUrl: string): Promise<number> { 
+  export async function importFileToDataBase(token: string | null | undefined, url: {fileUrl: string}): Promise<number> { 
     if (!token) {
         console.error("importFileToDataBase: Auth token is missing.");
         throw new Error("Authentication token is required.");
@@ -181,7 +181,7 @@ interface getfilesParambyFileIds {
     try {
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/water-quality/upload`, 
-        fileUrl,
+        url,
         {
           headers: {
             'Authorization': `Bearer ${token}`,

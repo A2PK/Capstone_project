@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import PageLoader from "@/components/pageloader";
 import Image from "next/image";
 import { Article } from "@/types/article";
-import { getAllArticles, deleteArticle } from "@/lib/article";
+import { getAllArticles, deleteArticle, generateProxyUrl } from "@/lib/article";
 import { QueryOptions } from "@/types/station2"; // Đổi tên type nếu cần
 import { useAuth } from "@/hooks/useAuth"; // Import hook xác thực
 import ArticleForm from "@/components/article-form"; // Import form component
@@ -198,7 +198,7 @@ const NewsAdminPage = () => {
               <div className="relative w-full h-48 sm:h-56"> {/* Giảm chiều cao ảnh một chút */}
                 <Image
                   // Sử dụng ảnh từ article.pictureUrl hoặc ảnh mặc định
-                  src={item.pictureUrl || DEFAULT_IMAGE_URL}
+                  src={generateProxyUrl(item.pictureUrl) || DEFAULT_IMAGE_URL}
                   alt={item.title}
                   fill
                   style={{ objectFit: "cover" }}

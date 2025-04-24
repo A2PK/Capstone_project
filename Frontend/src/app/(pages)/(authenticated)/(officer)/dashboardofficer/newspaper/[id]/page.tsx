@@ -1,4 +1,4 @@
-// src/app/newsadmin/[id]/page.tsx
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -152,7 +152,7 @@ const NewsDetailPage = () => {
        {/* Header: Breadcrumb + Actions */}
       <div className="flex justify-between items-center px-4 py-2 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center text-sm sm:text-base text-gray-600">
-             <Link href="/newsadmin" className="text-orange-600 hover:underline flex items-center">
+             <Link href= "/dashboardofficer/newspaper" className="text-orange-600 hover:underline flex items-center">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Quay lại Bản tin
              </Link>
@@ -206,7 +206,7 @@ const NewsDetailPage = () => {
           {isDeleted && (
               <div className="flex flex-col justify-center items-center h-full text-center">
                   <p className="text-red-500 text-xl font-semibold mb-4">📌 Bản tin đã bị xóa.</p>
-                  <Button onClick={() => router.push('/newsadmin')}>
+                  <Button onClick={() => router.push('/dashboardofficer/newspaper')}>
                       <ArrowLeft className="h-4 w-4 mr-2" />
                       Quay về danh sách bản tin
                   </Button>

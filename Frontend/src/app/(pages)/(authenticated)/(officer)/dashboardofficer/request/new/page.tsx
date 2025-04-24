@@ -197,13 +197,13 @@ export default function NewRequestPage() {
 
             // 2. Header Validation (Asynchronous)
             try {
-                const headerIsValid = await validateFileHeader(file);
-                if (!headerIsValid) {
-                    setError(`Tệp "${file.name}" có cấu trúc cột không đúng theo file mẫu. Vui lòng kiểm tra lại.`);
-                    setShowErrorDialog(true);
-                    validationErrorOccurred = true;
-                    break; // Stop processing further files
-                }
+                // const headerIsValid = await validateFileHeader(file);
+                // if (!headerIsValid) {
+                //     setError(`Tệp "${file.name}" có cấu trúc cột không đúng theo file mẫu. Vui lòng kiểm tra lại.`);
+                //     setShowErrorDialog(true);
+                //     validationErrorOccurred = true;
+                //     break; // Stop processing further files
+                // }
                 // If validation passes, prepare the file object for the state
                  filesToAdd.push({
                     file, // Store the actual File object
@@ -427,7 +427,7 @@ export default function NewRequestPage() {
                                 </Button>
                                 {/* Link to download template file */}
                                 <Button variant="link" asChild className="text-blue-600 underline p-0 h-auto">
-                                     <a href="/file_mau.xlsx" download="file_mau_quan_trac.xlsx"> Tải file mẫu (.xlsx) </a>
+                                     <a href="/file_test.xlsx" download="file_mau_quan_trac.xlsx"> Tải file mẫu (.xlsx) </a>
                                 </Button>
                             </div>
                              <p className="text-xs text-muted-foreground mt-1">Đã chọn: {filesToUpload.length}/{MAX_FILES} tệp. Yêu cầu tệp phải đúng cấu trúc cột theo file mẫu.</p>

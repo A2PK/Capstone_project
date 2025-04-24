@@ -73,7 +73,7 @@ export async function deleteUser(id: string, hardDelete: boolean = true): Promis
   }
 }
 
-interface searchParamsUser {
+export interface searchParamsUser {
   options: {
     filters: {
       email: string
@@ -85,7 +85,7 @@ interface searchParamsUser {
     sortDesc: boolean
   }
 }
-export async function searchUser(param: searchParamsUser): Promise<getUsers> { 
+export async function searchUser(searchParams: { options: { filters: { email: string; }; limit: number; }; }, token: string, param: searchParamsUser): Promise<getUsers> { 
   try {
     const res = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/search`, 

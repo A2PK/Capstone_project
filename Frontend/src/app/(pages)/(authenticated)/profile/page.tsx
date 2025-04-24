@@ -5,7 +5,7 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent } from "react"; // Added React import
 import Link from "next/link";
 import { format, parseISO, isValid as isValidDate } from 'date-fns'; // Để format ngày tháng
-
+import { useSearchParams, useRouter } from "next/navigation";
 // Components UI (Shadcn)
 import PageLoader from "@/components/pageloader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -76,8 +76,12 @@ interface AccountFormData {
 
 // --- Component Chính: ProfilePage ---
 export default function ProfilePage() {
+  const searchParams = useSearchParams(); // Hook để đọc query params
+  const router = useRouter();
   // ---- State ----
   const [isLoading, setIsLoading] = useState(true);
+  const initialTab = searchParams.get('tab') || 'profile';
+  const [activeTab, setActiveTab] = useState(initialTab);
     const [isSaving, setIsSaving] = useState(false);
     const [userData, setUserData] = useState<User | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -162,7 +166,12 @@ export default function ProfilePage() {
       const { id, value } = e.target;
       setAccountForm(prev => ({ ...prev, [id]: value }));
   };
-
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Tùy chọn: Cập nhật URL để đồng bộ, nhưng không reload trang
+    const newUrl = `/profile?tab=${value}`;
+    router.push(newUrl, { scroll: false }); // scroll: false để không cuộn lên đầu trang
+};
   // ---- Save Handlers ----
   // Lưu thông tin cá nhân
   const handleSaveProfile = async (e: FormEvent) => {
@@ -340,7 +349,7 @@ const getNotificationIcon = (notification: NotificationData) => {
 
         {/* ---- Cột Nội dung chính (Tabs) ---- */}
         <div className="flex-1">
-          <Tabs defaultValue="profile" className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             {/* Tabs List */}
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="profile">Thông tin cá nhân</TabsTrigger>

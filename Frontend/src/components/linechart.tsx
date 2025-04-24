@@ -111,31 +111,75 @@ const Chartline: React.FC<ChartlineProps> = ({
 
     // Calculate max available prediction weeks
     const maxAvailablePredictWeeks = useMemo((): number => {
-        let maxWeeks = 0;
+        console.log("--- Recalculating Max Available Predict Weeks ---");
         if (!groupedPredictionDataPoints || groupedPredictionDataPoints.size === 0) {
+            console.log("No prediction data groups found.");
             return 0;
         }
-        const sortedHistory = [...historicalDataPoints].sort((a, b) => new Date(a.monitoringTime).getTime() - new Date(b.monitoringTime).getTime());
-        const lastHistoricalTimestamp = sortedHistory.length > 0
-            ? new Date(sortedHistory[sortedHistory.length - 1].monitoringTime).getTime()
+
+        // 1. Tìm timestamp của điểm lịch sử cuối cùng (logic cũ)
+        const sortedHistoryForTimestamp = [...historicalDataPoints]
+            .map(dp => {
+                 try { return { ts: new Date(dp.monitoringTime).getTime(), dp }; }
+                 catch { return { ts: NaN, dp }; }
+            })
+            .filter(item => !isNaN(item.ts))
+            .sort((a, b) => a.ts - b.ts);
+
+        const lastHistoricalTimestamp = sortedHistoryForTimestamp.length > 0
+            ? sortedHistoryForTimestamp[sortedHistoryForTimestamp.length - 1].ts
             : undefined;
 
-        groupedPredictionDataPoints.forEach((predictionPoints) => {
+        console.log("Last Historical Timestamp:", lastHistoricalTimestamp ? new Date(lastHistoricalTimestamp) : 'N/A');
+
+        // 2. Tập hợp các ngày dự đoán duy nhất trong tương lai SAU KHI LỌC
+        const uniqueFutureDates = new Set<string>();
+
+        groupedPredictionDataPoints.forEach((predictionPoints, source) => {
             if (!Array.isArray(predictionPoints)) return;
-            let futurePointsCount = 0;
+
+            // Lọc lấy điểm mới nhất (createdAt) cho mỗi ngày dự đoán (logic tương tự trong chartData)
+            const latestPredictionPointsByDateForSource = new Map<string, DataPoint>();
             predictionPoints.forEach(dp => {
                 try {
-                    const timestamp = new Date(dp.monitoringTime).getTime();
-                    if (!isNaN(timestamp) && (lastHistoricalTimestamp === undefined || timestamp > lastHistoricalTimestamp)) {
-                        futurePointsCount++;
+                    const monitoringTimeDate = new Date(dp.monitoringTime);
+                    const createdAtDate = new Date(dp.createdAt);
+
+                    if (isNaN(monitoringTimeDate.getTime()) || isNaN(createdAtDate.getTime())) {
+                         return; // Bỏ qua điểm lỗi
+                    }
+
+                    // Chỉ xét điểm trong tương lai
+                    if (lastHistoricalTimestamp === undefined || monitoringTimeDate.getTime() > lastHistoricalTimestamp) {
+                        const monitoringDateStr = format(monitoringTimeDate, 'yyyy-MM-dd'); // Key là ngày
+                        const currentCreatedAt = createdAtDate.getTime();
+                        const existingPoint = latestPredictionPointsByDateForSource.get(monitoringDateStr);
+
+                        if (!existingPoint) {
+                            latestPredictionPointsByDateForSource.set(monitoringDateStr, dp);
+                        } else {
+                            const existingCreatedAt = new Date(existingPoint.createdAt).getTime();
+                             if (isNaN(existingCreatedAt) || currentCreatedAt > existingCreatedAt) {
+                                latestPredictionPointsByDateForSource.set(monitoringDateStr, dp);
+                            }
+                        }
                     }
                 } catch (e) {
-                    console.error("Error processing timestamp for max week calculation:", dp.monitoringTime, e);
+                    console.error(`Error processing prediction point for max week calc (source ${source}):`, dp, e);
                 }
             });
-            maxWeeks = Math.max(maxWeeks, futurePointsCount);
+
+             // Thêm các ngày đã lọc vào Set chung
+            latestPredictionPointsByDateForSource.forEach((_, dateStr) => {
+                uniqueFutureDates.add(dateStr);
+            });
+             console.log(`Source ${source}: Found ${latestPredictionPointsByDateForSource.size} unique future prediction dates after filtering.`);
         });
-        return maxWeeks;
+
+        console.log(`Total unique future prediction dates across all sources: ${uniqueFutureDates.size}`);
+        // Số "tuần" tối đa chính là số ngày dự đoán duy nhất tìm được
+        return uniqueFutureDates.size;
+
     }, [groupedPredictionDataPoints, historicalDataPoints]);
 
     // Effect to adjust selected prediction weeks if needed
@@ -173,32 +217,80 @@ const Chartline: React.FC<ChartlineProps> = ({
 
         if (predictMode && groupedPredictionDataPoints && groupedPredictionDataPoints.size > 0) {
             groupedPredictionDataPoints.forEach((predictionPoints, source) => {
-                const predictionSourceSeriesData: ApexChartSeriesDataElement[] = [];
+
+                // 1. Lọc các điểm dự đoán: chỉ giữ lại điểm mới nhất (createdAt) cho mỗi ngày
+                const latestPredictionPointsByDateForSource = new Map<string, DataPoint>();
+
                 if (Array.isArray(predictionPoints)) {
                     predictionPoints.forEach(dp => {
                         try {
-                            const timestamp = new Date(dp.monitoringTime).getTime();
-                            if (!isNaN(timestamp) && (lastHistoricalTimestamp === undefined || timestamp > lastHistoricalTimestamp)) {
-                                // getPointValue is stable
-                                predictionSourceSeriesData.push({ x: timestamp, y: getPointValue(dp, selectedFeature) });
+                            const monitoringTimeDate = new Date(dp.monitoringTime);
+                            const createdAtDate = new Date(dp.createdAt);
+
+                            if (isNaN(monitoringTimeDate.getTime()) || isNaN(createdAtDate.getTime())) {
+                                console.warn(`Invalid date in prediction point for source ${source}:`, dp);
+                                return; // Bỏ qua nếu ngày không hợp lệ
                             }
-                        } catch (e) { console.error(`Error processing prediction point for source ${source}:`, dp.monitoringTime, e); }
+
+                            // Chỉ xét các điểm dự đoán trong tương lai so với lịch sử
+                            if (lastHistoricalTimestamp === undefined || monitoringTimeDate.getTime() > lastHistoricalTimestamp) {
+                                const monitoringDateStr = format(monitoringTimeDate, 'yyyy-MM-dd'); // Key là ngày
+                                const currentCreatedAt = createdAtDate.getTime();
+
+                                const existingPoint = latestPredictionPointsByDateForSource.get(monitoringDateStr);
+
+                                if (!existingPoint) {
+                                    latestPredictionPointsByDateForSource.set(monitoringDateStr, dp);
+                                } else {
+                                    const existingCreatedAt = new Date(existingPoint.createdAt).getTime();
+                                    if (isNaN(existingCreatedAt)) {
+                                        latestPredictionPointsByDateForSource.set(monitoringDateStr, dp);
+                                    } else if (currentCreatedAt > existingCreatedAt) {
+                                        latestPredictionPointsByDateForSource.set(monitoringDateStr, dp);
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            console.error(`Error filtering prediction point for source ${source}:`, dp, e);
+                        }
                     });
                 }
+
+                // 2. Chuyển Map thành mảng các điểm dự đoán đã lọc cho nguồn này
+                const filteredPredictionPointsForSource = Array.from(latestPredictionPointsByDateForSource.values());
+
+                // 3. Tạo dữ liệu series từ các điểm đã lọc
+                const predictionSourceSeriesData: ApexChartSeriesDataElement[] = [];
+                filteredPredictionPointsForSource.forEach(dp => {
+                     try {
+                        const timestamp = new Date(dp.monitoringTime).getTime(); // Dùng monitoringTime cho trục X
+                        if (!isNaN(timestamp)) {
+                             // getPointValue đã ổn định
+                             predictionSourceSeriesData.push({ x: timestamp, y: getPointValue(dp, selectedFeature) });
+                        }
+                    } catch (e) { console.error(`Error creating series data from filtered prediction point for source ${source}:`, dp, e); }
+                });
+
+
+                // 4. Sắp xếp các điểm dự đoán đã lọc theo thời gian
                 const sortedSourcePredictions = predictionSourceSeriesData.sort((a, b) => a.x - b.x);
+
+                // 5. Chỉ lấy số tuần dự đoán mong muốn từ dữ liệu ĐÃ LỌC VÀ SẮP XẾP
                 const finalWeeksToShow = sortedSourcePredictions.slice(0, predictWeeks);
 
+                // 6. Thêm vào series chính và xử lý connector (logic cũ)
                 if (finalWeeksToShow.length > 0) {
                     series.push({ name: source, data: finalWeeksToShow });
                     const firstPredictionPoint = finalWeeksToShow[0];
+                     // Logic connector giữ nguyên: kiểm tra với lastHistoricalPoint
                     if (lastHistoricalPoint && firstPredictionPoint && (chartType === 'line' || chartType === 'area')) {
-                         if (lastHistoricalPoint.x !== firstPredictionPoint.x) {
+                         if (lastHistoricalPoint.x !== firstPredictionPoint.x) { // Kiểm tra timestamp đầy đủ
                              if (lastHistoricalPoint.y !== null && firstPredictionPoint.y !== null) {
-                                 connectorSeries.push({
-                                     name: `${source}_connector`,
-                                     data: [lastHistoricalPoint, firstPredictionPoint]
-                                 });
-                             }
+                                connectorSeries.push({
+                                    name: `${source}_connector`,
+                                    data: [lastHistoricalPoint, firstPredictionPoint]
+                                });
+                            }
                          }
                     }
                 }

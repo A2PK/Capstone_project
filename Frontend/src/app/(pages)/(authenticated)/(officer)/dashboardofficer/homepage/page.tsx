@@ -74,7 +74,7 @@ function formatMonitoringTime(timeString: string | undefined | null): string {
             console.warn("Invalid date format received:", timeString);
             return timeString; // Return original if invalid
         }
-        return format(date, 'HH:mm, dd/MM/yyyy'); // Format as HH:mm, dd/MM/yyyy
+        return format(date, 'dd/MM/yyyy'); // Format as HH:mm, dd/MM/yyyyHH:mm, 
     } catch (e) {
         console.error("Failed to format time:", timeString, e);
         return timeString; 

@@ -35,6 +35,7 @@ import * as XLSX from "xlsx"; // For reading Excel/CSV
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns'; // For formatting dates
 import axios from "axios";
+import { generateProxyUrl } from "@/lib/article";
 
 // Interface combining Request with optional sender details
 // Ensure this correctly extends the 'Request' type you provided
@@ -146,7 +147,7 @@ export default function AdminRequestsPage() {
                  setLoading(false);
              }
         }
-    }, [loading, token, currentAdmin]); // Rerun when token/admin is available
+    }, [token, currentAdmin]); // Rerun when token/admin is available
 
 
     // --- Helper Functions ---
@@ -251,14 +252,14 @@ export default function AdminRequestsPage() {
             }
             const fileInfo = fileInfos[0];
             setPreviewingFileInfo(fileInfo); // Store the full FileInfo
-
+            const proxyUrl = generateProxyUrl(fileInfo.url);
             // 2. Fetch the actual file content from the URL
             // IMPORTANT: Ensure the fileInfo.url is accessible (CORS headers might be needed on the server)
-            const response = await axios.get(fileInfo.url, {
-              responseType: 'arraybuffer' // <--- Crucial for getting ArrayBuffer
-          });
-            
-          const arrayBuffer: ArrayBuffer = response.data;
+            const response = await axios.get(proxyUrl, { // Gọi đến proxy, không phải URL gốc
+                responseType: 'arraybuffer'
+            });
+    
+            const arrayBuffer: ArrayBuffer = response.data;
 
             // 3. Parse the file content (Excel/CSV) using xlsx library
             const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -311,7 +312,7 @@ export default function AdminRequestsPage() {
         try {
             // Call the import API function with the file URL
             // Assuming the API expects the URL directly in the body based on your function definition
-            const status = await importFileToDataBase(token, previewingFileInfo.url);
+            const status = await importFileToDataBase(token, {fileUrl: previewingFileInfo.url});
 
             // Check for successful HTTP status code (e.g., 2xx)
             if (status >= 200 && status < 300) {
@@ -424,27 +425,37 @@ export default function AdminRequestsPage() {
 
                                 {/* Use request.fileIds */}
                                 {request.fileIds && request.fileIds.length > 0 && (
-                                    <div>
-                                        <h4 className="font-medium mb-2">File đính kèm ({request.fileIds.length}):</h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {request.fileIds.map((fileId) => (
-                                                <Button
-                                                    key={fileId}
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="flex items-center gap-1.5 text-xs h-8"
-                                                    onClick={() => handleFilePreview(request, fileId)}
-                                                    // Disable preview if importing this request's file
-                                                    disabled={actionLoading[request.id] === 'import'}
-                                                >
-                                                    <Eye className="h-3.5 w-3.5" />
-                                                    Xem File
-                                                    {/* Displaying File ID is okay if name isn't readily available */}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+    <div>
+        <h4 className="font-medium mb-2">File đính kèm ({request.fileIds.length}):</h4>
+        <div className="flex flex-wrap gap-2 items-center"> {/* Thêm items-center nếu muốn căn giữa theo chiều dọc */}
+            {request.fileIds.map((fileId) => (
+                <div key={fileId}> {/* Bọc mỗi mục bằng div để xử lý key */}
+                    {request.status === 'approved' ? (
+                        // --- Nếu đã duyệt: Hiển thị text thay vì Button ---
+                        <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 border border-gray-300">
+                             <FileText className="h-3.5 w-3.5" /> {/* Icon file thay cho mắt */}
+                             {/* Chỉ hiển thị ID vì chưa có tên ở đây */}
+                             File ID: {fileId}
+                        </span>
+                    ) : (
+                        // --- Nếu chưa duyệt (pending, rejected,...): Hiển thị Button như cũ ---
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-1.5 text-xs h-8"
+                            onClick={() => handleFilePreview(request, fileId)}
+                            // Disable nếu đang import hoặc request không còn pending
+                            disabled={actionLoading[request.id] === 'import' || request.status !== 'pending'}
+                        >
+                            <Eye className="h-3.5 w-3.5" />
+                            Xem File
+                        </Button>
+                    )}
+                </div>
+            ))}
+        </div>
+    </div>
+)}
                             </CardContent>
 
                             {/* Action Buttons for Pending Requests */}
@@ -570,7 +581,21 @@ export default function AdminRequestsPage() {
                          </AlertDialogDescription>
                      </AlertDialogHeader>
                      <AlertDialogFooter>
-                         <AlertDialogCancel>Hủy</AlertDialogCancel>
+                     <Button
+                variant="outline"
+                // Bắt sự kiện onPointerDown thay vì/ngoài onClick
+                onPointerDown={(e) => {
+                    // Ngăn sự kiện này "nổi" lên các element cha,
+                    // bao gồm cả overlay của Dialog cha.
+                    e.stopPropagation();
+                }}
+                // Vẫn giữ onClick để cập nhật state đóng AlertDialog
+                onClick={() => {
+                    setAddToDatabaseAlertOpen(false); // Chỉ đóng AlertDialog này
+                }}
+            >
+                Hủy
+            </Button>
                          <AlertDialogAction onClick={handleAddToDatabase} className="bg-primary hover:bg-primary/90">
                              Xác nhận thêm
                          </AlertDialogAction>
@@ -592,7 +617,7 @@ export default function AdminRequestsPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => { setActiveRequestId(null); setAlertAction(null); }}>Hủy</AlertDialogCancel>
+                        <Button onClick={() => { setActiveRequestId(null); setAlertAction(null); }}>Hủy</Button>
                         <AlertDialogAction
                             onClick={handleUpdateRequestStatus}
                             // Style action button based on alertAction

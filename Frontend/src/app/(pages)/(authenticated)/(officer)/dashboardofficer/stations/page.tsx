@@ -1,15 +1,15 @@
-// File: src/app/stationsadmin/page.tsx
 "use client";
 
 import React, { useEffect, useState, useMemo, ChangeEvent, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useSearchParams, useRouter } from 'next/navigation'; // Hook để đọc URL search params
+import { useSearchParams, useRouter } from 'next/navigation'; 
 import { format } from 'date-fns';
 import L from 'leaflet';
-import { Station, DataPoint, QueryOptions, Indicator } from "@/types/station2"; // Đảm bảo đường dẫn đúng
-import { getStations, getDataPointsOfStationById } from "@/lib/station"; // Đảm bảo đường dẫn đúng
-import { getStatusTextColor } from "@/lib/utils"; // Đảm bảo đường dẫn đúng
-
+import { Station, DataPoint, QueryOptions, Indicator } from "@/types/station2";
+import { getStations, getDataPointsOfStationById } from "@/lib/station";
+import { getStatusTextColor } from "@/lib/utils"; 
+import { ElementRange } from '@/types/threshold'; 
+import { getAllThresholdConfigs } from '@/lib/threshold'; 
 // Import các UI components
 import { Pagination } from "@/components/pagination2"; // Đảm bảo đường dẫn đúng
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Đảm bảo đường dẫn đúng
@@ -115,6 +115,8 @@ function formatMonitoringTime(timeString: string | undefined | null): string {
 // --- Component chính ---
 export default function StationsPage() {
     // --- State Variables ---
+    const [thresholdConfigs, setThresholdConfigs] = useState<ElementRange[] | null>(null); // Bắt đầu là null
+    const [isLoadingThresholds, setIsLoadingThresholds] = useState<boolean>(true);
     const [stations, setStations] = useState<Station[]>([]); // Danh sách tất cả trạm
     const [selectedStation, setSelectedStation] = useState<Station | null>(null); // Trạm đang được chọn
     const [selectedStationDataPoints, setStationDataPoints] = useState<DataPoint[]>([]); // Dữ liệu gốc của trạm được chọn (nếu cần)
@@ -141,27 +143,44 @@ export default function StationsPage() {
     const router = useRouter();
     // --- Data Fetching Effects ---
 
-    // Effect: Tải danh sách tất cả các trạm khi component được mount lần đầu
-    useEffect(() => {
-        setIsLoadingStations(true);
-        setError(null);
-        setInitialSelectionAttempted(false); // Reset cờ khi tải lại danh sách
-        getStations({ limit: 1000 }) // Lấy nhiều trạm, cân nhắc pagination ở backend nếu quá lớn
-            .then(data => {
-                setStations(data);
-                // Việc chọn trạm ban đầu (nếu có ID từ URL) sẽ được xử lý ở useEffect khác
-            })
-            .catch(err => {
-                console.error("Failed to fetch stations:", err);
-                setError("Không thể tải danh sách trạm quan trắc. Vui lòng thử lại.");
-            })
-            .finally(() => {
-                setIsLoadingStations(false);
-            });
-    }, []); // Mảng dependency rỗng = chỉ chạy 1 lần khi mount
+    // Effect: Tải danh sách tất cả các trạm khi component được mount lần đầu// Mảng dependency rỗng = chỉ chạy 1 lần khi mount
 
     // --- Event Handlers ---
+    useEffect(() => {
+        setIsLoadingStations(true);
+        setIsLoadingThresholds(true); // Bắt đầu tải ngưỡng
+        setError(null);
+        setInitialSelectionAttempted(false);
 
+        // Gọi cả hai API song song
+        Promise.all([
+            getStations({ limit: 1000 }),
+            getAllThresholdConfigs() // <--- GỌI API LẤY NGƯỠNG
+        ])
+        .then(([stationsData, thresholdsData]) => {
+            setStations(stationsData);
+
+            // --- Lọc trùng ngưỡng (nếu cần) ---
+            const uniqueThresholdsMap = new Map<string, ElementRange>();
+            thresholdsData.forEach(item => {
+                if (item.id) { uniqueThresholdsMap.set(item.id, item); }
+            });
+            const uniqueThresholds = Array.from(uniqueThresholdsMap.values());
+            setThresholdConfigs(uniqueThresholds); // <--- LƯU NGƯỠNG VÀO STATE
+            console.log("Fetched Thresholds in StationsPage:", uniqueThresholds);
+            // ----------------------------------
+        })
+        .catch(err => {
+            console.error("Failed to fetch initial stations or thresholds:", err);
+            setError("Không thể tải dữ liệu cần thiết (trạm hoặc ngưỡng). Vui lòng thử lại.");
+            // Có thể setThresholdConfigs(null) hoặc [] tùy logic xử lý lỗi
+            setThresholdConfigs([]); // Set thành mảng rỗng khi lỗi
+        })
+        .finally(() => {
+            setIsLoadingStations(false);
+            setIsLoadingThresholds(false); // <--- KẾT THÚC TẢI NGƯỠNG
+        });
+    }, []);
     // Hàm xử lý khi chọn một trạm (từ bảng hoặc map)
     // Sử dụng useCallback để tối ưu, vì hàm này là dependency của useEffect khác
     const handleSelectStation = useCallback((station: Station) => {
@@ -589,10 +608,11 @@ export default function StationsPage() {
                         <StationDetails
                             selectedStation={{
                                 ...(selectedStation as Station),
-                                ...selectedStationInfo
+                                ...selectedStationInfo,
                             }}
                             latestDataPoint={latestDataPoint}
                             availableFeatures={availableFeatures}
+                            thresholds={thresholdConfigs}
                         />
                     )}
                     {!isLoadingDataPoints && selectedStation && !latestDataPoint && !error && (

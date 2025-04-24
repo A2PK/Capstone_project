@@ -133,13 +133,13 @@ export async function getUnseenMessagesForCurrentUser( token: string | null | un
         const params = new URLSearchParams();
         const baseUrl = `${getBaseUrl()}/api/v1/messages/unseen`;
         console.log(`GET Request URL: ${baseUrl}`); 
-        const res = await axios.get(baseUrl, { 
+        const res = await axios.get<{ messages: Message[] }>(baseUrl, { 
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json'
             }
         });
-        return res.data.messages;
+        return res.data?.messages || [];
 
     } catch (error) {
         console.error("Error unseen messages of current user:", error);
