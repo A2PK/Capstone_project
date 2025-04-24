@@ -82,7 +82,7 @@ export async function createNotification(
 
 export async function markAsReadNotifications(
     token: string | null | undefined,
-    notificationids: string[] 
+    Ids: string[] 
 ): Promise<number> { 
     if (!token) {
         console.error("markAsReadNotification: Auth token is missing.");
@@ -92,9 +92,9 @@ export async function markAsReadNotifications(
     try {
         const url = `${getBaseUrl()}/api/v1/notifications`;
         console.log(`POST Request URL: ${url}`);
-        console.log(`POST Request Data:`, notificationids); 
+        console.log(`POST Request Data:`, Ids); 
 
-        const res = await axios.post(url, notificationids, { 
+        const res = await axios.post(url, {notificationIds: Ids}, { 
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
