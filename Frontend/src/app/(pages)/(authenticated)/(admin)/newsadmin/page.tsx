@@ -245,7 +245,7 @@ const NewsAdminPage = () => {
                              variant="outline"
                              size="icon"
                              className="bg-white hover:bg-gray-100 border-gray-300 rounded-full w-8 h-8"
-                             onClick={() => setArticleToDelete(item)} // Set article cần xóa khi click trigger
+                             onClick={() => openDeleteDialog(item)} // Set article cần xóa khi click trigger
                              title="Xóa"
                          >
                              <Trash2 className="h-4 w-4 text-red-600" />
