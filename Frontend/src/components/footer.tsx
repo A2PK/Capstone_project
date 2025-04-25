@@ -30,9 +30,9 @@ const AppFooter = () => {
           </h3>
           <nav className="flex flex-col items-center sm:items-start gap-2">
             <Link href="/" className="hover:text-white transition-colors duration-200">Trang chủ</Link>
-            <Link href="/about" className="hover:text-white transition-colors duration-200">Về chúng tôi</Link>
-            <Link href="/features" className="hover:text-white transition-colors duration-200">Tính năng</Link>
-            <Link href="/contact" className="hover:text-white transition-colors duration-200">Liên hệ</Link>
+            <Link href="/" className="hover:text-white transition-colors duration-200">Về chúng tôi</Link>
+            <Link href="/" className="hover:text-white transition-colors duration-200">Tính năng</Link>
+            <Link href="/" className="hover:text-white transition-colors duration-200">Liên hệ</Link>
           </nav>
         </div>
 
