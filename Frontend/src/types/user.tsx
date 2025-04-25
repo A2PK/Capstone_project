@@ -14,6 +14,7 @@ export interface User {
   address?: string | null;
   age?: number | null;
   profilePic?: string | null;
+  password?:string
 }
 
 export interface getUsers {

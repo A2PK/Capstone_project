@@ -264,6 +264,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, chatPartner, token
         <div className="flex-1 min-w-0">
           <p className="font-semibold truncate text-sm">{chatPartner.firstName} {chatPartner.lastName}</p>
            {chatPartner.role === 'admin' && <p className="text-xs text-orange-600">Quản trị viên</p>}
+           {chatPartner.role === 'manager' && <p className="text-xs text-blue-600">Tổng quản nhiệm</p>}
           {/* TODO: Thêm trạng thái online/offline nếu có */}
         </div>
         {/* TODO: Thêm nút gọi điện, video call,... nếu cần */}

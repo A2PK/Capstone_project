@@ -1,4 +1,3 @@
-// src/app/(pages)/(authenticated)/(admin)/dashboardadmin/requests/page.tsx (Adjust path as needed)
 "use client"
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation"; // Import if needed for navigation
@@ -77,7 +76,7 @@ export default function AdminRequestsPage() {
                 if (!response.ok) throw new Error('Failed to fetch session');
                 const data: { isLoggedIn: boolean; user: User | null; token: string | null } = await response.json();
                 // Ensure user exists and is an admin
-                if (data.isLoggedIn && data.user && data.token && data.user.role === 'admin') {
+                if (data.isLoggedIn && data.user && data.token && ((data.user.role === 'admin')||(data.user.role === 'manager'))) {
                     setCurrentAdmin(data.user);
                     setToken(data.token);
                     console.log("Admin session loaded:", data.user.id);

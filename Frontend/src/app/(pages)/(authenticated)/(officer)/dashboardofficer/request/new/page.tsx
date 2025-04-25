@@ -88,7 +88,7 @@ export default function NewRequestPage() {
                 try {
                     // Assume getAllUsers now requires token
                     const userData = await getAllUsers(token, { limit: 500 }); // Fetch a reasonable limit
-                    const admins = userData.users.filter(user => user.role === 'admin');
+                    const admins = userData.users.filter(user => ((user.role === 'admin')||(user.role === 'manager')));
                     setAdminUsers(admins);
                 } catch (err) {
                     console.error("Failed to fetch admin users:", err);

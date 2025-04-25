@@ -129,7 +129,7 @@ const NewsDetailPage = () => {
         setIsDeleted(true); // Cập nhật trạng thái đã xóa
         setIsDeleteDialogOpen(false); // Đóng dialog xác nhận
         // Không cần redirect ngay, chỉ hiển thị thông báo đã xóa
-        // router.push('/newsadmin'); // Chuyển về trang danh sách sau khi xóa
+        //router.push('/dashboardofficer/newspaper'); // Chuyển về trang danh sách sau khi xóa
 
      } catch (err: any) {
          console.error(`Error deleting article ${articleId}:`, err);
@@ -149,7 +149,6 @@ const NewsDetailPage = () => {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
        <Toaster position="top-right" />
-       {/* Header: Breadcrumb + Actions */}
       <div className="flex justify-between items-center px-4 py-2 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center text-sm sm:text-base text-gray-600">
              <Link href= "/dashboardofficer/newspaper" className="text-orange-600 hover:underline flex items-center">
@@ -181,9 +180,6 @@ const NewsDetailPage = () => {
                <Button variant="outline" size="sm" onClick={openEditModal}>
                   <Edit className="h-4 w-4 mr-1" /> Sửa
                </Button>
-
-               {/* Trigger cho AlertDialog */}
-              
                   <Button variant="destructive" size="sm" onClick={() => setIsDeleteDialogOpen(true)}>
                      <Trash2 className="h-4 w-4 mr-1" /> Xóa
                   </Button>
@@ -201,8 +197,6 @@ const NewsDetailPage = () => {
                   <p className="text-red-600 text-center text-lg p-10">⚠️ {error}</p>
               </div>
           )}
-
-          {/* Trường hợp đã xóa thành công */}
           {isDeleted && (
               <div className="flex flex-col justify-center items-center h-full text-center">
                   <p className="text-red-500 text-xl font-semibold mb-4">📌 Bản tin đã bị xóa.</p>
@@ -213,10 +207,8 @@ const NewsDetailPage = () => {
               </div>
           )}
 
-          {/* Trường hợp hiển thị PDF */}
           {!isLoading && !error && article && pdfFile && !isDeleted && (
              <div className="w-full h-full">
-                 {/* Worker cần URL hợp lệ */}
                  <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
                     {/* Đảm bảo container có chiều cao */}
                     <div style={{ height: 'calc(100vh - 50px)' }}> {/* Chiều cao trừ đi header */}

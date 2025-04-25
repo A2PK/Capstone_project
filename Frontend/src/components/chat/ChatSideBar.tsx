@@ -117,7 +117,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                                 hasUnread ? 'font-semibold text-gray-800' : 'font-medium text-gray-700' // In đậm tên nếu có tin chưa đọc
                                             }`}>
                                                 {user.firstName ?? ''} {user.lastName ?? ''}
-                                                {user.role === 'admin' && <span className="text-xs text-orange-600 ml-1 font-normal">(Admin)</span>}
+                                                {((user.role === 'admin')||(user.role === 'manager')) && <span className="text-xs text-orange-600 ml-1 font-normal">{user.role === 'admin' ? "(Quản trị viên)" : "(Tổng quản nhiệm)"}</span>}
                                             </p>
                                             {/* *** HIỂN THỊ BADGE SỐ LƯỢNG CHƯA ĐỌC *** */}
                                             {hasUnread && (
