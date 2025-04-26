@@ -322,7 +322,7 @@ export default function AdminRequestsPage() {
                     variant: "success",
                 });
                 // Optionally: Close the preview dialog after successful import
-                // setFileDialogOpen(false);
+                setFileDialogOpen(false);
             } else {
                  // Handle non-2xx status codes as errors
                  throw new Error(`API trả về trạng thái không thành công: ${status}`);
