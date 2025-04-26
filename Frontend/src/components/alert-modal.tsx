@@ -124,21 +124,38 @@ export function AlertConfigModal({
             toast({ variant: "warning", title: "Thiếu thông tin", description: "Vui lòng chọn tên chỉ số." });
             return;
         }
-        const minValue = newMinValue.trim() === '' ? null : parseFloat(newMinValue);
-        const maxValue = newMaxValue.trim() === '' ? null : parseFloat(newMaxValue);
-
-        if ((newMinValue.trim() !== '' && isNaN(minValue as number)) || (newMaxValue.trim() !== '' && isNaN(maxValue as number))) {
-             toast({ variant: "destructive", title: "Giá trị không hợp lệ", description: "Giá trị Min/Max không hợp lệ." });
+  
+        // --- THÊM VALIDATION BẮT BUỘC NHẬP ---
+        if (newMinValue.trim() === '') {
+            toast({ variant: "warning", title: "Thiếu giá trị", description: "Vui lòng nhập giá trị Min." });
             return;
         }
-        if (minValue !== null && maxValue !== null && minValue > maxValue) {
+        if (newMaxValue.trim() === '') {
+            toast({ variant: "warning", title: "Thiếu giá trị", description: "Vui lòng nhập giá trị Max." });
+            return;
+        }
+        // --- KẾT THÚC VALIDATION BẮT BUỘC NHẬP ---
+  
+        // Chuyển đổi sang số (giờ đã chắc chắn không phải chuỗi rỗng)
+        const minValue = parseFloat(newMinValue);
+        const maxValue = parseFloat(newMaxValue);
+  
+        // Kiểm tra xem có phải là số hợp lệ không (isNaN)
+        if (isNaN(minValue) || isNaN(maxValue)) {
+             toast({ variant: "destructive", title: "Giá trị không hợp lệ", description: "Giá trị Min/Max phải là số hợp lệ." });
+            return;
+        }
+  
+        // Kiểm tra logic Min <= Max (vẫn giữ lại)
+        if (minValue > maxValue) {
              toast({ variant: "warning", title: "Logic không hợp lệ", description: "Giá trị nhỏ nhất không thể lớn hơn giá trị lớn nhất." });
              return;
          }
-
+  
+        // Phần còn lại giữ nguyên: tạo payload và gọi onCreate
         const newConfigData: CreateElementRangeDto = { elementName: newElementName, minValue, maxValue };
         await onCreate(newConfigData);
-        // Reset form sau khi gọi API (thành công hay không thì parent sẽ fetch lại và cập nhật)
+        // Reset form sau khi gọi API
         setNewElementName('');
         setNewMinValue('');
         setNewMaxValue('');
@@ -147,6 +164,23 @@ export function AlertConfigModal({
     const handleSaveChanges = useCallback(async () => {
       console.log(">>> Bắt đầu handleSaveChanges. State hiện tại editableConfigs:", editableConfigs); 
          for (const config of editableConfigs) {
+            if (config.minValue === null || config.minValue === undefined) {
+                toast({
+                    variant: "warning",
+                    title: "Thiếu giá trị",
+                    description: `Vui lòng nhập giá trị Min cho "${config.elementName}".`,
+                });
+                return; // Dừng thực thi, không cho lưu
+            }
+            // Kiểm tra Max Value
+             if (config.maxValue === null || config.maxValue === undefined) {
+                toast({
+                    variant: "warning",
+                    title: "Thiếu giá trị",
+                    description: `Vui lòng nhập giá trị Max cho "${config.elementName}".`,
+                });
+                return; // Dừng thực thi, không cho lưu
+            }
              if (config.minValue !== null && config.maxValue !== null && config.minValue > config.maxValue) {
                  toast({ variant: "warning", title: "Logic không hợp lệ", description: `Tại "${config.elementName}", Min không thể lớn hơn Max.` });
                  return;
@@ -220,11 +254,11 @@ export function AlertConfigModal({
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 pl-10">
                                       <div className="space-y-1">
                                           <Label htmlFor={`min-${index}`} className="text-xs font-medium text-gray-600">Giá trị Min</Label>
-                                          <Input id={`min-${index}`} type="number" step="any" placeholder="Trống = không giới hạn" value={config.minValue ?? ""} onChange={(e) => handleInputChange(index, 'minValue', e.target.value)} className="h-9 text-sm" disabled={isProcessing} />
+                                          <Input id={`min-${index}`} type="number" step="any" placeholder="Nhập Min (Bắt buộc)" value={config.minValue ?? ""} onChange={(e) => handleInputChange(index, 'minValue', e.target.value)} className="h-9 text-sm" disabled={isProcessing} />
                                       </div>
                                       <div className="space-y-1">
                                            <Label htmlFor={`max-${index}`} className="text-xs font-medium text-gray-600">Giá trị Max</Label>
-                                          <Input id={`max-${index}`} type="number" step="any" placeholder="Trống = không giới hạn" value={config.maxValue ?? ""} onChange={(e) => handleInputChange(index, 'maxValue', e.target.value)} className="h-9 text-sm" disabled={isProcessing} />
+                                          <Input id={`max-${index}`} type="number" step="any" placeholder="Nhập Max (Bắt buộc)" value={config.maxValue ?? ""} onChange={(e) => handleInputChange(index, 'maxValue', e.target.value)} className="h-9 text-sm" disabled={isProcessing} />
                                       </div>
                                   </div>
                                   {/* Đường kẻ ngăn cách */}
@@ -254,11 +288,11 @@ export function AlertConfigModal({
                      </div>
                      <div>
                          <Label htmlFor="new-min-value" className="text-xs mb-1 block">Giá trị Min</Label>
-                         <Input id="new-min-value" type="number" step="any" placeholder="Min" value={newMinValue} onChange={(e) => setNewMinValue(e.target.value)} className="h-9 text-sm" disabled={isProcessing} />
+                         <Input id="new-min-value" type="number" step="any" placeholder="Min (Bắt buộc)"  value={newMinValue} onChange={(e) => setNewMinValue(e.target.value)} className="h-9 text-sm" disabled={isProcessing} />
                      </div>
                      <div>
                          <Label htmlFor="new-max-value" className="text-xs mb-1 block">Giá trị Max</Label>
-                         <Input id="new-max-value" type="number" step="any" placeholder="Max" value={newMaxValue} onChange={(e) => setNewMaxValue(e.target.value)} className="h-9 text-sm" disabled={isProcessing} />
+                         <Input id="new-max-value" type="number" step="any" placeholder="Max  (Bắt buộc)" value={newMaxValue} onChange={(e) => setNewMaxValue(e.target.value)} className="h-9 text-sm" disabled={isProcessing} />
                      </div>
                      <Button size="sm" className="h-9" onClick={handleAddNewThreshold} disabled={isProcessing || !newElementName} aria-label="Thêm ngưỡng mới">
                          <PlusCircle className="h-4 w-4 mr-1" /> Thêm

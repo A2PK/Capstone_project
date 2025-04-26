@@ -15,8 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Pagination } from "@/components/pagination";
-// *** QUAN TRỌNG: Bạn cần tạo hoặc cập nhật component AlertConfigModal ***
-import { AlertConfigModal } from '@/components/alert-modal'; // Giả định đường dẫn đúng
+import { AlertConfigModal } from '@/components/alert-modal';
 import PageLoader from "@/components/pageloader";
 
 // --- Icons ---
@@ -42,7 +41,6 @@ import { Thresholds, ElementRange, CreateElementRangeDto, CreateThresholdsDto, D
 import "../../../../fonts/times"; // Đảm bảo font được import đúng cách
 
 // --- Constants ---
-// Danh sách các header cho bảng (bao gồm cả WQI nếu muốn hiển thị)
 const metricHeaders = ["pH", "EC", "DO", "N-NH4", "N-NO2", "P-PO4", "TSS", "COD", "AH", "WQI"];
 // Danh sách tên element hợp lệ để cấu hình ngưỡng (Lấy từ yêu cầu của bạn, loại bỏ WQI và AH nếu không cần)
 const validThresholdElementNames = ["AH","pH", "EC", "DO", "N-NH4", "N-NO2", "P-PO4", "TSS", "COD"];
@@ -74,7 +72,6 @@ function formatMonitoringTimestamp(timeString: string | undefined | null): strin
     try {
         const date = parseISO(timeString);
         if (!isValidDate(date)) return timeString;
-        //return format(date, 'HH:mm, dd/MM/yyyy'); // Giữ lại giờ phút nếu cần
          return format(date, 'dd/MM/yyyy');
     } catch (e) { return timeString; }
 }
@@ -96,7 +93,7 @@ interface DisplayRowData extends DataPoint {
 export default function Realtimedata() {
     // --- State ---
     const [isLoading, setIsLoading] = useState(true);
-    const [isProcessing, setIsProcessing] = useState(false); // State loading cho các thao tác API (CUD)
+    const [isProcessing, setIsProcessing] = useState(false); 
     const [error, setError] = useState<string | null>(null);
     const [allStations, setAllStations] = useState<Station[]>([]);
     const [stationMap, setStationMap] = useState<Map<string, Station>>(new Map());
@@ -105,7 +102,7 @@ export default function Realtimedata() {
     const [filteredDisplayData, setFilteredDisplayData] = useState<DisplayRowData[]>([]);
 
     // --- Threshold State ---
-    const [thresholdConfigs, setThresholdConfigs] = useState<ElementRange[]>([]); // State lưu threshold configs từ backend
+    const [thresholdConfigs, setThresholdConfigs] = useState<ElementRange[]>([]); 
 
     // Filters
     const [date, setDate] = useState<DateRange | undefined>(undefined);
@@ -793,7 +790,6 @@ export default function Realtimedata() {
             )}
 
             {/* Alert Modal (Threshold Config Modal) */}
-            {/* *** QUAN TRỌNG: Component này cần được bạn TẠO MỚI hoặc CẬP NHẬT *** */}
             <AlertConfigModal
                 isOpen={isAlertModalOpen}
                 onClose={() => setIsAlertModalOpen(false)}
