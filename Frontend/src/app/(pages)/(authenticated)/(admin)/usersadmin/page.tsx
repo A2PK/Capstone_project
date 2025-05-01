@@ -588,25 +588,25 @@ export default function UsersAdminPage() {
                                 {/* Age */}
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="age" className="text-right">Tuổi</Label>
-                                    <Input id="age" name="age" type="number" value={formData.age == null ? '' : formData.age} onChange={handleFormChange} className="col-span-3" placeholder="(Tùy chọn)" disabled={isLoadingData}/>
+                                    <Input id="age" name="age" type="number" min={18} value={formData.age == null ? '' : formData.age} onChange={handleFormChange} className="col-span-3" placeholder="(Tùy chọn)" disabled={isLoadingData}/>
                                 </div>
                                 {/* Avatar URL */}
-                                <div className="grid grid-cols-4 items-center gap-4">
+                                {/* <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="profilePic" className="text-right">Avatar URL</Label>
                                     <Input id="profilePic" name="profilePic" value={formData.profilePic || ''} onChange={handleFormChange} className="col-span-3" placeholder="(Tùy chọn) URL ảnh đại diện" disabled={isLoadingData}/>
-                                </div>
+                                </div> */}
 
                                 {/* Password */}
                                 {!currentUser && (
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label htmlFor="password" className="text-right">Mật khẩu <span className="text-red-500">*</span></Label>
-                                        <Input id="password" name="password" type="text" value={formData.password || ''} onChange={handleFormChange} className="col-span-3" placeholder="Nhập mật khẩu" required disabled={isLoadingData}/>
+                                        <Input id="password" name="password" minLength={8} type="text" value={formData.password || ''} onChange={handleFormChange} className="col-span-3" placeholder="Nhập mật khẩu" required disabled={isLoadingData}/>
                                     </div>
                                 )}
                                 {currentUser && (
                                      <div className="grid grid-cols-4 items-center gap-4">
                                          <Label htmlFor="password" className="text-right">Đặt lại mật khẩu</Label>
-                                         <Input id="password" name="password" type="text" value={formData.password || ''} onChange={handleFormChange} className="col-span-3" placeholder="(Để trống nếu không đổi)" disabled={isLoadingData}/>
+                                         <Input id="password" name="password" minLength={8} type="text" value={formData.password || ''} onChange={handleFormChange} className="col-span-3" placeholder="(Để trống nếu không đổi)" disabled={isLoadingData}/>
                                      </div>
                                 )}
 

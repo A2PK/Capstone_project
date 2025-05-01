@@ -27,7 +27,8 @@ import { User as AppUser } from '@/types/user';
 import { useToast } from "@/hooks/use-toast"; // Import toast
 import { findNotificationsByUserId, getAllNotifications, markAsReadNotifications } from '@/lib/notification'; // Import notification API functions
 import { parseISO, isValid as isValidDate } from "date-fns";
-
+import { getUserById } from "@/lib/user";
+import { generateProxyUrl } from "@/lib/article";
 // --- Helper function for timeAgo (Keep as before) ---
 function timeAgo(dateString: string): string {
     try {
@@ -71,30 +72,59 @@ export default function Navbar() {
 
     // --- Fetch Session and Token ---
     useEffect(() => {
-        const checkSession = async () => {
-            setIsLoadingSession(true);
-            try {
-                const response = await fetch('/api/auth/session');
-                if (response.ok) {
-                    // Expect token to be returned from API now
-                    const data: { isLoggedIn: boolean; user: AppUser | null; token: string | null } = await response.json();
-                    setIsLoggedIn(data.isLoggedIn);
-                    setUser(data.user);
-                    setToken(data.token); // Store the token
-                    console.log("Session check success:", data.isLoggedIn);
-                } else {
-                    console.error("Failed to fetch session status:", response.status);
-                    setIsLoggedIn(false); setUser(null); setToken(null);
-                }
-            } catch (error) {
-                console.error("Error checking session:", error);
-                setIsLoggedIn(false); setUser(null); setToken(null);
-            } finally {
-                setIsLoadingSession(false);
-            }
+        const loadUserSessionAndData = async () => {
+         setIsLoadingSession(true);
+         setIsLoggedIn(false); // Reset trạng thái ban đầu
+         setUser(null);
+         setToken(null);
+         try {
+          // 1. Fetch session để lấy token và userId
+          console.log("Navbar: Fetching session...");
+          const sessionResponse = await fetch('/api/auth/session');
+          if (!sessionResponse.ok) {
+           // Không cần log lỗi ở đây nếu 401 là bình thường khi chưa đăng nhập
+           if (sessionResponse.status !== 401) {
+              console.error("Navbar: Session fetch failed with status:", sessionResponse.status);
+           }
+           setIsLoggedIn(false); setUser(null); setToken(null);
+           return; // Dừng nếu session lỗi (hoặc không có session)
+          }
+          const sessionData: { isLoggedIn: boolean; user: { id: string } | null; token: string | null } = await sessionResponse.json();
+      
+          if (sessionData.isLoggedIn && sessionData.user?.id && sessionData.token) {
+           const currentToken = sessionData.token;
+           const currentUserId = sessionData.user.id;
+           setToken(currentToken); // Lưu token vào state
+      
+           // 2. Fetch dữ liệu user đầy đủ bằng getUserById
+           try {
+            console.log(`Navbar: Fetching full user data for ID: ${currentUserId}`);
+            // Giả sử getUserById cần token, nếu không thì bỏ token đi
+            const fullUserData = await getUserById(currentUserId);
+            setUser(fullUserData); // *** CẬP NHẬT STATE USER BẰNG DỮ LIỆU TỪ getUserById ***
+            setIsLoggedIn(true); // Đặt trạng thái đăng nhập thành công
+            console.log("Navbar: Full user data loaded successfully.");
+           } catch (getUserError: any) {
+            console.error("Navbar: Failed to fetch user data by ID:", getUserError);
+            // Xử lý lỗi: Có thể đăng xuất người dùng hoặc hiển thị thông báo
+            setIsLoggedIn(false); setUser(null); setToken(null); // Coi như đăng nhập thất bại nếu không lấy được data
+            toast({ variant: "destructive", title: "Lỗi tải dữ liệu", description: "Không thể tải thông tin người dùng chi tiết." });
+           }
+          } else {
+           // Session trả về không đăng nhập hoặc thiếu thông tin
+           setIsLoggedIn(false); setUser(null); setToken(null);
+           console.log("Navbar: No active session found or session data incomplete.");
+          }
+         } catch (error) {
+          console.error("Navbar: Error loading user session/data:", error);
+          setIsLoggedIn(false); setUser(null); setToken(null);
+         } finally {
+          setIsLoadingSession(false); // Kết thúc trạng thái loading
+         }
         };
-        checkSession();
-    }, []);
+        loadUserSessionAndData();
+       // eslint-disable-next-line react-hooks/exhaustive-deps
+       }, []);
 
     // --- Fetch Notifications when user/token is available ---
     useEffect(() => {
@@ -307,7 +337,7 @@ export default function Navbar() {
                                         <Button variant="ghost" className="relative rounded-full p-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 h-9 w-9 flex items-center justify-center">
                                               <span className="sr-only">Open user menu</span>
                                               <Avatar className="h-8 w-8">
-                                                  <AvatarImage src={user.profilePic || undefined} alt={user.username || "User Avatar"} />
+                                                  <AvatarImage src={generateProxyUrl(user.profilePic ? user.profilePic :"") || undefined} alt={user.username || "User Avatar"} />
                                                    <AvatarFallback className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-medium">
                                                         { user.firstName?.charAt(0)?.toUpperCase() || user.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U' }
                                                    </AvatarFallback>

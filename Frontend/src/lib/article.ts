@@ -161,7 +161,7 @@ export const generateProxyUrl = (fileUrl: string) => {
       console.warn('generateProxyUrl nhận được fileUrl không hợp lệ:', fileUrl);
       return '';
     }
-    console.log(fileUrl)
+    if (fileUrl == '') return ''
     const apiRouteBasePath = '/api/auth/proxy-file';
     const encodedFileUrl = encodeURIComponent(fileUrl);
     return `${apiRouteBasePath}?url=${encodedFileUrl}`;
