@@ -67,8 +67,7 @@ const NewsGuestDetailPage = () => {
                 const mainFileId = fetchedArticle.fileIds[0];
                 console.log(`Guest: Attempting to fetch file info for ID [${mainFileId}] using "fake" token.`);
                 try {
-                    // Cần một token hợp lệ ở đây nếu API yêu cầu, thay "YOUR_VALID_TOKEN_OR_LOGIC"
-                    const filesInfo = await getMultipleFilesByFileIds("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImVtYWlsIjoidXNlckBnbWFpbC5jb20iLCJyb2xlIjoib2ZmaWNlciIsInN1YiI6ImEyM2ZkMWY0LThmZWEtNGQxZi04OGMxLTE1NjY3ZGI3YTQ3YSJ9LCJpc3MiOiJ3cWltS01UIiwic3ViIjoiYTIzZmQxZjQtOGZlYS00ZDFmLTg4YzEtMTU2NjdkYjdhNDdhIiwiZXhwIjoxNzQ1OTkxMjA5LCJpYXQiOjE3NDUzODY0MDl9.TkPqpDGuhsAdd8qItxecAIiDKQUjlWBGn9rMP8avjOY", { ids: [mainFileId] });
+                    const filesInfo = await getMultipleFilesByFileIds("guest", { ids: [mainFileId] });
                     console.log("Guest: Fetched file info:", filesInfo);
                     if (filesInfo && filesInfo.length > 0) {
                         if (filesInfo[0].type === 'application/pdf' || filesInfo[0].name?.toLowerCase().endsWith('.pdf')) {
