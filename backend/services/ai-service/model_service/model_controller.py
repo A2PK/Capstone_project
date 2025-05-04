@@ -448,7 +448,7 @@ async def training_api(
                             continue
 
 
-                        model_description = f"Auto-trained {model_type} model for station {station_id_str} using data tagged \'{date_tag}\'. Trained on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. Local Path: {model_path}"
+                        model_description = f"Mô hình {model_type} huấn luyện cho trạm {station_id_str}.\n Huấn luyện vào: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
 
                         # Create Pydantic payload
                         model_create_payload = AIModelCreate(

@@ -632,10 +632,185 @@
         ]
       }
     },
+    "/api/v1/water-quality/threshold-configs": {
+      "get": {
+        "summary": "List Threshold Configurations",
+        "description": "Retrieves a paginated list of threshold configurations with filtering options.",
+        "operationId": "WaterQualityService_ListThresholdConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityListThresholdConfigsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "options.limit",
+            "description": "Maximum number of items to return per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "50"
+          },
+          {
+            "name": "options.offset",
+            "description": "Number of items to skip before starting to collect the result set (for pagination).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          {
+            "name": "options.sortBy",
+            "description": "Field name to sort the results by (e.g., 'created_at', 'name').",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "default": "\"created_at\""
+          },
+          {
+            "name": "options.sortDesc",
+            "description": "Set to true to sort in descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "options.filters",
+            "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"}).",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "options.includeDeleted",
+            "description": "Set to true to include soft-deleted records in the results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Threshold Configurations"
+        ]
+      },
+      "post": {
+        "summary": "Create Threshold Configurations",
+        "description": "Creates one or more new threshold configurations.",
+        "operationId": "WaterQualityService_CreateThresholdConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateThresholdConfigsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to create one or more new threshold configurations.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateThresholdConfigsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Threshold Configurations"
+        ]
+      },
+      "put": {
+        "summary": "Update Threshold Configurations",
+        "description": "Updates one or more existing threshold configurations.",
+        "operationId": "WaterQualityService_UpdateThresholdConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityUpdateThresholdConfigsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to update one or more existing threshold configurations.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityUpdateThresholdConfigsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Threshold Configurations"
+        ]
+      }
+    },
+    "/api/v1/water-quality/threshold-configs/delete": {
+      "post": {
+        "summary": "Delete Threshold Configurations",
+        "description": "Deletes one or more threshold configurations. Can be soft or hard delete.",
+        "operationId": "WaterQualityService_DeleteThresholdConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityDeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to delete one or more entities by their IDs.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityDeleteRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Threshold Configurations"
+        ]
+      }
+    },
     "/api/v1/water-quality/upload": {
       "post": {
-        "summary": "Upload Data",
-        "description": "Streams a data file for processing and importing water quality data.",
+        "summary": "Upload Data via URL",
+        "description": "Initiates processing of a water quality data file specified by a URL.",
         "operationId": "WaterQualityService_UploadData",
         "responses": {
           "200": {
@@ -654,7 +829,7 @@
         "parameters": [
           {
             "name": "body",
-            "description": "A single message in the upload stream, containing either a metadata field or a data chunk. (streaming inputs)",
+            "description": "Request containing the URL of a data file to be processed.",
             "in": "body",
             "required": true,
             "schema": {
@@ -948,6 +1123,39 @@
       },
       "description": "Contains details of the newly created monitoring stations.",
       "title": "Create Stations Response"
+    },
+    "waterqualityCreateThresholdConfigsRequest": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfigInput"
+          },
+          "description": "List of threshold configurations to create."
+        }
+      },
+      "description": "Request to create one or more new threshold configurations.",
+      "title": "Create Threshold Configs Request",
+      "required": [
+        "configs"
+      ]
+    },
+    "waterqualityCreateThresholdConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfig"
+          },
+          "description": "List of created threshold configurations with system-generated fields populated."
+        }
+      },
+      "description": "Contains details of the newly created threshold configurations.",
+      "title": "Create Threshold Configs Response"
     },
     "waterqualityDataPoint": {
       "type": "object",
@@ -1484,6 +1692,29 @@
         "pagination"
       ]
     },
+    "waterqualityListThresholdConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfig"
+          },
+          "description": "List of threshold configurations matching the filter criteria."
+        },
+        "pagination": {
+          "$ref": "#/definitions/corePaginationInfo",
+          "description": "Pagination information including total count and current page."
+        }
+      },
+      "description": "Contains a paginated list of threshold configurations.",
+      "title": "List Threshold Configs Response",
+      "required": [
+        "configs",
+        "pagination"
+      ]
+    },
     "waterqualityObservationType": {
       "type": "string",
       "enum": [
@@ -1605,6 +1836,92 @@
         "country"
       ]
     },
+    "waterqualityThresholdConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+          "description": "Unique identifier for the threshold config (UUID format).",
+          "title": "Base fields inline"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-15T10:30:00Z",
+          "description": "Timestamp when the threshold config was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-16T11:00:00Z",
+          "description": "Timestamp when the threshold config was last updated."
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-17T12:00:00Z",
+          "description": "Timestamp when the threshold config was soft-deleted. Null if not deleted."
+        },
+        "elementName": {
+          "type": "string",
+          "example": "pH",
+          "description": "Name of the water quality element/parameter.",
+          "title": "ThresholdConfig specific fields"
+        },
+        "minValue": {
+          "type": "number",
+          "format": "double",
+          "example": 6.5,
+          "description": "Minimum acceptable value for the element."
+        },
+        "maxValue": {
+          "type": "number",
+          "format": "double",
+          "example": 8.5,
+          "description": "Maximum acceptable value for the element."
+        }
+      },
+      "description": "Represents water quality parameter threshold configuration.",
+      "title": "Threshold Configuration",
+      "required": [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "elementName",
+        "minValue",
+        "maxValue"
+      ]
+    },
+    "waterqualityThresholdConfigInput": {
+      "type": "object",
+      "properties": {
+        "elementName": {
+          "type": "string",
+          "example": "pH",
+          "description": "Name of the water quality element/parameter."
+        },
+        "minValue": {
+          "type": "number",
+          "format": "double",
+          "example": 6.5,
+          "description": "Minimum acceptable value for the element."
+        },
+        "maxValue": {
+          "type": "number",
+          "format": "double",
+          "example": 8.5,
+          "description": "Maximum acceptable value for the element."
+        }
+      },
+      "description": "Data required to create a new threshold configuration.",
+      "title": "Threshold Configuration Input",
+      "required": [
+        "elementName",
+        "minValue",
+        "maxValue"
+      ]
+    },
     "waterqualityUpdateDataPointsRequest": {
       "type": "object",
       "properties": {
@@ -1685,6 +2002,39 @@
       "description": "Contains details of the updated monitoring stations.",
       "title": "Update Stations Response"
     },
+    "waterqualityUpdateThresholdConfigsRequest": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfig"
+          },
+          "description": "List of threshold configurations with updated fields. Each must include ID."
+        }
+      },
+      "description": "Request to update one or more existing threshold configurations.",
+      "title": "Update Threshold Configs Request",
+      "required": [
+        "configs"
+      ]
+    },
+    "waterqualityUpdateThresholdConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfig"
+          },
+          "description": "List of updated threshold configurations."
+        }
+      },
+      "description": "Contains details of the updated threshold configurations.",
+      "title": "Update Threshold Configs Response"
+    },
     "waterqualityUploadDataResponse": {
       "type": "object",
       "properties": {
@@ -1733,25 +2083,18 @@
     "waterqualityUploadRequest": {
       "type": "object",
       "properties": {
-        "filename": {
+        "fileUrl": {
           "type": "string",
-          "example": "water_quality_jan2023.csv",
-          "description": "Name of the file being uploaded (sent usually as the first message)."
-        },
-        "fileType": {
-          "type": "string",
-          "example": "csv",
-          "description": "Type of the file (sent usually after filename)."
-        },
-        "dataChunk": {
-          "type": "string",
-          "format": "byte",
-          "description": "Chunk of binary file data (sent in subsequent messages).",
-          "title": "Optional: Consider adding data_source_schema_id here if needed\n string data_source_schema_id = 4 [(...)]"
+          "example": "https://storage.googleapis.com/bucket-name/water_quality_jan2023.csv",
+          "description": "URL pointing to the data file to be processed (e.g., a publicly accessible GGDrive or S3 URL).",
+          "title": "Optional: Consider adding data_source_schema_id here if needed for processing\n string data_source_schema_id = 2 [(...)]"
         }
       },
-      "description": "A single message in the upload stream, containing either a metadata field or a data chunk.",
-      "title": "Upload Request (Streaming, Flat Oneof)"
+      "description": "Request containing the URL of a data file to be processed.",
+      "title": "Upload Request (URL Based)",
+      "required": [
+        "fileUrl"
+      ]
     }
   },
   "securityDefinitions": {

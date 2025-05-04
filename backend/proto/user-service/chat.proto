@@ -1,0 +1,178 @@
+syntax = "proto3";
+
+package userservice; // Keep consistent package name
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+// Remove wrappers if not strictly needed for updates in this model
+import "proto/core/common.proto"; // Import common definitions
+import "google/api/annotations.proto"; // HTTP annotations
+import "protoc-gen-openapiv2/options/annotations.proto"; // OpenAPI annotations
+
+// Import User proto if needed for ConversationSummary
+import "proto/user-service/user.proto"; // Adjust path as needed
+
+option go_package = "golang-microservices-boilerplate/proto/user-service";
+
+// --- OpenAPI Info ---
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Direct Messaging Service API"; // Updated title
+    version: "1.0";
+    description: "API for managing direct messages between users."; // Updated description
+  };
+  schemes: [HTTP, HTTPS];
+  consumes: ["application/json"];
+  produces: ["application/json"];
+  security_definitions: {
+    security: {
+      key: "BearerAuth";
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+        description: "JWT Bearer token (e.g., 'Bearer ey...')";
+      }
+    }
+  };
+  security: {
+    security_requirement: {
+      key: "BearerAuth";
+      value: {};
+    }
+  }
+};
+
+
+// --- Direct Chat Message ---
+// Renamed from ChatMessage to avoid confusion if User service already has a generic Message type
+message DirectChatMessage {
+   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "DirectChatMessage";
+      description: "Represents a single direct message between two users.";
+      // Align required fields with Go entity (excluding BaseEntity fields handled by framework/mapper)
+      required: ["id", "sender_id", "receiver_id", "message", "created_at", "read"];
+    }
+  };
+
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Unique message identifier (UUID).", example: "\"msg-uuid-123\""}];
+  string sender_id = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "ID of the user who sent the message.", example: "\"user-uuid-sender\""}];
+  string receiver_id = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "ID of the user who received the message.", example: "\"user-uuid-receiver\""}];
+  string message = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The text content of the message.", example: "\"Hello there!\""}];
+  google.protobuf.Timestamp created_at = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Timestamp when the message was created (sent).", example: "\"2023-10-27T10:05:00Z\""}];
+  bool read = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Indicates if the receiver has read the message.", example: "false"}];
+  // updated_at and deleted_at from BaseEntity can be added if needed by clients
+  google.protobuf.Timestamp updated_at = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Last update timestamp.", example: "\"2023-10-27T10:05:00Z\""}];
+  optional google.protobuf.Timestamp deleted_at = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Deletion timestamp (if soft-deleted)."}];
+}
+
+// --- Conversation Summary ---
+// Represents the summary needed by the ListConversations use case
+message ConversationSummary {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "ConversationSummary";
+      description: "Summary of a direct message conversation with another user.";
+      required: ["other_participant", "last_message", "last_updated", "unread_count"];
+    }
+  };
+
+  // Use the User message type defined in user.proto (assuming it exists)
+  User other_participant = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Details of the other user in the conversation."}];
+  DirectChatMessage last_message = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The most recent message in the conversation."}];
+  google.protobuf.Timestamp last_updated = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Timestamp of the last message (same as last_message.created_at).", example: "\"2023-10-27T10:05:00Z\""}];
+  int32 unread_count = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Number of unread messages from the other participant for the current user.", example: "3"}];
+  // conversation_id (other participant's ID) is implicitly participant.id
+}
+
+
+// --- Request/Response Messages ---
+
+// Send Message
+message SendMessageRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Send Message Request", required: ["receiver_id", "message"] } };
+  // sender_id is usually inferred from the authenticated user context (JWT) on the server-side
+  // string sender_id = 1; // Can be added if needed explicitly
+  string receiver_id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "ID of the user to send the message to.", example: "\"user-uuid-receiver\""}];
+  string message = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The text content of the message.", example: "\"This is a test message.\""}];
+}
+message SendMessageResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Send Message Response" } };
+  DirectChatMessage message = 1;
+}
+
+// List Messages Between Users
+message ListMessagesBetweenUsersRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List Messages Between Users Request", required: ["user_id1", "user_id2"] } };
+  string user_id1 = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "ID of the first user in the conversation.", example: "\"user-uuid-sender\""}];
+  string user_id2 = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "ID of the second user in the conversation.", example: "\"user-uuid-receiver\""}];
+  core.FilterOptions options = 3; // For pagination, sorting by time etc.
+}
+message ListMessagesBetweenUsersResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List Messages Between Users Response" } };
+  repeated DirectChatMessage messages = 1;
+  core.PaginationInfo pagination_info = 2;
+}
+
+// List Unseen Messages For User
+message ListUnseenMessagesForUserRequest {
+   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List Unseen Messages For User Request" } };
+   // User ID is typically inferred from auth context
+   // string user_id = 1;
+   // Add FilterOptions if needed, though usually just returns all unseen
+}
+message ListUnseenMessagesForUserResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List Unseen Messages For User Response" } };
+  repeated DirectChatMessage messages = 1;
+  // Maybe add total count if useful
+  // int64 total_unseen = 2;
+}
+
+// Mark Messages As Read
+message MarkMessagesAsReadRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Mark Messages As Read Request", required: ["message_ids"] } };
+  repeated string message_ids = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "List of message UUIDs to mark as read.", example: "[\"msg-uuid-1\", \"msg-uuid-2\"]"}]; // Corrected example format
+  // reader_id is inferred from auth context
+}
+// Response is google.protobuf.Empty
+
+// --- Direct Message Service ---
+service DirectMessageService { // Renamed service
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "Operations related to direct messages"
+  };
+
+  // Send Message
+  // POST /api/v1/messages (Receiver specified in body)
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse) {
+    option (google.api.http) = { post: "/api/v1/messages", body: "*" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Send Direct Message", tags: ["Direct Messages"] };
+  }
+
+  // List Messages Between Users
+  // GET /api/v1/messages/conversation?userId1=...&userId2=...
+  // Requires explicit user IDs as path params might conflict if based on auth user
+  rpc ListMessagesBetweenUsers(ListMessagesBetweenUsersRequest) returns (ListMessagesBetweenUsersResponse) {
+    option (google.api.http) = { get: "/api/v1/messages/conversation" }; // Query parameters for users
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "List Messages Between Two Users",
+      tags: ["Direct Messages"],
+    };
+  }
+
+  // List Unseen Messages For User (Current authenticated user)
+  // GET /api/v1/messages/unseen
+  rpc ListUnseenMessagesForUser(ListUnseenMessagesForUserRequest) returns (ListUnseenMessagesForUserResponse) {
+    option (google.api.http) = { get: "/api/v1/messages/unseen" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "List Unseen Messages for Current User", tags: ["Direct Messages"] };
+  }
+
+  // Mark Messages As Read (Current authenticated user marks messages sent to them)
+  // POST /api/v1/messages/read
+  rpc MarkMessagesAsRead(MarkMessagesAsReadRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = { post: "/api/v1/messages/read", body: "*" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Mark Messages as Read", tags: ["Direct Messages"] };
+  }
+
+} // End of Service definition

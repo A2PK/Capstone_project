@@ -86,7 +86,7 @@ class WaterQualityServiceStub(object):
                 request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsRequest.SerializeToString,
                 response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsResponse.FromString,
                 _registered_method=True)
-        self.UploadData = channel.stream_unary(
+        self.UploadData = channel.unary_unary(
                 '/waterquality.WaterQualityService/UploadData',
                 request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.UploadRequest.SerializeToString,
                 response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.UploadDataResponse.FromString,
@@ -110,6 +110,26 @@ class WaterQualityServiceStub(object):
                 '/waterquality.WaterQualityService/ListDataSourceSchemas',
                 request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataSourceSchemasRequest.SerializeToString,
                 response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataSourceSchemasResponse.FromString,
+                _registered_method=True)
+        self.CreateThresholdConfigs = channel.unary_unary(
+                '/waterquality.WaterQualityService/CreateThresholdConfigs',
+                request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.CreateThresholdConfigsRequest.SerializeToString,
+                response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.CreateThresholdConfigsResponse.FromString,
+                _registered_method=True)
+        self.UpdateThresholdConfigs = channel.unary_unary(
+                '/waterquality.WaterQualityService/UpdateThresholdConfigs',
+                request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.UpdateThresholdConfigsRequest.SerializeToString,
+                response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.UpdateThresholdConfigsResponse.FromString,
+                _registered_method=True)
+        self.DeleteThresholdConfigs = channel.unary_unary(
+                '/waterquality.WaterQualityService/DeleteThresholdConfigs',
+                request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.DeleteRequest.SerializeToString,
+                response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.DeleteResponse.FromString,
+                _registered_method=True)
+        self.ListThresholdConfigs = channel.unary_unary(
+                '/waterquality.WaterQualityService/ListThresholdConfigs',
+                request_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListThresholdConfigsRequest.SerializeToString,
+                response_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListThresholdConfigsResponse.FromString,
                 _registered_method=True)
 
 
@@ -181,8 +201,9 @@ class WaterQualityServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def UploadData(self, request_iterator, context):
-        """File Upload RPC
+    def UploadData(self, request, context):
+        """File Upload RPC - Changed to Unary
+        Removed 'stream' keyword
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -208,6 +229,31 @@ class WaterQualityServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def ListDataSourceSchemas(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateThresholdConfigs(self, request, context):
+        """ThresholdConfig RPCs
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateThresholdConfigs(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteThresholdConfigs(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListThresholdConfigs(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -266,7 +312,7 @@ def add_WaterQualityServiceServicer_to_server(servicer, server):
                     request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsRequest.FromString,
                     response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListAllDataPointsResponse.SerializeToString,
             ),
-            'UploadData': grpc.stream_unary_rpc_method_handler(
+            'UploadData': grpc.unary_unary_rpc_method_handler(
                     servicer.UploadData,
                     request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.UploadRequest.FromString,
                     response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.UploadDataResponse.SerializeToString,
@@ -290,6 +336,26 @@ def add_WaterQualityServiceServicer_to_server(servicer, server):
                     servicer.ListDataSourceSchemas,
                     request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataSourceSchemasRequest.FromString,
                     response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListDataSourceSchemasResponse.SerializeToString,
+            ),
+            'CreateThresholdConfigs': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateThresholdConfigs,
+                    request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.CreateThresholdConfigsRequest.FromString,
+                    response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.CreateThresholdConfigsResponse.SerializeToString,
+            ),
+            'UpdateThresholdConfigs': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateThresholdConfigs,
+                    request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.UpdateThresholdConfigsRequest.FromString,
+                    response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.UpdateThresholdConfigsResponse.SerializeToString,
+            ),
+            'DeleteThresholdConfigs': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteThresholdConfigs,
+                    request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.DeleteRequest.FromString,
+                    response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.DeleteResponse.SerializeToString,
+            ),
+            'ListThresholdConfigs': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListThresholdConfigs,
+                    request_deserializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListThresholdConfigsRequest.FromString,
+                    response_serializer=proto_dot_water__quality__service_dot_water__quality__pb2.ListThresholdConfigsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -575,7 +641,7 @@ class WaterQualityService(object):
             _registered_method=True)
 
     @staticmethod
-    def UploadData(request_iterator,
+    def UploadData(request,
             target,
             options=(),
             channel_credentials=None,
@@ -585,8 +651,8 @@ class WaterQualityService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_unary(
-            request_iterator,
+        return grpc.experimental.unary_unary(
+            request,
             target,
             '/waterquality.WaterQualityService/UploadData',
             proto_dot_water__quality__service_dot_water__quality__pb2.UploadRequest.SerializeToString,
@@ -699,6 +765,114 @@ class WaterQualityService(object):
             '/waterquality.WaterQualityService/ListDataSourceSchemas',
             proto_dot_water__quality__service_dot_water__quality__pb2.ListDataSourceSchemasRequest.SerializeToString,
             proto_dot_water__quality__service_dot_water__quality__pb2.ListDataSourceSchemasResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateThresholdConfigs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/waterquality.WaterQualityService/CreateThresholdConfigs',
+            proto_dot_water__quality__service_dot_water__quality__pb2.CreateThresholdConfigsRequest.SerializeToString,
+            proto_dot_water__quality__service_dot_water__quality__pb2.CreateThresholdConfigsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateThresholdConfigs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/waterquality.WaterQualityService/UpdateThresholdConfigs',
+            proto_dot_water__quality__service_dot_water__quality__pb2.UpdateThresholdConfigsRequest.SerializeToString,
+            proto_dot_water__quality__service_dot_water__quality__pb2.UpdateThresholdConfigsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteThresholdConfigs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/waterquality.WaterQualityService/DeleteThresholdConfigs',
+            proto_dot_water__quality__service_dot_water__quality__pb2.DeleteRequest.SerializeToString,
+            proto_dot_water__quality__service_dot_water__quality__pb2.DeleteResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListThresholdConfigs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/waterquality.WaterQualityService/ListThresholdConfigs',
+            proto_dot_water__quality__service_dot_water__quality__pb2.ListThresholdConfigsRequest.SerializeToString,
+            proto_dot_water__quality__service_dot_water__quality__pb2.ListThresholdConfigsResponse.FromString,
             options,
             channel_credentials,
             insecure,

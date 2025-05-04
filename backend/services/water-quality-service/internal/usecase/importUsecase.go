@@ -1,11 +1,14 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +28,7 @@ import (
 // ImportUseCase defines the interface for data import operations.
 type ImportUseCase interface {
 	ImportData(ctx context.Context, reader io.Reader, filename string, filetype string) (*waterPb.UploadDataResponse, error)
+	ImportDataFromURL(ctx context.Context, fileURL string) (*waterPb.UploadDataResponse, error)
 	GetDataSourceSchema(ctx context.Context, schemaID uuid.UUID) (*entity.DataSourceSchema, error)
 	ListDataSourceSchemas(ctx context.Context, opts types.FilterOptions) (*types.PaginationResult[entity.DataSourceSchema], error)
 }
@@ -119,6 +123,238 @@ func (s *importService) ImportData(ctx context.Context, reader io.Reader, filena
 
 	s.logger.Info("Data import finished", "filename", filename, "processed", processedCount, "failed", failedCount)
 	return response, nil
+}
+
+// ImportDataFromURL handles importing data specified by a URL.
+func (s *importService) ImportDataFromURL(ctx context.Context, fileURL string) (*waterPb.UploadDataResponse, error) {
+	s.logger.Info("Starting data import from URL", "url", fileURL)
+
+	// Check if it's a Google Drive URL
+	isGoogleDriveURL := strings.Contains(fileURL, "drive.google.com")
+	fileID := ""
+
+	// Extract file ID for Google Drive URLs if needed
+	if isGoogleDriveURL {
+		s.logger.Info("Detected Google Drive URL", "url", fileURL)
+
+		// Handle case where URL is already in the correct format
+		if strings.Contains(fileURL, "id=") {
+			queryParams := strings.Split(fileURL, "?")[1]
+			params := strings.Split(queryParams, "&")
+
+			for _, param := range params {
+				if strings.HasPrefix(param, "id=") {
+					fileID = strings.TrimPrefix(param, "id=")
+					break
+				}
+			}
+		} else if strings.Contains(fileURL, "/file/d/") {
+			// Handle share URL format: https://drive.google.com/file/d/{fileId}/view
+			parts := strings.Split(fileURL, "/")
+			for i, part := range parts {
+				if part == "d" && i+1 < len(parts) {
+					fileID = parts[i+1]
+					break
+				}
+			}
+		}
+
+		// If we got a file ID, convert to direct download URL format
+		if fileID != "" {
+			fileURL = fmt.Sprintf("https://drive.google.com/uc?id=%s&export=download", fileID)
+			s.logger.Info("Converted to direct download URL", "url", fileURL)
+		}
+	}
+
+	// Create a client with reasonable timeouts
+	client := &http.Client{
+		Timeout: 3 * time.Minute, // Large files might take some time
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// Allow up to 10 redirects
+			if len(via) >= 10 {
+				return fmt.Errorf("stopped after 10 redirects")
+			}
+			return nil
+		},
+	}
+
+	// Download the file
+	req, err := http.NewRequestWithContext(ctx, "GET", fileURL, nil)
+	if err != nil {
+		s.logger.Error("Failed to create request", "url", fileURL, "error", err)
+		return nil, fmt.Errorf("failed to create request for URL %s: %w", fileURL, err)
+	}
+
+	// Add User-Agent to avoid being blocked
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		s.logger.Error("Failed to download file from URL", "url", fileURL, "error", err)
+		return nil, fmt.Errorf("failed to download file from URL %s: %w", fileURL, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		s.logger.Error("Failed to download file: non-OK status", "url", fileURL, "status", resp.Status)
+		return nil, fmt.Errorf("failed to download file from URL %s: status %s", fileURL, resp.Status)
+	}
+
+	// Check for Google Drive warning page
+	if isGoogleDriveURL && resp.ContentLength < 50000 { // Small response might be warning page
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
+
+		// Check if it's the virus scan warning page
+		bodyText := string(bodyBytes)
+		if strings.Contains(bodyText, "Google Drive can't scan this file for viruses") ||
+			strings.Contains(bodyText, "Virus scan warning") {
+			// Need to use a different approach for large files - typically contains a form
+			// with a download button. This is a simplistic approach:
+			if strings.Contains(bodyText, "confirm=") {
+				confirmCode := ""
+				// Try to extract the confirm code
+				start := strings.Index(bodyText, "confirm=")
+				if start != -1 {
+					end := strings.Index(bodyText[start:], "&")
+					if end != -1 {
+						confirmCode = bodyText[start+8 : start+end]
+					} else {
+						end = strings.Index(bodyText[start:], "\"")
+						if end != -1 {
+							confirmCode = bodyText[start+8 : start+end]
+						}
+					}
+
+					if confirmCode != "" {
+						// New URL with confirm code
+						newURL := fmt.Sprintf("%s&confirm=%s", fileURL, confirmCode)
+						s.logger.Info("Got warning page, retrying with confirm code", "newURL", newURL)
+
+						// Try the download again with the confirm code
+						req, err = http.NewRequestWithContext(ctx, "GET", newURL, nil)
+						if err != nil {
+							return nil, fmt.Errorf("failed to create request with confirm code: %w", err)
+						}
+						req.Header.Set("User-Agent", "Mozilla/5.0")
+
+						resp.Body.Close() // Close previous response
+
+						resp, err = client.Do(req)
+						if err != nil {
+							return nil, fmt.Errorf("failed to download with confirm code: %w", err)
+						}
+						defer resp.Body.Close()
+
+						if resp.StatusCode != http.StatusOK {
+							return nil, fmt.Errorf("failed to download with confirm code: status %s", resp.Status)
+						}
+					}
+				}
+			} else {
+				// Couldn't handle the warning page
+				return nil, fmt.Errorf("file requires manual confirmation, can't download automatically")
+			}
+		} else {
+			// It wasn't the warning page but something else, reset to read from beginning
+			resp.Body.Close()
+			req, _ = http.NewRequestWithContext(ctx, "GET", fileURL, nil)
+			req.Header.Set("User-Agent", "Mozilla/5.0")
+			resp, err = client.Do(req)
+			if err != nil {
+				return nil, fmt.Errorf("failed to re-request file: %w", err)
+			}
+			defer resp.Body.Close()
+		}
+	}
+
+	// 2. Determine filename and filetype
+	filename := "downloaded_file" // Default name
+	filetype := ""                // Will try to infer
+
+	// Try to get filename from Content-Disposition header
+	if cd := resp.Header.Get("Content-Disposition"); cd != "" {
+		if _, params, err := mime.ParseMediaType(cd); err == nil {
+			if fn, ok := params["filename"]; ok {
+				filename = fn
+			} else if fn, ok := params["filename*"]; ok {
+				// Handle extended format
+				filename = fn
+			}
+		}
+	}
+
+	// If no filename from header, extract from URL
+	if filename == "downloaded_file" {
+		if isGoogleDriveURL && fileID != "" {
+			filename = fileID // Use fileID as last resort
+		} else {
+			// Basic inference from URL path
+			if idx := strings.LastIndex(fileURL, "/"); idx != -1 {
+				filename = fileURL[idx+1:]
+			}
+
+			// Remove query parameters
+			if idx := strings.LastIndex(filename, "?"); idx != -1 {
+				filename = filename[:idx]
+			}
+		}
+	}
+
+	// Determine file type from extension
+	if dotIdx := strings.LastIndex(filename, "."); dotIdx != -1 {
+		filetype = strings.ToLower(filename[dotIdx+1:])
+	}
+
+	// If no extension, use Content-Type header
+	if filetype == "" {
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != "" {
+			// Basic mapping - needs refinement
+			if strings.Contains(contentType, "csv") {
+				filetype = "csv"
+			} else if strings.Contains(contentType, "spreadsheetml") ||
+				strings.Contains(contentType, "excel") ||
+				strings.Contains(contentType, "ms-excel") {
+				filetype = "excel"
+			} else if strings.Contains(contentType, "json") {
+				filetype = "json"
+			} else if strings.Contains(contentType, "text/plain") {
+				// Check first few bytes to detect csv
+				buf := make([]byte, 1024)
+				n, _ := io.ReadAtLeast(resp.Body, buf, 512)
+				if n > 0 {
+					// Look for commas and newlines pattern typical of CSVs
+					commas := bytes.Count(buf[:n], []byte(","))
+					newlines := bytes.Count(buf[:n], []byte("\n"))
+					if commas > 0 && newlines > 0 && float64(commas)/float64(newlines) >= 2 {
+						filetype = "csv" // Likely a CSV
+					}
+				}
+
+				// Since we've read from the body, we need to create a new reader that includes what we read
+				resp.Body.Close()
+				req, _ = http.NewRequestWithContext(ctx, "GET", fileURL, nil)
+				req.Header.Set("User-Agent", "Mozilla/5.0")
+				resp, err = client.Do(req)
+				if err != nil {
+					return nil, fmt.Errorf("failed to re-request file after content inspection: %w", err)
+				}
+				defer resp.Body.Close()
+			}
+		}
+	}
+
+	if filetype == "" {
+		return nil, fmt.Errorf("could not determine file type for URL: %s", fileURL)
+	}
+
+	s.logger.Info("File details", "filename", filename, "filetype", filetype, "contentType", resp.Header.Get("Content-Type"))
+
+	// 3. Call the existing ImportData logic with the downloaded content
+	return s.ImportData(ctx, resp.Body, filename, filetype)
 }
 
 // GetDataSourceSchema retrieves a schema by ID
@@ -219,6 +455,10 @@ func (s *importService) getOrCreateSchema(ctx context.Context, filename string, 
 	schemaName := strings.TrimSuffix(filename, "."+filetype)
 	sourceIdentifier := filename
 	sourceType := entity.SourceType(filetype)
+
+	if sourceType == "xlsx" {
+		sourceType = entity.SourceTypeExcel
+	}
 
 	schema, err := s.schemaRepo.FindByNameAndSource(ctx, schemaName, sourceIdentifier, sourceType)
 	if err == nil && schema != nil {
@@ -600,6 +840,7 @@ func isEmptyRow(row []string) bool {
 
 // Helper to find row index (for error reporting, potentially slow)
 func findRowIndex(records [][]string, monitoringTime time.Time, stationKey string) int {
+	_ = stationKey
 	// Simplified search - this won't be perfectly accurate without more context
 	timeStr := monitoringTime.Format("2006-01-02") // Example format match
 	for i, row := range records[1:] {
@@ -858,6 +1099,7 @@ func parseTime(value string) (time.Time, error) {
 func (s *importService) extractFeatures(fieldDefs []entity.FieldDefinition, row, headers []string, parentDataPoint *entity.DataPoint, source string, indicatorNameColIdx, genericValueColIdx int) ([]entity.DataPointFeature, error) {
 	var features []entity.DataPointFeature
 	var multiErr error
+	_ = parentDataPoint
 
 	// Handle flat format (IndicatorsName, Value columns)
 	if indicatorNameColIdx != -1 && genericValueColIdx != -1 && genericValueColIdx < len(row) && indicatorNameColIdx < len(row) {
@@ -954,8 +1196,8 @@ func parseAndSetFeatureValue(feature *entity.DataPointFeature, valueStr string, 
 		}
 	case entity.DataTypeBoolean:
 		lowerValue := strings.ToLower(valueStr)
-		isTrue := lowerValue == "true" || valueStr == "1" || lowerValue == "yes" || lowerValue == "dương tính" || lowerValue == "có" || lowerValue == "positive"
-		isFalse := lowerValue == "false" || valueStr == "0" || lowerValue == "no" || lowerValue == "âm tính" || lowerValue == "không" || lowerValue == "negative"
+		isTrue := lowerValue == "true" || valueStr == "1" || lowerValue == "yes" || valueStr == "dương tính" || valueStr == "có" || valueStr == "positive"
+		isFalse := lowerValue == "false" || valueStr == "0" || lowerValue == "no" || valueStr == "âm tính" || valueStr == "không" || valueStr == "negative"
 
 		// Always store original text
 		textVal := valueStr

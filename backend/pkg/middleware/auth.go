@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"golang-microservices-boilerplate/pkg/utils"
@@ -11,6 +12,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // UserClaims represents the custom claims in the JWT
@@ -304,4 +308,69 @@ func ValidateRefreshToken(tokenString string, refreshSecret string) (*UserClaims
 	// Optional: Check against a revocation list here if implementing
 
 	return claims, nil
+}
+
+// write me a function to extract the user claims from the metadata
+func GetClaimsFromMetadata(metadata metadata.MD) (*UserClaims, error) {
+	cfg := DefaultJWTConfig
+
+	bearerTokenString := metadata.Get("authorization")
+
+	if len(bearerTokenString) == 0 {
+		return nil, errors.New("missing authorization header")
+	}
+	tokenString := strings.TrimPrefix(bearerTokenString[0], "Bearer ")
+	if tokenString == "" {
+		return nil, errors.New("missing token")
+	}
+
+	claims := &UserClaims{}
+	parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		// Validate the algorithm
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		// Use the primary secret for access token validation
+		return []byte(cfg.AccessTokenSecret), nil
+	})
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, errors.New("token expired")
+		} else if errors.Is(err, jwt.ErrSignatureInvalid) {
+			return nil, errors.New("invalid token signature")
+		}
+		return nil, errors.New("invalid token")
+	}
+	if !parsedToken.Valid {
+		return nil, errors.New("invalid token")
+	}
+	// Check if token is expired
+	if claims.ExpiresAt != nil {
+		if claims.ExpiresAt.Time.Before(time.Now()) {
+			return nil, errors.New("token expired")
+		}
+	}
+	return claims, nil
+}
+
+func GetUserIdFromGRPCContext(ctx context.Context) (uuid.UUID, error) {
+	metadata, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return uuid.Nil, status.Errorf(http.StatusUnauthorized, "missing metadata in context")
+	}
+	claims, err := GetClaimsFromMetadata(metadata)
+	if err != nil {
+		return uuid.Nil, status.Errorf(http.StatusUnauthorized, "missing user authentication or ID in context: %v", err)
+	}
+
+	userIDString, ok := claims.Data["sub"].(string)
+	if !ok {
+		return uuid.Nil, status.Errorf(http.StatusUnauthorized, "missing user authentication or ID in context")
+	}
+	userID, err := uuid.Parse(userIDString)
+	if err != nil {
+		return uuid.Nil, status.Errorf(http.StatusUnauthorized, "invalid user ID format in context: %v", err)
+	}
+	return userID, nil
 }

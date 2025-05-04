@@ -15,6 +15,8 @@ import (
 	pb "golang-microservices-boilerplate/proto/user-service"
 	"golang-microservices-boilerplate/services/user-service/internal/entity"
 	userservice_usecase "golang-microservices-boilerplate/services/user-service/internal/usecase"
+	// Import schema only if needed by handler logic, maybe not here
+	// userschema "golang-microservices-boilerplate/services/user-service/internal/schema"
 )
 
 // UserServer defines the interface for the gRPC service handler.
@@ -53,8 +55,8 @@ func RegisterUserServiceServer(s *grpc.Server, uc userservice_usecase.UserUsecas
 
 // Create implements proto.UserServiceServer.
 func (s *userServer) Create(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	// Map proto directly to entity
-	userEntity, err := s.mapper.ProtoCreateToEntity(req)
+	// Map proto directly to entity using the specific mapper method
+	userEntity, err := s.mapper.UserProtoCreateToEntity(req)
 	if err != nil {
 		return nil, status.Errorf(http.StatusBadRequest, "failed to map request: %v", err)
 	}
@@ -66,7 +68,7 @@ func (s *userServer) Create(ctx context.Context, req *pb.CreateUserRequest) (*pb
 	}
 
 	// The userEntity is updated in place (e.g., with ID) by the Create method
-	userProto, err := s.mapper.EntityToProto(userEntity)
+	userProto, err := s.mapper.UserEntityToProto(userEntity)
 	if err != nil {
 		return nil, status.Errorf(http.StatusInternalServerError, "failed to map result: %v", err)
 	}
@@ -86,7 +88,7 @@ func (s *userServer) GetByID(ctx context.Context, req *pb.GetUserByIDRequest) (*
 		return nil, coreController.MapErrorToHttpStatus(err)
 	}
 
-	userProto, err := s.mapper.EntityToProto(user)
+	userProto, err := s.mapper.UserEntityToProto(user)
 	if err != nil {
 		return nil, status.Errorf(http.StatusInternalServerError, "failed to map result: %v", err)
 	}
@@ -96,14 +98,15 @@ func (s *userServer) GetByID(ctx context.Context, req *pb.GetUserByIDRequest) (*
 
 // List implements proto.UserServiceServer.
 func (s *userServer) List(ctx context.Context, req *pb.ListUsersRequest) (*pb.ListUsersResponse, error) {
-	opts := s.mapper.ProtoListRequestToFilterOptions(req)
+	// Use correct mapper method, passing the Options field
+	opts := s.mapper.ProtoListRequestToFilterOptions(req.GetOptions())
 
 	result, err := s.uc.List(ctx, opts)
 	if err != nil {
 		return nil, coreController.MapErrorToHttpStatus(err)
 	}
 
-	response, err := s.mapper.PaginationResultToProtoList(result)
+	response, err := s.mapper.UserPaginationResultToProtoList(result)
 	if err != nil {
 		return nil, status.Errorf(http.StatusInternalServerError, "failed to map result list: %v", err)
 	}
@@ -125,7 +128,7 @@ func (s *userServer) Update(ctx context.Context, req *pb.UpdateUserRequest) (*pb
 	}
 
 	// 2. Apply updates from proto request to the existing entity
-	if err := s.mapper.ApplyProtoUpdateToEntity(req, existingUser); err != nil {
+	if err := s.mapper.UserApplyProtoUpdateToEntity(req, existingUser); err != nil {
 		return nil, status.Errorf(http.StatusBadRequest, "failed to map update request: %v", err)
 	}
 
@@ -136,7 +139,7 @@ func (s *userServer) Update(ctx context.Context, req *pb.UpdateUserRequest) (*pb
 	}
 
 	// 4. Map the updated entity back to proto for response
-	userProto, err := s.mapper.EntityToProto(existingUser)
+	userProto, err := s.mapper.UserEntityToProto(existingUser)
 	if err != nil {
 		return nil, status.Errorf(http.StatusInternalServerError, "failed to map result: %v", err)
 	}
@@ -163,10 +166,10 @@ func (s *userServer) Delete(ctx context.Context, req *pb.DeleteUserRequest) (*em
 
 // FindWithFilter implements proto.UserServiceServer.
 func (s *userServer) FindWithFilter(ctx context.Context, req *pb.FindUsersWithFilterRequest) (*pb.FindUsersWithFilterResponse, error) {
-	// Map the options from the request, which now contains the filters map internally
+	// Map the options from the request
 	opts := coreTypes.DefaultFilterOptions()
 	if req.Options != nil {
-		opts = s.mapper.ProtoListRequestToFilterOptions(&pb.ListUsersRequest{Options: req.Options})
+		opts = s.mapper.ProtoListRequestToFilterOptions(req.GetOptions()) // Pass Options field
 	}
 
 	// Pass opts.Filters directly to the use case
@@ -178,14 +181,14 @@ func (s *userServer) FindWithFilter(ctx context.Context, req *pb.FindUsersWithFi
 	// Need to map PaginationResult[entity.User] to FindUsersWithFilterResponse
 	usersProto := make([]*pb.User, 0, len(result.Items))
 	for _, userEntity := range result.Items {
-		userProto, mapErr := s.mapper.EntityToProto(userEntity)
+		userProto, mapErr := s.mapper.UserEntityToProto(userEntity)
 		if mapErr != nil {
 			return nil, status.Errorf(http.StatusInternalServerError, "failed to map user entity %s: %v", userEntity.ID, mapErr)
 		}
 		usersProto = append(usersProto, userProto)
 	}
 
-	paginationInfo := &corePb.PaginationInfo{ // Use corepb alias
+	paginationInfo := &corePb.PaginationInfo{
 		TotalItems: result.TotalItems,
 		Limit:      int32(result.Limit),
 		Offset:     int32(result.Offset),
@@ -206,7 +209,7 @@ func (s *userServer) CreateMany(ctx context.Context, req *pb.CreateUsersRequest)
 	// Map proto requests directly to entities
 	entities := make([]*entity.User, 0, len(req.Users))
 	for i, createReq := range req.Users {
-		userEntity, err := s.mapper.ProtoCreateToEntity(createReq)
+		userEntity, err := s.mapper.UserProtoCreateToEntity(createReq)
 		if err != nil {
 			return nil, status.Errorf(http.StatusBadRequest, "failed to map user %d in bulk request: %v", i, err)
 		}
@@ -222,7 +225,7 @@ func (s *userServer) CreateMany(ctx context.Context, req *pb.CreateUsersRequest)
 	// Map the returned created entities (now with IDs) back to proto
 	usersProto := make([]*pb.User, 0, len(createdEntities))
 	for _, userEntity := range createdEntities { // Use the returned slice
-		userProto, mapErr := s.mapper.EntityToProto(userEntity)
+		userProto, mapErr := s.mapper.UserEntityToProto(userEntity)
 		if mapErr != nil {
 			// Log or handle potential partial failure? For now, fail the whole request.
 			return nil, status.Errorf(http.StatusInternalServerError, "failed to map created user %s: %v", userEntity.ID, mapErr)
@@ -241,7 +244,6 @@ func (s *userServer) UpdateMany(ctx context.Context, req *pb.UpdateUsersRequest)
 		return &emptypb.Empty{}, nil // Nothing to update
 	}
 
-	// Map proto request items to the map expected by the use case
 	// Instead of mapping to DTOs, fetch entities and apply updates
 	entitiesToUpdate := make([]*entity.User, 0, len(req.Items))
 	for i, item := range req.Items {
@@ -271,7 +273,7 @@ func (s *userServer) UpdateMany(ctx context.Context, req *pb.UpdateUsersRequest)
 			Age:        item.Age,
 			ProfilePic: item.ProfilePic,
 		}
-		if err := s.mapper.ApplyProtoUpdateToEntity(updateReq, existingUser); err != nil {
+		if err := s.mapper.UserApplyProtoUpdateToEntity(updateReq, existingUser); err != nil {
 			return nil, status.Errorf(http.StatusBadRequest, "failed to map update item %d (ID: %s): %v", i, id, err)
 		}
 
@@ -315,8 +317,8 @@ func (s *userServer) DeleteMany(ctx context.Context, req *pb.DeleteUsersRequest)
 
 // Login implements proto.UserServiceServer.
 func (s *userServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
-	// Map proto to schema.LoginCredentials
-	creds, err := s.mapper.ProtoLoginToSchema(req)
+	// Map proto to schema.LoginCredentials using the specific mapper method
+	creds, err := s.mapper.UserProtoLoginToSchema(req)
 	if err != nil {
 		return nil, status.Errorf(http.StatusBadRequest, "failed to map login request: %v", err)
 	}
@@ -328,7 +330,7 @@ func (s *userServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Login
 	}
 
 	// Map the schema.LoginResult to proto response using the mapper
-	response, err := s.mapper.SchemaLoginResultToProto(loginResult)
+	response, err := s.mapper.UserSchemaLoginResultToProto(loginResult)
 	if err != nil {
 		return nil, status.Errorf(http.StatusInternalServerError, "failed to map login result: %v", err)
 	}
@@ -350,7 +352,7 @@ func (s *userServer) Refresh(ctx context.Context, req *pb.RefreshRequest) (*pb.R
 	}
 
 	// Map the schema.RefreshResult to proto response using the mapper
-	response, err := s.mapper.SchemaRefreshResultToProto(refreshResult)
+	response, err := s.mapper.UserSchemaRefreshResultToProto(refreshResult)
 	if err != nil {
 		return nil, status.Errorf(http.StatusInternalServerError, "failed to map refresh result: %v", err)
 	}

@@ -43,6 +43,13 @@ type Mapper interface {
 	// Add mappings for ListAllDataPoints
 	ProtoListAllDataPointsRequestToFilterOptions(req *pb.ListAllDataPointsRequest) coreTypes.FilterOptions
 	DataPointPaginationResultToProtoListAll(result *coreTypes.PaginationResult[entity.DataPoint]) (*pb.ListAllDataPointsResponse, error)
+
+	// ThresholdConfig Mappings
+	ThresholdConfigEntityToProto(config *entity.ThresholdConfig) (*pb.ThresholdConfig, error)
+	ProtoThresholdConfigInputToEntity(req *pb.ThresholdConfigInput) (*entity.ThresholdConfig, error)
+	ApplyProtoThresholdConfigUpdateToEntity(req *pb.ThresholdConfig, existingConfig *entity.ThresholdConfig) error
+	ProtoListThresholdConfigsRequestToFilterOptions(req *pb.ListThresholdConfigsRequest) coreTypes.FilterOptions
+	ThresholdConfigPaginationResultToProtoList(result *coreTypes.PaginationResult[entity.ThresholdConfig]) (*pb.ListThresholdConfigsResponse, error)
 }
 
 // Ensure WaterQualityMapper implements Mapper interface.
@@ -791,6 +798,119 @@ func (m *WaterQualityMapper) DataSourceSchemaPaginationResultToProtoList(result 
 
 	return &pb.ListDataSourceSchemasResponse{
 		Schemas: protoSchemas,
+		Pagination: &corePb.PaginationInfo{
+			TotalItems: result.TotalItems,
+			Limit:      int32(result.Limit),
+			Offset:     int32(result.Offset),
+		},
+	}, nil
+}
+
+// --- ThresholdConfig Mappings ---
+
+// ThresholdConfigEntityToProto converts a ThresholdConfig entity to its proto representation
+func (m *WaterQualityMapper) ThresholdConfigEntityToProto(config *entity.ThresholdConfig) (*pb.ThresholdConfig, error) {
+	if config == nil {
+		return nil, nil
+	}
+
+	protoConfig := &pb.ThresholdConfig{
+		Id:          config.ID.String(),
+		CreatedAt:   timestamppb.New(config.CreatedAt),
+		UpdatedAt:   timestamppb.New(config.UpdatedAt),
+		ElementName: config.ElementName,
+		MinValue:    config.MinValue,
+		MaxValue:    config.MaxValue,
+	}
+
+	// Check if DeletedAt is not nil before using it
+	if config.DeletedAt != nil && !config.DeletedAt.IsZero() {
+		protoConfig.DeletedAt = timestamppb.New(*config.DeletedAt)
+	}
+
+	return protoConfig, nil
+}
+
+// ProtoThresholdConfigInputToEntity converts a ThresholdConfigInput proto to a ThresholdConfig entity
+func (m *WaterQualityMapper) ProtoThresholdConfigInputToEntity(req *pb.ThresholdConfigInput) (*entity.ThresholdConfig, error) {
+	if req == nil {
+		return nil, nil
+	}
+
+	return &entity.ThresholdConfig{
+		ElementName: req.ElementName,
+		MinValue:    req.MinValue,
+		MaxValue:    req.MaxValue,
+	}, nil
+}
+
+// ApplyProtoThresholdConfigUpdateToEntity applies updates from a ThresholdConfig proto to an existing ThresholdConfig entity
+func (m *WaterQualityMapper) ApplyProtoThresholdConfigUpdateToEntity(req *pb.ThresholdConfig, existingConfig *entity.ThresholdConfig) error {
+	if req == nil || existingConfig == nil {
+		return fmt.Errorf("both request and existing config must be non-nil")
+	}
+
+	// Update fields
+	existingConfig.ElementName = req.ElementName
+	existingConfig.MinValue = req.MinValue
+	existingConfig.MaxValue = req.MaxValue
+
+	return nil
+}
+
+// ProtoListThresholdConfigsRequestToFilterOptions converts a ListThresholdConfigsRequest to FilterOptions
+func (m *WaterQualityMapper) ProtoListThresholdConfigsRequestToFilterOptions(req *pb.ListThresholdConfigsRequest) coreTypes.FilterOptions {
+	opts := coreTypes.DefaultFilterOptions()
+	if req == nil || req.Options == nil {
+		return opts
+	}
+
+	if req.Options.Limit != nil {
+		opts.Limit = int(*req.Options.Limit)
+	}
+	if req.Options.Offset != nil {
+		opts.Offset = int(*req.Options.Offset)
+	}
+	if req.Options.SortBy != nil {
+		opts.SortBy = *req.Options.SortBy
+	}
+	if req.Options.SortDesc != nil {
+		opts.SortDesc = *req.Options.SortDesc
+	}
+	if req.Options.IncludeDeleted != nil {
+		opts.IncludeDeleted = *req.Options.IncludeDeleted
+	}
+
+	if len(req.Options.Filters) > 0 {
+		opts.Filters = make(map[string]interface{}, len(req.Options.Filters))
+		for k, v := range req.Options.Filters {
+			opts.Filters[k] = mapProtoValueToGo(v)
+		}
+	}
+	return opts
+}
+
+// ThresholdConfigPaginationResultToProtoList converts a PaginationResult of ThresholdConfigs to a ListThresholdConfigsResponse
+func (m *WaterQualityMapper) ThresholdConfigPaginationResultToProtoList(result *coreTypes.PaginationResult[entity.ThresholdConfig]) (*pb.ListThresholdConfigsResponse, error) {
+	if result == nil {
+		return &pb.ListThresholdConfigsResponse{
+			Configs:    []*pb.ThresholdConfig{},
+			Pagination: &corePb.PaginationInfo{TotalItems: 0, Limit: 0, Offset: 0},
+		}, nil
+	}
+
+	protoConfigs := make([]*pb.ThresholdConfig, 0, len(result.Items))
+	for _, config := range result.Items {
+		// Notice we pass 'config' directly, not '&config'
+		protoConfig, err := m.ThresholdConfigEntityToProto(config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map threshold config entity %s to proto: %w", config.ID.String(), err)
+		}
+		protoConfigs = append(protoConfigs, protoConfig)
+	}
+
+	return &pb.ListThresholdConfigsResponse{
+		Configs: protoConfigs,
 		Pagination: &corePb.PaginationInfo{
 			TotalItems: result.TotalItems,
 			Limit:      int32(result.Limit),

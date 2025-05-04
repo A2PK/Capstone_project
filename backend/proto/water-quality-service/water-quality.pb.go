@@ -1438,15 +1438,10 @@ func (x *ListAllDataPointsResponse) GetPagination() *core.PaginationInfo {
 	return nil
 }
 
-// New UploadRequest message for streaming, with flat fields inside a oneof
+// Changed from streaming to unary: Receives a URL to the data file.
 type UploadRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Types that are valid to be assigned to Payload:
-	//
-	//	*UploadRequest_Filename
-	//	*UploadRequest_FileType
-	//	*UploadRequest_DataChunk
-	Payload       isUploadRequest_Payload `protobuf_oneof:"payload"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FileUrl       string                 `protobuf:"bytes,1,opt,name=file_url,json=fileUrl,proto3" json:"file_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1481,61 +1476,12 @@ func (*UploadRequest) Descriptor() ([]byte, []int) {
 	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{22}
 }
 
-func (x *UploadRequest) GetPayload() isUploadRequest_Payload {
+func (x *UploadRequest) GetFileUrl() string {
 	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-func (x *UploadRequest) GetFilename() string {
-	if x != nil {
-		if x, ok := x.Payload.(*UploadRequest_Filename); ok {
-			return x.Filename
-		}
+		return x.FileUrl
 	}
 	return ""
 }
-
-func (x *UploadRequest) GetFileType() string {
-	if x != nil {
-		if x, ok := x.Payload.(*UploadRequest_FileType); ok {
-			return x.FileType
-		}
-	}
-	return ""
-}
-
-func (x *UploadRequest) GetDataChunk() []byte {
-	if x != nil {
-		if x, ok := x.Payload.(*UploadRequest_DataChunk); ok {
-			return x.DataChunk
-		}
-	}
-	return nil
-}
-
-type isUploadRequest_Payload interface {
-	isUploadRequest_Payload()
-}
-
-type UploadRequest_Filename struct {
-	Filename string `protobuf:"bytes,1,opt,name=filename,proto3,oneof"`
-}
-
-type UploadRequest_FileType struct {
-	FileType string `protobuf:"bytes,2,opt,name=file_type,json=fileType,proto3,oneof"`
-}
-
-type UploadRequest_DataChunk struct {
-	DataChunk []byte `protobuf:"bytes,3,opt,name=data_chunk,json=dataChunk,proto3,oneof"`
-}
-
-func (*UploadRequest_Filename) isUploadRequest_Payload() {}
-
-func (*UploadRequest_FileType) isUploadRequest_Payload() {}
-
-func (*UploadRequest_DataChunk) isUploadRequest_Payload() {}
 
 type UploadDataResponse struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
@@ -2157,6 +2103,432 @@ func (x *ListDataSourceSchemasResponse) GetPagination() *core.PaginationInfo {
 	return nil
 }
 
+type ThresholdConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Base fields inline
+	Id        string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	DeletedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=deleted_at,json=deletedAt,proto3,oneof" json:"deleted_at,omitempty"`
+	// ThresholdConfig specific fields
+	ElementName   string  `protobuf:"bytes,5,opt,name=element_name,json=elementName,proto3" json:"element_name,omitempty"`
+	MinValue      float64 `protobuf:"fixed64,6,opt,name=min_value,json=minValue,proto3" json:"min_value,omitempty"`
+	MaxValue      float64 `protobuf:"fixed64,7,opt,name=max_value,json=maxValue,proto3" json:"max_value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ThresholdConfig) Reset() {
+	*x = ThresholdConfig{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ThresholdConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ThresholdConfig) ProtoMessage() {}
+
+func (x *ThresholdConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ThresholdConfig.ProtoReflect.Descriptor instead.
+func (*ThresholdConfig) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *ThresholdConfig) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ThresholdConfig) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *ThresholdConfig) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *ThresholdConfig) GetDeletedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DeletedAt
+	}
+	return nil
+}
+
+func (x *ThresholdConfig) GetElementName() string {
+	if x != nil {
+		return x.ElementName
+	}
+	return ""
+}
+
+func (x *ThresholdConfig) GetMinValue() float64 {
+	if x != nil {
+		return x.MinValue
+	}
+	return 0
+}
+
+func (x *ThresholdConfig) GetMaxValue() float64 {
+	if x != nil {
+		return x.MaxValue
+	}
+	return 0
+}
+
+type ThresholdConfigInput struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ElementName   string                 `protobuf:"bytes,1,opt,name=element_name,json=elementName,proto3" json:"element_name,omitempty"`
+	MinValue      float64                `protobuf:"fixed64,2,opt,name=min_value,json=minValue,proto3" json:"min_value,omitempty"`
+	MaxValue      float64                `protobuf:"fixed64,3,opt,name=max_value,json=maxValue,proto3" json:"max_value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ThresholdConfigInput) Reset() {
+	*x = ThresholdConfigInput{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ThresholdConfigInput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ThresholdConfigInput) ProtoMessage() {}
+
+func (x *ThresholdConfigInput) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ThresholdConfigInput.ProtoReflect.Descriptor instead.
+func (*ThresholdConfigInput) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *ThresholdConfigInput) GetElementName() string {
+	if x != nil {
+		return x.ElementName
+	}
+	return ""
+}
+
+func (x *ThresholdConfigInput) GetMinValue() float64 {
+	if x != nil {
+		return x.MinValue
+	}
+	return 0
+}
+
+func (x *ThresholdConfigInput) GetMaxValue() float64 {
+	if x != nil {
+		return x.MaxValue
+	}
+	return 0
+}
+
+type CreateThresholdConfigsRequest struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Configs       []*ThresholdConfigInput `protobuf:"bytes,1,rep,name=configs,proto3" json:"configs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateThresholdConfigsRequest) Reset() {
+	*x = CreateThresholdConfigsRequest{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateThresholdConfigsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateThresholdConfigsRequest) ProtoMessage() {}
+
+func (x *CreateThresholdConfigsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateThresholdConfigsRequest.ProtoReflect.Descriptor instead.
+func (*CreateThresholdConfigsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *CreateThresholdConfigsRequest) GetConfigs() []*ThresholdConfigInput {
+	if x != nil {
+		return x.Configs
+	}
+	return nil
+}
+
+type CreateThresholdConfigsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Configs       []*ThresholdConfig     `protobuf:"bytes,1,rep,name=configs,proto3" json:"configs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateThresholdConfigsResponse) Reset() {
+	*x = CreateThresholdConfigsResponse{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateThresholdConfigsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateThresholdConfigsResponse) ProtoMessage() {}
+
+func (x *CreateThresholdConfigsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateThresholdConfigsResponse.ProtoReflect.Descriptor instead.
+func (*CreateThresholdConfigsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *CreateThresholdConfigsResponse) GetConfigs() []*ThresholdConfig {
+	if x != nil {
+		return x.Configs
+	}
+	return nil
+}
+
+type UpdateThresholdConfigsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Configs       []*ThresholdConfig     `protobuf:"bytes,1,rep,name=configs,proto3" json:"configs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateThresholdConfigsRequest) Reset() {
+	*x = UpdateThresholdConfigsRequest{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateThresholdConfigsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateThresholdConfigsRequest) ProtoMessage() {}
+
+func (x *UpdateThresholdConfigsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateThresholdConfigsRequest.ProtoReflect.Descriptor instead.
+func (*UpdateThresholdConfigsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *UpdateThresholdConfigsRequest) GetConfigs() []*ThresholdConfig {
+	if x != nil {
+		return x.Configs
+	}
+	return nil
+}
+
+type UpdateThresholdConfigsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Configs       []*ThresholdConfig     `protobuf:"bytes,1,rep,name=configs,proto3" json:"configs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateThresholdConfigsResponse) Reset() {
+	*x = UpdateThresholdConfigsResponse{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateThresholdConfigsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateThresholdConfigsResponse) ProtoMessage() {}
+
+func (x *UpdateThresholdConfigsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateThresholdConfigsResponse.ProtoReflect.Descriptor instead.
+func (*UpdateThresholdConfigsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *UpdateThresholdConfigsResponse) GetConfigs() []*ThresholdConfig {
+	if x != nil {
+		return x.Configs
+	}
+	return nil
+}
+
+type ListThresholdConfigsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Options       *core.FilterOptions    `protobuf:"bytes,1,opt,name=options,proto3" json:"options,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListThresholdConfigsRequest) Reset() {
+	*x = ListThresholdConfigsRequest{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListThresholdConfigsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListThresholdConfigsRequest) ProtoMessage() {}
+
+func (x *ListThresholdConfigsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListThresholdConfigsRequest.ProtoReflect.Descriptor instead.
+func (*ListThresholdConfigsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *ListThresholdConfigsRequest) GetOptions() *core.FilterOptions {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+type ListThresholdConfigsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Configs       []*ThresholdConfig     `protobuf:"bytes,1,rep,name=configs,proto3" json:"configs,omitempty"`
+	Pagination    *core.PaginationInfo   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListThresholdConfigsResponse) Reset() {
+	*x = ListThresholdConfigsResponse{}
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListThresholdConfigsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListThresholdConfigsResponse) ProtoMessage() {}
+
+func (x *ListThresholdConfigsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_water_quality_service_water_quality_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListThresholdConfigsResponse.ProtoReflect.Descriptor instead.
+func (*ListThresholdConfigsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_water_quality_service_water_quality_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *ListThresholdConfigsResponse) GetConfigs() []*ThresholdConfig {
+	if x != nil {
+		return x.Configs
+	}
+	return nil
+}
+
+func (x *ListThresholdConfigsResponse) GetPagination() *core.PaginationInfo {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
 var File_proto_water_quality_service_water_quality_proto protoreflect.FileDescriptor
 
 const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
@@ -2310,14 +2682,10 @@ const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
 	"pagination\x18\x02 \x01(\v2\x14.core.PaginationInfoBC\x92A@2>Pagination information including total count and current page.R\n" +
 	"pagination:|\x92Ay\n" +
 	"w*\x1dList All Data Points Response2;Contains a paginated list of data points from all stations.\xd2\x01\vdata_points\xd2\x01\n" +
-	"pagination\"\xf2\x03\n" +
-	"\rUploadRequest\x12\x84\x01\n" +
-	"\bfilename\x18\x01 \x01(\tBf\x92Ac2DName of the file being uploaded (sent usually as the first message).J\x1b\"water_quality_jan2023.csv\"H\x00R\bfilename\x12Z\n" +
-	"\tfile_type\x18\x02 \x01(\tB;\x92A82/Type of the file (sent usually after filename).J\x05\"csv\"H\x00R\bfileType\x12e\n" +
-	"\n" +
-	"data_chunk\x18\x03 \x01(\fBD\x92AA28Chunk of binary file data (sent in subsequent messages).\xa2\x02\x04byteH\x00R\tdataChunk:\x8b\x01\x92A\x87\x01\n" +
-	"\x84\x01*&Upload Request (Streaming, Flat Oneof)2ZA single message in the upload stream, containing either a metadata field or a data chunk.B\t\n" +
-	"\apayload\"\xe5\x05\n" +
+	"pagination\"\xc4\x02\n" +
+	"\rUploadRequest\x12\xc8\x01\n" +
+	"\bfile_url\x18\x01 \x01(\tB\xac\x01\x92A\xa8\x012^URL pointing to the data file to be processed (e.g., a publicly accessible GGDrive or S3 URL).JF\"https://storage.googleapis.com/bucket-name/water_quality_jan2023.csv\"R\afileUrl:h\x92Ae\n" +
+	"c*\x1aUpload Request (URL Based)2:Request containing the URL of a data file to be processed.\xd2\x01\bfile_url\"\xe5\x05\n" +
 	"\x12UploadDataResponse\x12x\n" +
 	"\amessage\x18\x01 \x01(\tB^\x92A[2,Summary message about the upload processing.J+\"Upload successful, processed 125 records.\"R\amessage\x12`\n" +
 	"\x11records_processed\x18\x02 \x01(\x03B3\x92A02)Number of records successfully processed.J\x03125R\x10recordsProcessed\x12X\n" +
@@ -2378,6 +2746,48 @@ const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
 	"pagination\x18\x02 \x01(\v2\x14.core.PaginationInfoBC\x92A@2>Pagination information including total count and current page.R\n" +
 	"pagination:r\x92Ao\n" +
 	"m*!List Data Source Schemas Response21Contains a paginated list of data source schemas.\xd2\x01\aschemas\xd2\x01\n" +
+	"pagination\"\x83\b\n" +
+	"\x0fThresholdConfig\x12v\n" +
+	"\x02id\x18\x01 \x01(\tBf\x92Ac29Unique identifier for the threshold config (UUID format).J&\"a1b2c3d4-e5f6-7890-1234-567890abcdef\"R\x02id\x12\x88\x01\n" +
+	"\n" +
+	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampBM\x92AJ20Timestamp when the threshold config was created.J\x16\"2023-01-15T10:30:00Z\"R\tcreatedAt\x12\x8d\x01\n" +
+	"\n" +
+	"updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampBR\x92AO25Timestamp when the threshold config was last updated.J\x16\"2023-01-16T11:00:00Z\"R\tupdatedAt\x12\xa7\x01\n" +
+	"\n" +
+	"deleted_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampBg\x92Ad2JTimestamp when the threshold config was soft-deleted. Null if not deleted.J\x16\"2023-01-17T12:00:00Z\"H\x00R\tdeletedAt\x88\x01\x01\x12Z\n" +
+	"\felement_name\x18\x05 \x01(\tB7\x92A42,Name of the water quality element/parameter.J\x04\"pH\"R\velementName\x12P\n" +
+	"\tmin_value\x18\x06 \x01(\x01B3\x92A02)Minimum acceptable value for the element.J\x036.5R\bminValue\x12P\n" +
+	"\tmax_value\x18\a \x01(\x01B3\x92A02)Maximum acceptable value for the element.J\x038.5R\bmaxValue:\xa3\x01\x92A\x9f\x01\n" +
+	"\x9c\x01*\x17Threshold Configuration2;Represents water quality parameter threshold configuration.\xd2\x01\x02id\xd2\x01\n" +
+	"created_at\xd2\x01\n" +
+	"updated_at\xd2\x01\felement_name\xd2\x01\tmin_value\xd2\x01\tmax_valueB\r\n" +
+	"\v_deleted_at\"\x9d\x03\n" +
+	"\x14ThresholdConfigInput\x12Z\n" +
+	"\felement_name\x18\x01 \x01(\tB7\x92A42,Name of the water quality element/parameter.J\x04\"pH\"R\velementName\x12P\n" +
+	"\tmin_value\x18\x02 \x01(\x01B3\x92A02)Minimum acceptable value for the element.J\x036.5R\bminValue\x12P\n" +
+	"\tmax_value\x18\x03 \x01(\x01B3\x92A02)Maximum acceptable value for the element.J\x038.5R\bmaxValue:\x84\x01\x92A\x80\x01\n" +
+	"~*\x1dThreshold Configuration Input26Data required to create a new threshold configuration.\xd2\x01\felement_name\xd2\x01\tmin_value\xd2\x01\tmax_value\"\xff\x01\n" +
+	"\x1dCreateThresholdConfigsRequest\x12n\n" +
+	"\aconfigs\x18\x01 \x03(\v2\".waterquality.ThresholdConfigInputB0\x92A-2+List of threshold configurations to create.R\aconfigs:n\x92Ak\n" +
+	"i* Create Threshold Configs Request2;Request to create one or more new threshold configurations.\xd2\x01\aconfigs\"\x9c\x02\n" +
+	"\x1eCreateThresholdConfigsResponse\x12\x8e\x01\n" +
+	"\aconfigs\x18\x01 \x03(\v2\x1d.waterquality.ThresholdConfigBU\x92AR2PList of created threshold configurations with system-generated fields populated.R\aconfigs:i\x92Af\n" +
+	"d*!Create Threshold Configs Response2?Contains details of the newly created threshold configurations.\"\xa0\x02\n" +
+	"\x1dUpdateThresholdConfigsRequest\x12\x89\x01\n" +
+	"\aconfigs\x18\x01 \x03(\v2\x1d.waterquality.ThresholdConfigBP\x92AM2KList of threshold configurations with updated fields. Each must include ID.R\aconfigs:s\x92Ap\n" +
+	"n* Update Threshold Configs Request2@Request to update one or more existing threshold configurations.\xd2\x01\aconfigs\"\xee\x01\n" +
+	"\x1eUpdateThresholdConfigsResponse\x12g\n" +
+	"\aconfigs\x18\x01 \x03(\v2\x1d.waterquality.ThresholdConfigB.\x92A+2)List of updated threshold configurations.R\aconfigs:c\x92A`\n" +
+	"^*!Update Threshold Configs Response29Contains details of the updated threshold configurations.\"\xf6\x01\n" +
+	"\x1bListThresholdConfigsRequest\x12_\n" +
+	"\aoptions\x18\x01 \x01(\v2\x13.core.FilterOptionsB0\x92A-2+Filtering, pagination, and sorting options.R\aoptions:v\x92As\n" +
+	"q*\x1eList Threshold Configs Request2ORequest to list threshold configurations with filtering and pagination options.\"\x8e\x03\n" +
+	"\x1cListThresholdConfigsResponse\x12|\n" +
+	"\aconfigs\x18\x01 \x03(\v2\x1d.waterquality.ThresholdConfigBC\x92A@2>List of threshold configurations matching the filter criteria.R\aconfigs\x12y\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2\x14.core.PaginationInfoBC\x92A@2>Pagination information including total count and current page.R\n" +
+	"pagination:u\x92Ar\n" +
+	"p*\x1fList Threshold Configs Response26Contains a paginated list of threshold configurations.\xd2\x01\aconfigs\xd2\x01\n" +
 	"pagination*\xbe\x01\n" +
 	"\x0fObservationType\x12 \n" +
 	"\x1cOBSERVATION_TYPE_UNSPECIFIED\x10\x00\x12\x1b\n" +
@@ -2389,7 +2799,7 @@ const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
 	"\x1dINDICATOR_PURPOSE_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cINDICATOR_PURPOSE_PREDICTION\x10\x01\x12\x1d\n" +
 	"\x19INDICATOR_PURPOSE_DISPLAY\x10\x02\x12\x1e\n" +
-	"\x1aINDICATOR_PURPOSE_ANALYSIS\x10\x032\xe8\x1e\n" +
+	"\x1aINDICATOR_PURPOSE_ANALYSIS\x10\x032\xf7'\n" +
 	"\x13WaterQualityService\x12\xd2\x01\n" +
 	"\x0eCreateStations\x12#.waterquality.CreateStationsRequest\x1a$.waterquality.CreateStationsResponse\"u\x92AI\n" +
 	"\bStations\x12\x0fCreate Stations\x1a,Creates one or more new monitoring stations.\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/api/v1/water-quality/stations\x12\xd7\x01\n" +
@@ -2410,10 +2820,10 @@ const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
 	"\x1bListDataPointsByStationPost\x12,.waterquality.ListDataPointsByStationRequest\x1a-.waterquality.ListDataPointsByStationResponse\"\x8c\x02\x92A\xcc\x01\n" +
 	"\vData Points\x12\"List Data Points by Station (POST)\x1a\x98\x01Retrieves a paginated list of data points using POST. All filter/pagination parameters, including station_id, must be provided in the JSON request body.\x82\xd3\xe4\x93\x026:\x01*\"1/api/v1/water-quality/data-points/list-by-station\x12\x9c\x02\n" +
 	"\x11ListAllDataPoints\x12&.waterquality.ListAllDataPointsRequest\x1a'.waterquality.ListAllDataPointsResponse\"\xb5\x01\x92A}\n" +
-	"\vData Points\x12\x14List All Data Points\x1aXRetrieves a paginated list of data points across all stations. Uses POST with JSON body.\x82\xd3\xe4\x93\x02/:\x01*\"*/api/v1/water-quality/data-points/list-all\x12\xda\x01\n" +
+	"\vData Points\x12\x14List All Data Points\x1aXRetrieves a paginated list of data points across all stations. Uses POST with JSON body.\x82\xd3\xe4\x93\x02/:\x01*\"*/api/v1/water-quality/data-points/list-all\x12\xe1\x01\n" +
 	"\n" +
-	"UploadData\x12\x1b.waterquality.UploadRequest\x1a .waterquality.UploadDataResponse\"\x8a\x01\x92A`\n" +
-	"\vData Import\x12\vUpload Data\x1aDStreams a data file for processing and importing water quality data.\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/api/v1/water-quality/upload(\x01\x12\xff\x01\n" +
+	"UploadData\x12\x1b.waterquality.UploadRequest\x1a .waterquality.UploadDataResponse\"\x93\x01\x92Ai\n" +
+	"\vData Import\x12\x13Upload Data via URL\x1aEInitiates processing of a water quality data file specified by a URL.\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/api/v1/water-quality/upload\x12\xff\x01\n" +
 	"\x16CreateDataSourceSchema\x12+.waterquality.CreateDataSourceSchemaRequest\x1a,.waterquality.CreateDataSourceSchemaResponse\"\x89\x01\x92A^\n" +
 	"\x13Data Source Schemas\x12\x19Create Data Source Schema\x1a,Creates a new data source schema definition.\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/api/v1/water-quality/schemas\x12\x91\x02\n" +
 	"\x16UpdateDataSourceSchema\x12+.waterquality.UpdateDataSourceSchemaRequest\x1a,.waterquality.UpdateDataSourceSchemaResponse\"\x9b\x01\x92Ad\n" +
@@ -2421,7 +2831,15 @@ const file_proto_water_quality_service_water_quality_proto_rawDesc = "" +
 	"\x13GetDataSourceSchema\x12(.waterquality.GetDataSourceSchemaRequest\x1a).waterquality.GetDataSourceSchemaResponse\"\x8a\x01\x92A]\n" +
 	"\x13Data Source Schemas\x12\x16Get Data Source Schema\x1a.Retrieves a specific data source schema by ID.\x82\xd3\xe4\x93\x02$\x12\"/api/v1/water-quality/schemas/{id}\x12\x95\x02\n" +
 	"\x15ListDataSourceSchemas\x12*.waterquality.ListDataSourceSchemasRequest\x1a+.waterquality.ListDataSourceSchemasResponse\"\xa2\x01\x92Az\n" +
-	"\x13Data Source Schemas\x12\x18List Data Source Schemas\x1aIRetrieves a paginated list of data source schemas with filtering options.\x82\xd3\xe4\x93\x02\x1f\x12\x1d/api/v1/water-quality/schemas\x1a3\x92A0\x12.Operations related to water quality monitoringB\x94\x02\x92A\xdb\x01\x12Q\n" +
+	"\x13Data Source Schemas\x12\x18List Data Source Schemas\x1aIRetrieves a paginated list of data source schemas with filtering options.\x82\xd3\xe4\x93\x02\x1f\x12\x1d/api/v1/water-quality/schemas\x12\x99\x02\n" +
+	"\x16CreateThresholdConfigs\x12+.waterquality.CreateThresholdConfigsRequest\x1a,.waterquality.CreateThresholdConfigsResponse\"\xa3\x01\x92An\n" +
+	"\x18Threshold Configurations\x12\x1fCreate Threshold Configurations\x1a1Creates one or more new threshold configurations.\x82\xd3\xe4\x93\x02,:\x01*\"'/api/v1/water-quality/threshold-configs\x12\x9e\x02\n" +
+	"\x16UpdateThresholdConfigs\x12+.waterquality.UpdateThresholdConfigsRequest\x1a,.waterquality.UpdateThresholdConfigsResponse\"\xa8\x01\x92As\n" +
+	"\x18Threshold Configurations\x12\x1fUpdate Threshold Configurations\x1a6Updates one or more existing threshold configurations.\x82\xd3\xe4\x93\x02,:\x01*\x1a'/api/v1/water-quality/threshold-configs\x12\x99\x02\n" +
+	"\x16DeleteThresholdConfigs\x12\x1b.waterquality.DeleteRequest\x1a\x1c.waterquality.DeleteResponse\"\xc3\x01\x92A\x86\x01\n" +
+	"\x18Threshold Configurations\x12\x1fDelete Threshold Configurations\x1aIDeletes one or more threshold configurations. Can be soft or hard delete.\x82\xd3\xe4\x93\x023:\x01*\"./api/v1/water-quality/threshold-configs/delete\x12\xac\x02\n" +
+	"\x14ListThresholdConfigs\x12).waterquality.ListThresholdConfigsRequest\x1a*.waterquality.ListThresholdConfigsResponse\"\xbc\x01\x92A\x89\x01\n" +
+	"\x18Threshold Configurations\x12\x1dList Threshold Configurations\x1aNRetrieves a paginated list of threshold configurations with filtering options.\x82\xd3\xe4\x93\x02)\x12'/api/v1/water-quality/threshold-configs\x1a3\x92A0\x12.Operations related to water quality monitoringB\x94\x02\x92A\xdb\x01\x12Q\n" +
 	"\x19Water Quality Service API\x12/API for managing water quality monitoring data.2\x031.0*\x02\x01\x022\x10application/json:\x10application/jsonZL\n" +
 	"J\n" +
 	"\n" +
@@ -2443,7 +2861,7 @@ func file_proto_water_quality_service_water_quality_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_water_quality_service_water_quality_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_proto_water_quality_service_water_quality_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
+var file_proto_water_quality_service_water_quality_proto_msgTypes = make([]protoimpl.MessageInfo, 42)
 var file_proto_water_quality_service_water_quality_proto_goTypes = []any{
 	(ObservationType)(0),                    // 0: waterquality.ObservationType
 	(IndicatorPurpose)(0),                   // 1: waterquality.IndicatorPurpose
@@ -2481,91 +2899,117 @@ var file_proto_water_quality_service_water_quality_proto_goTypes = []any{
 	(*GetDataSourceSchemaResponse)(nil),     // 33: waterquality.GetDataSourceSchemaResponse
 	(*ListDataSourceSchemasRequest)(nil),    // 34: waterquality.ListDataSourceSchemasRequest
 	(*ListDataSourceSchemasResponse)(nil),   // 35: waterquality.ListDataSourceSchemasResponse
-	(*timestamppb.Timestamp)(nil),           // 36: google.protobuf.Timestamp
-	(*core.FilterOptions)(nil),              // 37: core.FilterOptions
-	(*core.PaginationInfo)(nil),             // 38: core.PaginationInfo
-	(*structpb.Struct)(nil),                 // 39: google.protobuf.Struct
+	(*ThresholdConfig)(nil),                 // 36: waterquality.ThresholdConfig
+	(*ThresholdConfigInput)(nil),            // 37: waterquality.ThresholdConfigInput
+	(*CreateThresholdConfigsRequest)(nil),   // 38: waterquality.CreateThresholdConfigsRequest
+	(*CreateThresholdConfigsResponse)(nil),  // 39: waterquality.CreateThresholdConfigsResponse
+	(*UpdateThresholdConfigsRequest)(nil),   // 40: waterquality.UpdateThresholdConfigsRequest
+	(*UpdateThresholdConfigsResponse)(nil),  // 41: waterquality.UpdateThresholdConfigsResponse
+	(*ListThresholdConfigsRequest)(nil),     // 42: waterquality.ListThresholdConfigsRequest
+	(*ListThresholdConfigsResponse)(nil),    // 43: waterquality.ListThresholdConfigsResponse
+	(*timestamppb.Timestamp)(nil),           // 44: google.protobuf.Timestamp
+	(*core.FilterOptions)(nil),              // 45: core.FilterOptions
+	(*core.PaginationInfo)(nil),             // 46: core.PaginationInfo
+	(*structpb.Struct)(nil),                 // 47: google.protobuf.Struct
 }
 var file_proto_water_quality_service_water_quality_proto_depIdxs = []int32{
-	36, // 0: waterquality.Station.created_at:type_name -> google.protobuf.Timestamp
-	36, // 1: waterquality.Station.updated_at:type_name -> google.protobuf.Timestamp
-	36, // 2: waterquality.Station.deleted_at:type_name -> google.protobuf.Timestamp
+	44, // 0: waterquality.Station.created_at:type_name -> google.protobuf.Timestamp
+	44, // 1: waterquality.Station.updated_at:type_name -> google.protobuf.Timestamp
+	44, // 2: waterquality.Station.deleted_at:type_name -> google.protobuf.Timestamp
 	3,  // 3: waterquality.CreateStationsRequest.stations:type_name -> waterquality.StationInput
 	2,  // 4: waterquality.CreateStationsResponse.stations:type_name -> waterquality.Station
 	2,  // 5: waterquality.UpdateStationsRequest.stations:type_name -> waterquality.Station
 	2,  // 6: waterquality.UpdateStationsResponse.stations:type_name -> waterquality.Station
-	37, // 7: waterquality.ListStationsRequest.options:type_name -> core.FilterOptions
+	45, // 7: waterquality.ListStationsRequest.options:type_name -> core.FilterOptions
 	2,  // 8: waterquality.ListStationsResponse.stations:type_name -> waterquality.Station
-	38, // 9: waterquality.ListStationsResponse.pagination:type_name -> core.PaginationInfo
+	46, // 9: waterquality.ListStationsResponse.pagination:type_name -> core.PaginationInfo
 	1,  // 10: waterquality.DataPointFeature.purpose:type_name -> waterquality.IndicatorPurpose
 	1,  // 11: waterquality.DataPointFeatureInput.purpose:type_name -> waterquality.IndicatorPurpose
-	36, // 12: waterquality.DataPoint.created_at:type_name -> google.protobuf.Timestamp
-	36, // 13: waterquality.DataPoint.updated_at:type_name -> google.protobuf.Timestamp
-	36, // 14: waterquality.DataPoint.deleted_at:type_name -> google.protobuf.Timestamp
-	36, // 15: waterquality.DataPoint.monitoring_time:type_name -> google.protobuf.Timestamp
+	44, // 12: waterquality.DataPoint.created_at:type_name -> google.protobuf.Timestamp
+	44, // 13: waterquality.DataPoint.updated_at:type_name -> google.protobuf.Timestamp
+	44, // 14: waterquality.DataPoint.deleted_at:type_name -> google.protobuf.Timestamp
+	44, // 15: waterquality.DataPoint.monitoring_time:type_name -> google.protobuf.Timestamp
 	0,  // 16: waterquality.DataPoint.observation_type:type_name -> waterquality.ObservationType
 	12, // 17: waterquality.DataPoint.features:type_name -> waterquality.DataPointFeature
-	36, // 18: waterquality.DataPointInput.monitoring_time:type_name -> google.protobuf.Timestamp
+	44, // 18: waterquality.DataPointInput.monitoring_time:type_name -> google.protobuf.Timestamp
 	0,  // 19: waterquality.DataPointInput.observation_type:type_name -> waterquality.ObservationType
 	13, // 20: waterquality.DataPointInput.features:type_name -> waterquality.DataPointFeatureInput
 	15, // 21: waterquality.CreateDataPointsRequest.data_points:type_name -> waterquality.DataPointInput
 	14, // 22: waterquality.CreateDataPointsResponse.data_points:type_name -> waterquality.DataPoint
 	14, // 23: waterquality.UpdateDataPointsRequest.data_points:type_name -> waterquality.DataPoint
 	14, // 24: waterquality.UpdateDataPointsResponse.data_points:type_name -> waterquality.DataPoint
-	37, // 25: waterquality.ListDataPointsByStationRequest.options:type_name -> core.FilterOptions
+	45, // 25: waterquality.ListDataPointsByStationRequest.options:type_name -> core.FilterOptions
 	14, // 26: waterquality.ListDataPointsByStationResponse.data_points:type_name -> waterquality.DataPoint
-	38, // 27: waterquality.ListDataPointsByStationResponse.pagination:type_name -> core.PaginationInfo
-	37, // 28: waterquality.ListAllDataPointsRequest.options:type_name -> core.FilterOptions
+	46, // 27: waterquality.ListDataPointsByStationResponse.pagination:type_name -> core.PaginationInfo
+	45, // 28: waterquality.ListAllDataPointsRequest.options:type_name -> core.FilterOptions
 	14, // 29: waterquality.ListAllDataPointsResponse.data_points:type_name -> waterquality.DataPoint
-	38, // 30: waterquality.ListAllDataPointsResponse.pagination:type_name -> core.PaginationInfo
-	36, // 31: waterquality.DataSourceSchema.created_at:type_name -> google.protobuf.Timestamp
-	36, // 32: waterquality.DataSourceSchema.updated_at:type_name -> google.protobuf.Timestamp
-	36, // 33: waterquality.DataSourceSchema.deleted_at:type_name -> google.protobuf.Timestamp
-	39, // 34: waterquality.DataSourceSchema.schema_definition:type_name -> google.protobuf.Struct
-	39, // 35: waterquality.DataSourceSchemaInput.schema_definition:type_name -> google.protobuf.Struct
+	46, // 30: waterquality.ListAllDataPointsResponse.pagination:type_name -> core.PaginationInfo
+	44, // 31: waterquality.DataSourceSchema.created_at:type_name -> google.protobuf.Timestamp
+	44, // 32: waterquality.DataSourceSchema.updated_at:type_name -> google.protobuf.Timestamp
+	44, // 33: waterquality.DataSourceSchema.deleted_at:type_name -> google.protobuf.Timestamp
+	47, // 34: waterquality.DataSourceSchema.schema_definition:type_name -> google.protobuf.Struct
+	47, // 35: waterquality.DataSourceSchemaInput.schema_definition:type_name -> google.protobuf.Struct
 	27, // 36: waterquality.CreateDataSourceSchemaRequest.schema:type_name -> waterquality.DataSourceSchemaInput
 	26, // 37: waterquality.CreateDataSourceSchemaResponse.schema:type_name -> waterquality.DataSourceSchema
 	26, // 38: waterquality.UpdateDataSourceSchemaRequest.schema:type_name -> waterquality.DataSourceSchema
 	26, // 39: waterquality.UpdateDataSourceSchemaResponse.schema:type_name -> waterquality.DataSourceSchema
 	26, // 40: waterquality.GetDataSourceSchemaResponse.schema:type_name -> waterquality.DataSourceSchema
-	37, // 41: waterquality.ListDataSourceSchemasRequest.options:type_name -> core.FilterOptions
+	45, // 41: waterquality.ListDataSourceSchemasRequest.options:type_name -> core.FilterOptions
 	26, // 42: waterquality.ListDataSourceSchemasResponse.schemas:type_name -> waterquality.DataSourceSchema
-	38, // 43: waterquality.ListDataSourceSchemasResponse.pagination:type_name -> core.PaginationInfo
-	4,  // 44: waterquality.WaterQualityService.CreateStations:input_type -> waterquality.CreateStationsRequest
-	6,  // 45: waterquality.WaterQualityService.UpdateStations:input_type -> waterquality.UpdateStationsRequest
-	8,  // 46: waterquality.WaterQualityService.DeleteStations:input_type -> waterquality.DeleteRequest
-	10, // 47: waterquality.WaterQualityService.ListStations:input_type -> waterquality.ListStationsRequest
-	16, // 48: waterquality.WaterQualityService.CreateDataPoints:input_type -> waterquality.CreateDataPointsRequest
-	18, // 49: waterquality.WaterQualityService.UpdateDataPoints:input_type -> waterquality.UpdateDataPointsRequest
-	8,  // 50: waterquality.WaterQualityService.DeleteDataPoints:input_type -> waterquality.DeleteRequest
-	20, // 51: waterquality.WaterQualityService.ListDataPointsByStation:input_type -> waterquality.ListDataPointsByStationRequest
-	20, // 52: waterquality.WaterQualityService.ListDataPointsByStationPost:input_type -> waterquality.ListDataPointsByStationRequest
-	22, // 53: waterquality.WaterQualityService.ListAllDataPoints:input_type -> waterquality.ListAllDataPointsRequest
-	24, // 54: waterquality.WaterQualityService.UploadData:input_type -> waterquality.UploadRequest
-	28, // 55: waterquality.WaterQualityService.CreateDataSourceSchema:input_type -> waterquality.CreateDataSourceSchemaRequest
-	30, // 56: waterquality.WaterQualityService.UpdateDataSourceSchema:input_type -> waterquality.UpdateDataSourceSchemaRequest
-	32, // 57: waterquality.WaterQualityService.GetDataSourceSchema:input_type -> waterquality.GetDataSourceSchemaRequest
-	34, // 58: waterquality.WaterQualityService.ListDataSourceSchemas:input_type -> waterquality.ListDataSourceSchemasRequest
-	5,  // 59: waterquality.WaterQualityService.CreateStations:output_type -> waterquality.CreateStationsResponse
-	7,  // 60: waterquality.WaterQualityService.UpdateStations:output_type -> waterquality.UpdateStationsResponse
-	9,  // 61: waterquality.WaterQualityService.DeleteStations:output_type -> waterquality.DeleteResponse
-	11, // 62: waterquality.WaterQualityService.ListStations:output_type -> waterquality.ListStationsResponse
-	17, // 63: waterquality.WaterQualityService.CreateDataPoints:output_type -> waterquality.CreateDataPointsResponse
-	19, // 64: waterquality.WaterQualityService.UpdateDataPoints:output_type -> waterquality.UpdateDataPointsResponse
-	9,  // 65: waterquality.WaterQualityService.DeleteDataPoints:output_type -> waterquality.DeleteResponse
-	21, // 66: waterquality.WaterQualityService.ListDataPointsByStation:output_type -> waterquality.ListDataPointsByStationResponse
-	21, // 67: waterquality.WaterQualityService.ListDataPointsByStationPost:output_type -> waterquality.ListDataPointsByStationResponse
-	23, // 68: waterquality.WaterQualityService.ListAllDataPoints:output_type -> waterquality.ListAllDataPointsResponse
-	25, // 69: waterquality.WaterQualityService.UploadData:output_type -> waterquality.UploadDataResponse
-	29, // 70: waterquality.WaterQualityService.CreateDataSourceSchema:output_type -> waterquality.CreateDataSourceSchemaResponse
-	31, // 71: waterquality.WaterQualityService.UpdateDataSourceSchema:output_type -> waterquality.UpdateDataSourceSchemaResponse
-	33, // 72: waterquality.WaterQualityService.GetDataSourceSchema:output_type -> waterquality.GetDataSourceSchemaResponse
-	35, // 73: waterquality.WaterQualityService.ListDataSourceSchemas:output_type -> waterquality.ListDataSourceSchemasResponse
-	59, // [59:74] is the sub-list for method output_type
-	44, // [44:59] is the sub-list for method input_type
-	44, // [44:44] is the sub-list for extension type_name
-	44, // [44:44] is the sub-list for extension extendee
-	0,  // [0:44] is the sub-list for field type_name
+	46, // 43: waterquality.ListDataSourceSchemasResponse.pagination:type_name -> core.PaginationInfo
+	44, // 44: waterquality.ThresholdConfig.created_at:type_name -> google.protobuf.Timestamp
+	44, // 45: waterquality.ThresholdConfig.updated_at:type_name -> google.protobuf.Timestamp
+	44, // 46: waterquality.ThresholdConfig.deleted_at:type_name -> google.protobuf.Timestamp
+	37, // 47: waterquality.CreateThresholdConfigsRequest.configs:type_name -> waterquality.ThresholdConfigInput
+	36, // 48: waterquality.CreateThresholdConfigsResponse.configs:type_name -> waterquality.ThresholdConfig
+	36, // 49: waterquality.UpdateThresholdConfigsRequest.configs:type_name -> waterquality.ThresholdConfig
+	36, // 50: waterquality.UpdateThresholdConfigsResponse.configs:type_name -> waterquality.ThresholdConfig
+	45, // 51: waterquality.ListThresholdConfigsRequest.options:type_name -> core.FilterOptions
+	36, // 52: waterquality.ListThresholdConfigsResponse.configs:type_name -> waterquality.ThresholdConfig
+	46, // 53: waterquality.ListThresholdConfigsResponse.pagination:type_name -> core.PaginationInfo
+	4,  // 54: waterquality.WaterQualityService.CreateStations:input_type -> waterquality.CreateStationsRequest
+	6,  // 55: waterquality.WaterQualityService.UpdateStations:input_type -> waterquality.UpdateStationsRequest
+	8,  // 56: waterquality.WaterQualityService.DeleteStations:input_type -> waterquality.DeleteRequest
+	10, // 57: waterquality.WaterQualityService.ListStations:input_type -> waterquality.ListStationsRequest
+	16, // 58: waterquality.WaterQualityService.CreateDataPoints:input_type -> waterquality.CreateDataPointsRequest
+	18, // 59: waterquality.WaterQualityService.UpdateDataPoints:input_type -> waterquality.UpdateDataPointsRequest
+	8,  // 60: waterquality.WaterQualityService.DeleteDataPoints:input_type -> waterquality.DeleteRequest
+	20, // 61: waterquality.WaterQualityService.ListDataPointsByStation:input_type -> waterquality.ListDataPointsByStationRequest
+	20, // 62: waterquality.WaterQualityService.ListDataPointsByStationPost:input_type -> waterquality.ListDataPointsByStationRequest
+	22, // 63: waterquality.WaterQualityService.ListAllDataPoints:input_type -> waterquality.ListAllDataPointsRequest
+	24, // 64: waterquality.WaterQualityService.UploadData:input_type -> waterquality.UploadRequest
+	28, // 65: waterquality.WaterQualityService.CreateDataSourceSchema:input_type -> waterquality.CreateDataSourceSchemaRequest
+	30, // 66: waterquality.WaterQualityService.UpdateDataSourceSchema:input_type -> waterquality.UpdateDataSourceSchemaRequest
+	32, // 67: waterquality.WaterQualityService.GetDataSourceSchema:input_type -> waterquality.GetDataSourceSchemaRequest
+	34, // 68: waterquality.WaterQualityService.ListDataSourceSchemas:input_type -> waterquality.ListDataSourceSchemasRequest
+	38, // 69: waterquality.WaterQualityService.CreateThresholdConfigs:input_type -> waterquality.CreateThresholdConfigsRequest
+	40, // 70: waterquality.WaterQualityService.UpdateThresholdConfigs:input_type -> waterquality.UpdateThresholdConfigsRequest
+	8,  // 71: waterquality.WaterQualityService.DeleteThresholdConfigs:input_type -> waterquality.DeleteRequest
+	42, // 72: waterquality.WaterQualityService.ListThresholdConfigs:input_type -> waterquality.ListThresholdConfigsRequest
+	5,  // 73: waterquality.WaterQualityService.CreateStations:output_type -> waterquality.CreateStationsResponse
+	7,  // 74: waterquality.WaterQualityService.UpdateStations:output_type -> waterquality.UpdateStationsResponse
+	9,  // 75: waterquality.WaterQualityService.DeleteStations:output_type -> waterquality.DeleteResponse
+	11, // 76: waterquality.WaterQualityService.ListStations:output_type -> waterquality.ListStationsResponse
+	17, // 77: waterquality.WaterQualityService.CreateDataPoints:output_type -> waterquality.CreateDataPointsResponse
+	19, // 78: waterquality.WaterQualityService.UpdateDataPoints:output_type -> waterquality.UpdateDataPointsResponse
+	9,  // 79: waterquality.WaterQualityService.DeleteDataPoints:output_type -> waterquality.DeleteResponse
+	21, // 80: waterquality.WaterQualityService.ListDataPointsByStation:output_type -> waterquality.ListDataPointsByStationResponse
+	21, // 81: waterquality.WaterQualityService.ListDataPointsByStationPost:output_type -> waterquality.ListDataPointsByStationResponse
+	23, // 82: waterquality.WaterQualityService.ListAllDataPoints:output_type -> waterquality.ListAllDataPointsResponse
+	25, // 83: waterquality.WaterQualityService.UploadData:output_type -> waterquality.UploadDataResponse
+	29, // 84: waterquality.WaterQualityService.CreateDataSourceSchema:output_type -> waterquality.CreateDataSourceSchemaResponse
+	31, // 85: waterquality.WaterQualityService.UpdateDataSourceSchema:output_type -> waterquality.UpdateDataSourceSchemaResponse
+	33, // 86: waterquality.WaterQualityService.GetDataSourceSchema:output_type -> waterquality.GetDataSourceSchemaResponse
+	35, // 87: waterquality.WaterQualityService.ListDataSourceSchemas:output_type -> waterquality.ListDataSourceSchemasResponse
+	39, // 88: waterquality.WaterQualityService.CreateThresholdConfigs:output_type -> waterquality.CreateThresholdConfigsResponse
+	41, // 89: waterquality.WaterQualityService.UpdateThresholdConfigs:output_type -> waterquality.UpdateThresholdConfigsResponse
+	9,  // 90: waterquality.WaterQualityService.DeleteThresholdConfigs:output_type -> waterquality.DeleteResponse
+	43, // 91: waterquality.WaterQualityService.ListThresholdConfigs:output_type -> waterquality.ListThresholdConfigsResponse
+	73, // [73:92] is the sub-list for method output_type
+	54, // [54:73] is the sub-list for method input_type
+	54, // [54:54] is the sub-list for extension type_name
+	54, // [54:54] is the sub-list for extension extendee
+	0,  // [0:54] is the sub-list for field type_name
 }
 
 func init() { file_proto_water_quality_service_water_quality_proto_init() }
@@ -2578,19 +3022,15 @@ func file_proto_water_quality_service_water_quality_proto_init() {
 	file_proto_water_quality_service_water_quality_proto_msgTypes[11].OneofWrappers = []any{}
 	file_proto_water_quality_service_water_quality_proto_msgTypes[12].OneofWrappers = []any{}
 	file_proto_water_quality_service_water_quality_proto_msgTypes[13].OneofWrappers = []any{}
-	file_proto_water_quality_service_water_quality_proto_msgTypes[22].OneofWrappers = []any{
-		(*UploadRequest_Filename)(nil),
-		(*UploadRequest_FileType)(nil),
-		(*UploadRequest_DataChunk)(nil),
-	}
 	file_proto_water_quality_service_water_quality_proto_msgTypes[24].OneofWrappers = []any{}
+	file_proto_water_quality_service_water_quality_proto_msgTypes[34].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_water_quality_service_water_quality_proto_rawDesc), len(file_proto_water_quality_service_water_quality_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   34,
+			NumMessages:   42,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -3,8 +3,8 @@ package entity
 import (
 	"time"
 
-	core_entity "golang-microservices-boilerplate/pkg/core/entity" // Import the base entity
-
+	coreEntity "golang-microservices-boilerplate/pkg/core/entity" // Import the base entity
+	// Assuming a standard logger package
 	"github.com/google/uuid"
 )
 
@@ -45,12 +45,26 @@ type DataPointFeature struct {
 
 // DataPoint represents a single data collection event at a station, including its features.
 type DataPoint struct {
-	core_entity.BaseEntity
-	MonitoringTime     time.Time          `json:"monitoring_time,omitempty" gorm:"not null;index;uniqueIndex:idx_datapoint_time_station_source"`
-	WQI                *float64           `json:"wqi,omitempty" gorm:"type:decimal(10,4);uniqueIndex:idx_datapoint_time_station_source"` // Water Quality Index (use pointer for nullability)
-	StationID          uuid.UUID          `json:"station_id,omitempty" gorm:"type:uuid;not null;index;uniqueIndex:idx_datapoint_time_station_source"`
-	Source             string             `json:"source,omitempty" gorm:"type:varchar(255);index;uniqueIndex:idx_datapoint_time_station_source"`
-	ObservationType    ObservationType    `json:"observation_type,omitempty" gorm:"type:varchar(50);not null;index;check:chk_observation_type,observation_type IN ('actual', 'interpolation', 'predicted', 'realtime-monitoring')"` // Renamed type, kept json tag
-	DataSourceSchemaID uuid.UUID          `json:"data_source_schema_id,omitempty" gorm:"type:uuid;not null;index"`                                                                                                                  // Added foreign key with json tag
-	Features           []DataPointFeature `json:"features,omitempty" gorm:"type:jsonb;not null;serializer:json"`                                                                                                                    // Changed type from datatypes.JSON, kept json tag
+	coreEntity.BaseEntity
+	MonitoringTime     time.Time          `json:"monitoring_time,omitempty" gorm:"not null;index;uniqueIndex:idx_datapoint_time_station_observation_wqi"`
+	WQI                *float64           `json:"wqi,omitempty" gorm:"type:decimal(10,4);uniqueIndex:idx_datapoint_time_station_observation_wqi"` // Water Quality Index (use pointer for nullability)
+	StationID          uuid.UUID          `json:"station_id,omitempty" gorm:"type:uuid;not null;index;uniqueIndex:idx_datapoint_time_station_observation_wqi"`
+	Source             string             `json:"source,omitempty" gorm:"type:varchar(255);index"`
+	ObservationType    ObservationType    `json:"observation_type,omitempty" gorm:"type:varchar(50);not null;index;uniqueIndex:idx_datapoint_time_station_observation_wqi;check:chk_observation_type,observation_type IN ('actual', 'interpolation', 'predicted', 'realtime-monitoring')"` // Renamed type, kept json tag
+	DataSourceSchemaID uuid.UUID          `json:"data_source_schema_id,omitempty" gorm:"type:uuid;not null;index"`                                                                                                                                                                         // Added foreign key with json tag
+	Features           []DataPointFeature `json:"features,omitempty" gorm:"type:jsonb;not null;serializer:json"`                                                                                                                                                                           // Changed type from datatypes.JSON, kept json tag
+}
+
+type NotificationForHook struct {
+	ID          uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;"`
+	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	Title       string    `json:"title" gorm:"not null"`
+	Description string    `json:"description" gorm:"not null"`
+	Read        bool      `json:"read" gorm:"default:false"`
+	UserID      uuid.UUID `json:"user_id" gorm:"type:uuid;not null"`
+}
+
+func (NotificationForHook) TableName() string {
+	return "notifications" // Explicitly set table name
 }

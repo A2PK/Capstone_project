@@ -34,6 +34,10 @@ const (
 	WaterQualityService_UpdateDataSourceSchema_FullMethodName      = "/waterquality.WaterQualityService/UpdateDataSourceSchema"
 	WaterQualityService_GetDataSourceSchema_FullMethodName         = "/waterquality.WaterQualityService/GetDataSourceSchema"
 	WaterQualityService_ListDataSourceSchemas_FullMethodName       = "/waterquality.WaterQualityService/ListDataSourceSchemas"
+	WaterQualityService_CreateThresholdConfigs_FullMethodName      = "/waterquality.WaterQualityService/CreateThresholdConfigs"
+	WaterQualityService_UpdateThresholdConfigs_FullMethodName      = "/waterquality.WaterQualityService/UpdateThresholdConfigs"
+	WaterQualityService_DeleteThresholdConfigs_FullMethodName      = "/waterquality.WaterQualityService/DeleteThresholdConfigs"
+	WaterQualityService_ListThresholdConfigs_FullMethodName        = "/waterquality.WaterQualityService/ListThresholdConfigs"
 )
 
 // WaterQualityServiceClient is the client API for WaterQualityService service.
@@ -53,13 +57,18 @@ type WaterQualityServiceClient interface {
 	ListDataPointsByStationPost(ctx context.Context, in *ListDataPointsByStationRequest, opts ...grpc.CallOption) (*ListDataPointsByStationResponse, error)
 	// --- Add ListAllDataPoints RPC ---
 	ListAllDataPoints(ctx context.Context, in *ListAllDataPointsRequest, opts ...grpc.CallOption) (*ListAllDataPointsResponse, error)
-	// File Upload RPC
-	UploadData(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadRequest, UploadDataResponse], error)
+	// File Upload RPC - Changed to Unary
+	UploadData(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*UploadDataResponse, error)
 	// DataSourceSchema RPCs
 	CreateDataSourceSchema(ctx context.Context, in *CreateDataSourceSchemaRequest, opts ...grpc.CallOption) (*CreateDataSourceSchemaResponse, error)
 	UpdateDataSourceSchema(ctx context.Context, in *UpdateDataSourceSchemaRequest, opts ...grpc.CallOption) (*UpdateDataSourceSchemaResponse, error)
 	GetDataSourceSchema(ctx context.Context, in *GetDataSourceSchemaRequest, opts ...grpc.CallOption) (*GetDataSourceSchemaResponse, error)
 	ListDataSourceSchemas(ctx context.Context, in *ListDataSourceSchemasRequest, opts ...grpc.CallOption) (*ListDataSourceSchemasResponse, error)
+	// ThresholdConfig RPCs
+	CreateThresholdConfigs(ctx context.Context, in *CreateThresholdConfigsRequest, opts ...grpc.CallOption) (*CreateThresholdConfigsResponse, error)
+	UpdateThresholdConfigs(ctx context.Context, in *UpdateThresholdConfigsRequest, opts ...grpc.CallOption) (*UpdateThresholdConfigsResponse, error)
+	DeleteThresholdConfigs(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
+	ListThresholdConfigs(ctx context.Context, in *ListThresholdConfigsRequest, opts ...grpc.CallOption) (*ListThresholdConfigsResponse, error)
 }
 
 type waterQualityServiceClient struct {
@@ -170,18 +179,15 @@ func (c *waterQualityServiceClient) ListAllDataPoints(ctx context.Context, in *L
 	return out, nil
 }
 
-func (c *waterQualityServiceClient) UploadData(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadRequest, UploadDataResponse], error) {
+func (c *waterQualityServiceClient) UploadData(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*UploadDataResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &WaterQualityService_ServiceDesc.Streams[0], WaterQualityService_UploadData_FullMethodName, cOpts...)
+	out := new(UploadDataResponse)
+	err := c.cc.Invoke(ctx, WaterQualityService_UploadData_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[UploadRequest, UploadDataResponse]{ClientStream: stream}
-	return x, nil
+	return out, nil
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type WaterQualityService_UploadDataClient = grpc.ClientStreamingClient[UploadRequest, UploadDataResponse]
 
 func (c *waterQualityServiceClient) CreateDataSourceSchema(ctx context.Context, in *CreateDataSourceSchemaRequest, opts ...grpc.CallOption) (*CreateDataSourceSchemaResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -223,6 +229,46 @@ func (c *waterQualityServiceClient) ListDataSourceSchemas(ctx context.Context, i
 	return out, nil
 }
 
+func (c *waterQualityServiceClient) CreateThresholdConfigs(ctx context.Context, in *CreateThresholdConfigsRequest, opts ...grpc.CallOption) (*CreateThresholdConfigsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateThresholdConfigsResponse)
+	err := c.cc.Invoke(ctx, WaterQualityService_CreateThresholdConfigs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waterQualityServiceClient) UpdateThresholdConfigs(ctx context.Context, in *UpdateThresholdConfigsRequest, opts ...grpc.CallOption) (*UpdateThresholdConfigsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateThresholdConfigsResponse)
+	err := c.cc.Invoke(ctx, WaterQualityService_UpdateThresholdConfigs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waterQualityServiceClient) DeleteThresholdConfigs(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteResponse)
+	err := c.cc.Invoke(ctx, WaterQualityService_DeleteThresholdConfigs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waterQualityServiceClient) ListThresholdConfigs(ctx context.Context, in *ListThresholdConfigsRequest, opts ...grpc.CallOption) (*ListThresholdConfigsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListThresholdConfigsResponse)
+	err := c.cc.Invoke(ctx, WaterQualityService_ListThresholdConfigs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WaterQualityServiceServer is the server API for WaterQualityService service.
 // All implementations must embed UnimplementedWaterQualityServiceServer
 // for forward compatibility.
@@ -240,13 +286,18 @@ type WaterQualityServiceServer interface {
 	ListDataPointsByStationPost(context.Context, *ListDataPointsByStationRequest) (*ListDataPointsByStationResponse, error)
 	// --- Add ListAllDataPoints RPC ---
 	ListAllDataPoints(context.Context, *ListAllDataPointsRequest) (*ListAllDataPointsResponse, error)
-	// File Upload RPC
-	UploadData(grpc.ClientStreamingServer[UploadRequest, UploadDataResponse]) error
+	// File Upload RPC - Changed to Unary
+	UploadData(context.Context, *UploadRequest) (*UploadDataResponse, error)
 	// DataSourceSchema RPCs
 	CreateDataSourceSchema(context.Context, *CreateDataSourceSchemaRequest) (*CreateDataSourceSchemaResponse, error)
 	UpdateDataSourceSchema(context.Context, *UpdateDataSourceSchemaRequest) (*UpdateDataSourceSchemaResponse, error)
 	GetDataSourceSchema(context.Context, *GetDataSourceSchemaRequest) (*GetDataSourceSchemaResponse, error)
 	ListDataSourceSchemas(context.Context, *ListDataSourceSchemasRequest) (*ListDataSourceSchemasResponse, error)
+	// ThresholdConfig RPCs
+	CreateThresholdConfigs(context.Context, *CreateThresholdConfigsRequest) (*CreateThresholdConfigsResponse, error)
+	UpdateThresholdConfigs(context.Context, *UpdateThresholdConfigsRequest) (*UpdateThresholdConfigsResponse, error)
+	DeleteThresholdConfigs(context.Context, *DeleteRequest) (*DeleteResponse, error)
+	ListThresholdConfigs(context.Context, *ListThresholdConfigsRequest) (*ListThresholdConfigsResponse, error)
 	mustEmbedUnimplementedWaterQualityServiceServer()
 }
 
@@ -287,8 +338,8 @@ func (UnimplementedWaterQualityServiceServer) ListDataPointsByStationPost(contex
 func (UnimplementedWaterQualityServiceServer) ListAllDataPoints(context.Context, *ListAllDataPointsRequest) (*ListAllDataPointsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAllDataPoints not implemented")
 }
-func (UnimplementedWaterQualityServiceServer) UploadData(grpc.ClientStreamingServer[UploadRequest, UploadDataResponse]) error {
-	return status.Errorf(codes.Unimplemented, "method UploadData not implemented")
+func (UnimplementedWaterQualityServiceServer) UploadData(context.Context, *UploadRequest) (*UploadDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadData not implemented")
 }
 func (UnimplementedWaterQualityServiceServer) CreateDataSourceSchema(context.Context, *CreateDataSourceSchemaRequest) (*CreateDataSourceSchemaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDataSourceSchema not implemented")
@@ -301,6 +352,18 @@ func (UnimplementedWaterQualityServiceServer) GetDataSourceSchema(context.Contex
 }
 func (UnimplementedWaterQualityServiceServer) ListDataSourceSchemas(context.Context, *ListDataSourceSchemasRequest) (*ListDataSourceSchemasResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDataSourceSchemas not implemented")
+}
+func (UnimplementedWaterQualityServiceServer) CreateThresholdConfigs(context.Context, *CreateThresholdConfigsRequest) (*CreateThresholdConfigsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateThresholdConfigs not implemented")
+}
+func (UnimplementedWaterQualityServiceServer) UpdateThresholdConfigs(context.Context, *UpdateThresholdConfigsRequest) (*UpdateThresholdConfigsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateThresholdConfigs not implemented")
+}
+func (UnimplementedWaterQualityServiceServer) DeleteThresholdConfigs(context.Context, *DeleteRequest) (*DeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteThresholdConfigs not implemented")
+}
+func (UnimplementedWaterQualityServiceServer) ListThresholdConfigs(context.Context, *ListThresholdConfigsRequest) (*ListThresholdConfigsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListThresholdConfigs not implemented")
 }
 func (UnimplementedWaterQualityServiceServer) mustEmbedUnimplementedWaterQualityServiceServer() {}
 func (UnimplementedWaterQualityServiceServer) testEmbeddedByValue()                             {}
@@ -503,12 +566,23 @@ func _WaterQualityService_ListAllDataPoints_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _WaterQualityService_UploadData_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(WaterQualityServiceServer).UploadData(&grpc.GenericServerStream[UploadRequest, UploadDataResponse]{ServerStream: stream})
+func _WaterQualityService_UploadData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaterQualityServiceServer).UploadData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WaterQualityService_UploadData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaterQualityServiceServer).UploadData(ctx, req.(*UploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type WaterQualityService_UploadDataServer = grpc.ClientStreamingServer[UploadRequest, UploadDataResponse]
 
 func _WaterQualityService_CreateDataSourceSchema_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateDataSourceSchemaRequest)
@@ -582,6 +656,78 @@ func _WaterQualityService_ListDataSourceSchemas_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WaterQualityService_CreateThresholdConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateThresholdConfigsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaterQualityServiceServer).CreateThresholdConfigs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WaterQualityService_CreateThresholdConfigs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaterQualityServiceServer).CreateThresholdConfigs(ctx, req.(*CreateThresholdConfigsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WaterQualityService_UpdateThresholdConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateThresholdConfigsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaterQualityServiceServer).UpdateThresholdConfigs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WaterQualityService_UpdateThresholdConfigs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaterQualityServiceServer).UpdateThresholdConfigs(ctx, req.(*UpdateThresholdConfigsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WaterQualityService_DeleteThresholdConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaterQualityServiceServer).DeleteThresholdConfigs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WaterQualityService_DeleteThresholdConfigs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaterQualityServiceServer).DeleteThresholdConfigs(ctx, req.(*DeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WaterQualityService_ListThresholdConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListThresholdConfigsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaterQualityServiceServer).ListThresholdConfigs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WaterQualityService_ListThresholdConfigs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaterQualityServiceServer).ListThresholdConfigs(ctx, req.(*ListThresholdConfigsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // WaterQualityService_ServiceDesc is the grpc.ServiceDesc for WaterQualityService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -630,6 +776,10 @@ var WaterQualityService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _WaterQualityService_ListAllDataPoints_Handler,
 		},
 		{
+			MethodName: "UploadData",
+			Handler:    _WaterQualityService_UploadData_Handler,
+		},
+		{
 			MethodName: "CreateDataSourceSchema",
 			Handler:    _WaterQualityService_CreateDataSourceSchema_Handler,
 		},
@@ -645,13 +795,23 @@ var WaterQualityService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ListDataSourceSchemas",
 			Handler:    _WaterQualityService_ListDataSourceSchemas_Handler,
 		},
-	},
-	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "UploadData",
-			Handler:       _WaterQualityService_UploadData_Handler,
-			ClientStreams: true,
+			MethodName: "CreateThresholdConfigs",
+			Handler:    _WaterQualityService_CreateThresholdConfigs_Handler,
+		},
+		{
+			MethodName: "UpdateThresholdConfigs",
+			Handler:    _WaterQualityService_UpdateThresholdConfigs_Handler,
+		},
+		{
+			MethodName: "DeleteThresholdConfigs",
+			Handler:    _WaterQualityService_DeleteThresholdConfigs_Handler,
+		},
+		{
+			MethodName: "ListThresholdConfigs",
+			Handler:    _WaterQualityService_ListThresholdConfigs_Handler,
 		},
 	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/water-quality-service/water-quality.proto",
 }

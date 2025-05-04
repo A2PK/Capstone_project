@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/metadata"
 
 	"golang-microservices-boilerplate/pkg/core/logger"
 	"golang-microservices-boilerplate/pkg/middleware"
@@ -88,6 +89,8 @@ func NewGateway(
 		gwMux: runtime.NewServeMux(
 			runtime.WithErrorHandler(defaultErrorHandler),
 			runtime.WithIncomingHeaderMatcher(headerMatcher),
+			// runtime to pass UserClaims from middleware to grpc
+			runtime.WithMetadata(CustomMetadataFromRequest),
 		),
 		discovery:    discovery,
 		serviceConns: make(map[string]*grpc.ClientConn),
@@ -107,6 +110,7 @@ func NewGateway(
 	// Configure Fiber App with the final logger in the error handler
 	g.app = fiber.New(fiber.Config{
 		ErrorHandler: g.fiberErrorHandler, // Assign the method reference
+		BodyLimit:    maxUploadSize,
 	})
 
 	// Configure gRPC global logger
@@ -200,4 +204,13 @@ func headerMatcher(key string) (string, bool) {
 		return key, true
 	}
 	return runtime.DefaultHeaderMatcher(key)
+}
+
+func CustomMetadataFromRequest(ctx context.Context, req *http.Request) metadata.MD {
+	md := metadata.MD{}
+	if authHeader := req.Header.Get("Authorization"); authHeader != "" {
+		// md.Append("authorization", authHeader)
+		md.Set("authorization", authHeader)
+	}
+	return md
 }

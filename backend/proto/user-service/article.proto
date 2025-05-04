@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package userservice;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto"; // For optional fields in updates
+import "proto/core/common.proto"; // Import common definitions - Ensure this path is correct relative to your project root/include paths
+import "google/api/annotations.proto"; // HTTP annotations
+import "protoc-gen-openapiv2/options/annotations.proto"; // OpenAPI annotations
+
+option go_package = "golang-microservices-boilerplate/proto/user-service";
+
+// --- OpenAPI Info ---
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Article Service API";
+    version: "1.0";
+    description: "API for managing articles.";
+  };
+  schemes: [HTTP, HTTPS];
+  consumes: ["application/json"];
+  produces: ["application/json"];
+  security_definitions: {
+    security: {
+      key: "BearerAuth"; // Matches user.proto
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+        description: "JWT Bearer token (e.g., 'Bearer ey...')";
+      }
+    }
+  };
+  security: {
+    security_requirement: {
+      key: "BearerAuth";
+      value: {};
+    }
+  }
+};
+
+// --- Article Message ---
+message Article {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Article";
+      description: "Represents an article entity.";
+      required: ["id", "created_at", "updated_at", "title", "content", "author_id", "badge"];
+    }
+  };
+
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Unique identifier (UUID).", example: "\"uuid-string\""}];
+  google.protobuf.Timestamp created_at = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Creation timestamp.", example: "\"2023-10-27T10:00:00Z\""}];
+  google.protobuf.Timestamp updated_at = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Last update timestamp.", example: "\"2023-10-27T11:30:00Z\""}];
+  optional google.protobuf.Timestamp deleted_at = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Deletion timestamp (if soft-deleted).", example: "\"2023-10-28T09:15:00Z\""}];
+  string title = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Article title.", example: "\"Article Title\""}];
+  string content = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Article content.", example: "\"Article content here...\""}];
+  string author_id = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Author's user ID (UUID).", example: "\"author-uuid-string\""}];
+  string picture_url = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "URL of the associated picture (optional).", example: "\"https://example.com/image.jpg\""}];
+  string badge = 9 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Article badge ('common', 'good', 'danger').", example: "\"common\""}];
+  repeated string file_ids = 10 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "List of associated file IDs (UUIDs).", example: "[\"file-uuid-1\", \"file-uuid-2\"]"}]; // Corrected example format
+}
+
+// --- Request/Response Messages ---
+
+// Create
+message CreateArticleRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Create Article Request", required: ["title", "content", "author_id"] } };
+  string title = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Article title.", example: "\"New Article Title\""}];
+  string content = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Article content.", example: "\"Content for the new article.\""}];
+  string author_id = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Author's user ID (UUID).", example: "\"author-uuid-string\""}];
+  optional string picture_url = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "URL of the associated picture (optional).", example: "\"https://example.com/new_image.jpg\""}];
+  optional string badge = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Article badge ('common', 'good', 'danger'). Defaults to 'common'.", example: "\"good\""}];
+  repeated string file_ids = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "List of associated file IDs (UUIDs, optional).", example: "[\"file-uuid-1\"]"}]; // Corrected example format
+}
+message CreateArticleResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Create Article Response" } };
+  Article article = 1;
+}
+
+// Get By ID
+message GetArticleByIDRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Get Article By ID Request", required: ["id"] } };
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "UUID of the article to retrieve.", example: "\"article-uuid-string\""}];
+}
+message GetArticleByIDResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Get Article By ID Response" } };
+  Article article = 1;
+}
+
+// List
+message ListArticlesRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List Articles Request" } };
+  core.FilterOptions options = 1;
+}
+message ListArticlesResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List Articles Response" } };
+  repeated Article articles = 1;
+  core.PaginationInfo pagination_info = 2;
+}
+
+// Update
+message UpdateArticleRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Update Article Request", required: ["id"] } };
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "UUID of the article to update.", example: "\"article-uuid-string\""}];
+  optional google.protobuf.StringValue title = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "New title.", example: "\"Updated Title\""}];
+  optional google.protobuf.StringValue content = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "New content.", example: "\"Updated content...\""}];
+  // author_id typically shouldn't be updated
+  optional google.protobuf.StringValue picture_url = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "New picture URL.", example: "\"https://example.com/updated_image.jpg\""}];
+  optional google.protobuf.StringValue badge = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "New badge ('common', 'good', 'danger').", example: "\"danger\""}];
+  // Use a specific message/field for managing file associations if needed, simple replacement shown here
+  optional FileIDsUpdate file_ids = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Replace associated file IDs."}];
+}
+// Helper message for updating repeated fields like file_ids
+message FileIDsUpdate {
+   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "File IDs Update" } };
+  repeated string ids = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "New list of associated file IDs (UUIDs).", example: "[\"file-uuid-3\", \"file-uuid-4\"]"}]; // Corrected example format
+}
+
+message UpdateArticleResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Update Article Response" } };
+  Article article = 1;
+}
+
+// Delete
+message DeleteArticleRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Delete Article Request", required: ["id"] } };
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "UUID of the article to delete.", example: "\"article-uuid-string\""}];
+  bool hard_delete = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Perform hard delete if true.", default: "false", example: "false"}]; // Corrected example format for bool
+}
+// Response is google.protobuf.Empty
+
+
+// --- Article Service ---
+service ArticleService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "Operations related to articles"
+  };
+
+  // Create
+  rpc Create(CreateArticleRequest) returns (CreateArticleResponse) {
+    option (google.api.http) = { post: "/api/v1/articles", body: "*" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Create Article", tags: ["Articles"] };
+  }
+
+  // Get By ID
+  rpc GetByID(GetArticleByIDRequest) returns (GetArticleByIDResponse) {
+    option (google.api.http) = { get: "/api/v1/articles/{id}" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Get Article By ID", tags: ["Articles"] };
+  }
+
+  // List
+  rpc List(ListArticlesRequest) returns (ListArticlesResponse) {
+    option (google.api.http) = { get: "/api/v1/articles" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "List Articles", tags: ["Articles"] };
+  }
+
+  // Update
+  rpc Update(UpdateArticleRequest) returns (UpdateArticleResponse) {
+    option (google.api.http) = { patch: "/api/v1/articles/{id}", body: "*" }; // Changed to PATCH for partial updates, PUT is also common
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Update Article", tags: ["Articles"] };
+  }
+
+  // Delete
+  rpc Delete(DeleteArticleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = { delete: "/api/v1/articles/{id}" }; // hard_delete will be a query param: ?hard_delete=true
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Delete Article", tags: ["Articles"] };
+  }
+
+  // Add specific RPCs based on repository methods if any in the future
+  // e.g., rpc FindByAuthor(...) returns (...) { ... }
+}

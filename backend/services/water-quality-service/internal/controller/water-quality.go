@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"io"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -27,6 +26,7 @@ type waterQualityServer struct {
 	dataPointUC        usecase.DataPointUsecase
 	importUC           usecase.ImportUseCase
 	dataSourceSchemaUC usecase.DataSourceSchemaUsecase
+	thresholdConfigUC  usecase.ThresholdConfigUsecase
 	mapper             Mapper
 }
 
@@ -39,6 +39,7 @@ func NewWaterQualityServer(
 	dataPointUC usecase.DataPointUsecase,
 	importUC usecase.ImportUseCase,
 	dataSourceSchemaUC usecase.DataSourceSchemaUsecase,
+	thresholdConfigUC usecase.ThresholdConfigUsecase,
 	mapper Mapper,
 ) WaterQualityServer {
 	return &waterQualityServer{
@@ -46,6 +47,7 @@ func NewWaterQualityServer(
 		dataPointUC:        dataPointUC,
 		importUC:           importUC,
 		dataSourceSchemaUC: dataSourceSchemaUC,
+		thresholdConfigUC:  thresholdConfigUC,
 		mapper:             mapper,
 	}
 }
@@ -57,9 +59,10 @@ func RegisterWaterQualityServiceServer(
 	dataPointUC usecase.DataPointUsecase,
 	importUC usecase.ImportUseCase,
 	dataSourceSchemaUC usecase.DataSourceSchemaUsecase,
+	thresholdConfigUC usecase.ThresholdConfigUsecase,
 	mapper Mapper,
 ) {
-	server := NewWaterQualityServer(stationUC, dataPointUC, importUC, dataSourceSchemaUC, mapper)
+	server := NewWaterQualityServer(stationUC, dataPointUC, importUC, dataSourceSchemaUC, thresholdConfigUC, mapper)
 	pb.RegisterWaterQualityServiceServer(s, server)
 }
 
@@ -390,102 +393,26 @@ func (s *waterQualityServer) ListAllDataPoints(ctx context.Context, req *pb.List
 
 // --- File Upload Method ---
 
-// UploadData implements the streaming pb.WaterQualityServiceServer.UploadData method
-func (s *waterQualityServer) UploadData(stream pb.WaterQualityService_UploadDataServer) error {
-	var filename string
-	var filetype string
-	var metadataReceived bool
-	var pr *io.PipeReader
-	var pw *io.PipeWriter
-	var importErr error
-	importDone := make(chan struct{}) // Channel to signal import completion
-	ctx := stream.Context()
-
-	for {
-		req, err := stream.Recv()
-		if err == io.EOF {
-			if !metadataReceived {
-				return status.Error(http.StatusBadRequest, "EOF received before metadata (filename, filetype)")
-			}
-			if pw != nil {
-				pw.Close() // Signal end of data to the reader
-			}
-			break // Exit the receive loop
-		}
-		if err != nil {
-			return status.Errorf(http.StatusInternalServerError, "error receiving stream message: %v", err)
-		}
-
-		switch payload := req.GetPayload().(type) {
-		case *pb.UploadRequest_Filename:
-			if filename != "" {
-				return status.Error(http.StatusBadRequest, "filename sent more than once")
-			}
-			filename = payload.Filename
-			if filetype != "" && !metadataReceived {
-				metadataReceived = true
-				pr, pw = io.Pipe()
-				go s.runImportAndHandleResponse(ctx, pr, filename, filetype, importDone, &importErr, stream)
-			}
-		case *pb.UploadRequest_FileType:
-			if filetype != "" {
-				return status.Error(http.StatusBadRequest, "file_type sent more than once")
-			}
-			filetype = payload.FileType
-			if filename != "" && !metadataReceived {
-				metadataReceived = true
-				pr, pw = io.Pipe()
-				go s.runImportAndHandleResponse(ctx, pr, filename, filetype, importDone, &importErr, stream)
-			}
-		case *pb.UploadRequest_DataChunk:
-			if !metadataReceived {
-				return status.Error(http.StatusBadRequest, "data_chunk received before complete metadata (filename, filetype)")
-			}
-			if _, err := pw.Write(payload.DataChunk); err != nil {
-				<-importDone
-				return status.Errorf(http.StatusInternalServerError, "error writing chunk to processing pipe: %v", err)
-			}
-		default:
-			return status.Error(http.StatusBadRequest, "unknown payload type in UploadRequest")
-		}
+// UploadData implements the unary pb.WaterQualityServiceServer.UploadData method
+// It accepts a request with a file URL and triggers the import process.
+func (s *waterQualityServer) UploadData(ctx context.Context, req *pb.UploadRequest) (*pb.UploadDataResponse, error) {
+	if req == nil || req.GetFileUrl() == "" {
+		return nil, status.Errorf(http.StatusBadRequest, "file_url is required in the request")
 	}
 
-	// Wait for the import process to finish if it started
-	if metadataReceived {
-		<-importDone
-	}
+	fileURL := req.GetFileUrl()
 
-	// Return the final error captured from the goroutine (nil if successful)
-	return importErr
-}
-
-// runImportAndHandleResponse runs import logic and sends the response back via the stream.
-func (s *waterQualityServer) runImportAndHandleResponse(
-	ctx context.Context,
-	pr *io.PipeReader,
-	filename, filetype string,
-	done chan<- struct{},
-	errResult *error,
-	stream pb.WaterQualityService_UploadDataServer,
-) {
-	defer close(done) // Ensure done is closed on exit
-
-	response, err := s.importUC.ImportData(ctx, pr, filename, filetype)
+	// Assume the ImportUseCase has a method like ImportDataFromURL
+	// This method would handle downloading the file from the URL and processing it.
+	// We pass the context and the URL.
+	response, err := s.importUC.ImportDataFromURL(ctx, fileURL) // Pass URL directly
 	if err != nil {
-		pr.CloseWithError(err) // Close the reader part of the pipe on error
-		*errResult = status.Errorf(http.StatusInternalServerError, "error processing data: %v", err)
-		// We cannot send the response here as SendAndClose is called by the main handler upon return.
-		// The error is captured in errResult.
-		return
+		// Map the use case error (or potentially download/processing error) to a gRPC status
+		return nil, coreController.MapErrorToHttpStatus(err)
 	}
 
-	// If successful, send the response and close the stream.
-	if err := stream.SendAndClose(response); err != nil {
-		*errResult = status.Errorf(http.StatusInternalServerError, "failed to send upload response: %v", err)
-		return
-	}
-
-	*errResult = nil // Signal success
+	// If the import was successful, the use case should return the appropriate response proto
+	return response, nil
 }
 
 // --- DataSourceSchema Methods ---
@@ -595,6 +522,142 @@ func (s *waterQualityServer) ListDataSourceSchemas(ctx context.Context, req *pb.
 	response, err := s.mapper.DataSourceSchemaPaginationResultToProtoList(result)
 	if err != nil {
 		return nil, status.Errorf(http.StatusInternalServerError, "failed to map schema pagination result: %v", err)
+	}
+
+	return response, nil
+}
+
+// --- ThresholdConfig Methods ---
+
+// CreateThresholdConfigs implements the pb.WaterQualityServiceServer.CreateThresholdConfigs method
+func (s *waterQualityServer) CreateThresholdConfigs(ctx context.Context, req *pb.CreateThresholdConfigsRequest) (*pb.CreateThresholdConfigsResponse, error) {
+	if req == nil || len(req.Configs) == 0 {
+		return nil, status.Errorf(http.StatusBadRequest, "at least one threshold config is required")
+	}
+
+	// Map proto inputs to entities
+	configEntities := make([]*entity.ThresholdConfig, 0, len(req.Configs))
+	for _, protoConfig := range req.Configs {
+		configEntity, err := s.mapper.ProtoThresholdConfigInputToEntity(protoConfig)
+		if err != nil {
+			return nil, status.Errorf(http.StatusBadRequest, "invalid threshold config: %v", err)
+		}
+		configEntities = append(configEntities, configEntity)
+	}
+
+	// Create the entities using the use case
+	createdConfigs, err := s.thresholdConfigUC.CreateMany(ctx, configEntities)
+	if err != nil {
+		return nil, coreController.MapErrorToHttpStatus(err)
+	}
+
+	// Map the created entities back to proto
+	response := &pb.CreateThresholdConfigsResponse{
+		Configs: make([]*pb.ThresholdConfig, 0, len(createdConfigs)),
+	}
+	for _, config := range createdConfigs {
+		protoConfig, err := s.mapper.ThresholdConfigEntityToProto(config)
+		if err != nil {
+			return nil, status.Errorf(http.StatusInternalServerError, "failed to map created threshold config: %v", err)
+		}
+		response.Configs = append(response.Configs, protoConfig)
+	}
+
+	return response, nil
+}
+
+// UpdateThresholdConfigs implements the pb.WaterQualityServiceServer.UpdateThresholdConfigs method
+func (s *waterQualityServer) UpdateThresholdConfigs(ctx context.Context, req *pb.UpdateThresholdConfigsRequest) (*pb.UpdateThresholdConfigsResponse, error) {
+	if req == nil || len(req.Configs) == 0 {
+		return nil, status.Errorf(http.StatusBadRequest, "at least one threshold config is required")
+	}
+
+	// We need to fetch the existing entities first to apply updates
+	configEntities := make([]*entity.ThresholdConfig, 0, len(req.Configs))
+	for _, protoConfig := range req.Configs {
+		// Parse the ID
+		configID, err := uuid.Parse(protoConfig.Id)
+		if err != nil {
+			return nil, status.Errorf(http.StatusBadRequest, "invalid threshold config ID: %v", err)
+		}
+
+		// Get the existing entity
+		existingConfig, err := s.thresholdConfigUC.GetByID(ctx, configID)
+		if err != nil {
+			return nil, coreController.MapErrorToHttpStatus(err)
+		}
+
+		// Apply updates from proto to entity
+		if err := s.mapper.ApplyProtoThresholdConfigUpdateToEntity(protoConfig, existingConfig); err != nil {
+			return nil, status.Errorf(http.StatusBadRequest, "failed to apply updates: %v", err)
+		}
+
+		configEntities = append(configEntities, existingConfig)
+	}
+
+	// Update the entities
+	updatedConfigs, err := s.thresholdConfigUC.UpdateMany(ctx, configEntities)
+	if err != nil {
+		return nil, coreController.MapErrorToHttpStatus(err)
+	}
+
+	// Map the updated entities back to proto
+	response := &pb.UpdateThresholdConfigsResponse{
+		Configs: make([]*pb.ThresholdConfig, 0, len(updatedConfigs)),
+	}
+	for _, config := range updatedConfigs {
+		protoConfig, err := s.mapper.ThresholdConfigEntityToProto(config)
+		if err != nil {
+			return nil, status.Errorf(http.StatusInternalServerError, "failed to map updated threshold config: %v", err)
+		}
+		response.Configs = append(response.Configs, protoConfig)
+	}
+
+	return response, nil
+}
+
+// DeleteThresholdConfigs implements the pb.WaterQualityServiceServer.DeleteThresholdConfigs method
+func (s *waterQualityServer) DeleteThresholdConfigs(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
+	if req == nil || len(req.Ids) == 0 {
+		return nil, status.Errorf(http.StatusBadRequest, "at least one ID is required")
+	}
+
+	// Convert string IDs to UUID
+	uuids := make([]uuid.UUID, 0, len(req.Ids))
+	for _, idStr := range req.Ids {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			return nil, status.Errorf(http.StatusBadRequest, "invalid ID format: %v", err)
+		}
+		uuids = append(uuids, id)
+	}
+
+	// Delete the entities
+	err := s.thresholdConfigUC.DeleteMany(ctx, uuids, req.HardDelete)
+	if err != nil {
+		return nil, coreController.MapErrorToHttpStatus(err)
+	}
+
+	return &pb.DeleteResponse{
+		AffectedCount: int64(len(req.Ids)),
+	}, nil
+}
+
+// ListThresholdConfigs implements the pb.WaterQualityServiceServer.ListThresholdConfigs method
+func (s *waterQualityServer) ListThresholdConfigs(ctx context.Context, req *pb.ListThresholdConfigsRequest) (*pb.ListThresholdConfigsResponse, error) {
+	// Convert the request to filter options
+	opts := s.mapper.ProtoListThresholdConfigsRequestToFilterOptions(req)
+
+	// Get the entities using the use case
+	result, err := s.thresholdConfigUC.List(ctx, opts)
+	if err != nil {
+		return nil, coreController.MapErrorToHttpStatus(err)
+	}
+
+	// Map the pagination result to proto response
+	response, err := s.mapper.ThresholdConfigPaginationResultToProtoList(result)
+	if err != nil {
+		return nil, status.Errorf(http.StatusInternalServerError, "failed to map threshold configs: %v", err)
 	}
 
 	return response, nil

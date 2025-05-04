@@ -444,7 +444,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/UserServiceUpdateBody"
+              "$ref": "#/definitions/userserviceUserServiceUpdateBody"
             }
           }
         ],
@@ -455,72 +455,6 @@
     }
   },
   "definitions": {
-    "UserServiceUpdateBody": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "type": "string",
-          "example": "johndoeupdated",
-          "description": "New username.",
-          "title": "Fields corresponding to schema.UserUpdateDTO (using wrappers for optionality)"
-        },
-        "email": {
-          "type": "string",
-          "example": "john.doe.updated@example.com",
-          "description": "New email address."
-        },
-        "password": {
-          "type": "string",
-          "format": "password",
-          "example": "NewSecureP@ssw0rd!",
-          "description": "New password (min 8 characters). Use a dedicated endpoint for password changes if more security is needed."
-        },
-        "firstName": {
-          "type": "string",
-          "example": "Jonathan",
-          "description": "New first name.",
-          "title": "Password updates might need a separate, dedicated RPC for security"
-        },
-        "lastName": {
-          "type": "string",
-          "example": "Doe",
-          "description": "New last name."
-        },
-        "role": {
-          "type": "string",
-          "example": "manager",
-          "description": "New role."
-        },
-        "isActive": {
-          "type": "boolean",
-          "example": false,
-          "description": "Update active status."
-        },
-        "phone": {
-          "type": "string",
-          "example": "+1122334455",
-          "description": "New phone number."
-        },
-        "address": {
-          "type": "string",
-          "example": "789 Pine Ln, Otherville",
-          "description": "New address."
-        },
-        "age": {
-          "type": "integer",
-          "format": "int32",
-          "example": 31,
-          "description": "New age."
-        },
-        "profilePic": {
-          "type": "string",
-          "example": "https://example.com/profiles/johndoe_v2.jpg",
-          "description": "New profile picture URL."
-        }
-      },
-      "description": "Data for updating an existing user. Include only the fields to be changed.",
-      "title": "Update User Request"
-    },
     "coreFilterOptions": {
       "type": "object",
       "properties": {
@@ -1126,6 +1060,72 @@
         "role",
         "isActive"
       ]
+    },
+    "userserviceUserServiceUpdateBody": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "example": "johndoeupdated",
+          "description": "New username.",
+          "title": "Fields corresponding to schema.UserUpdateDTO (using wrappers for optionality)"
+        },
+        "email": {
+          "type": "string",
+          "example": "john.doe.updated@example.com",
+          "description": "New email address."
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "example": "NewSecureP@ssw0rd!",
+          "description": "New password (min 8 characters). Use a dedicated endpoint for password changes if more security is needed."
+        },
+        "firstName": {
+          "type": "string",
+          "example": "Jonathan",
+          "description": "New first name.",
+          "title": "Password updates might need a separate, dedicated RPC for security"
+        },
+        "lastName": {
+          "type": "string",
+          "example": "Doe",
+          "description": "New last name."
+        },
+        "role": {
+          "type": "string",
+          "example": "manager",
+          "description": "New role."
+        },
+        "isActive": {
+          "type": "boolean",
+          "example": false,
+          "description": "Update active status."
+        },
+        "phone": {
+          "type": "string",
+          "example": "+1122334455",
+          "description": "New phone number."
+        },
+        "address": {
+          "type": "string",
+          "example": "789 Pine Ln, Otherville",
+          "description": "New address."
+        },
+        "age": {
+          "type": "integer",
+          "format": "int32",
+          "example": 31,
+          "description": "New age."
+        },
+        "profilePic": {
+          "type": "string",
+          "example": "https://example.com/profiles/johndoe_v2.jpg",
+          "description": "New profile picture URL."
+        }
+      },
+      "description": "Data for updating an existing user. Include only the fields to be changed.",
+      "title": "Update User Request"
     }
   },
   "securityDefinitions": {

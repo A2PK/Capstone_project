@@ -528,30 +528,21 @@ message ListAllDataPointsResponse {
 
 // --- File Upload ---
 
-// New UploadRequest message for streaming, with flat fields inside a oneof
+// Changed from streaming to unary: Receives a URL to the data file.
 message UploadRequest {
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema: {
-      title: "Upload Request (Streaming, Flat Oneof)";
-      description: "A single message in the upload stream, containing either a metadata field or a data chunk.";
+      title: "Upload Request (URL Based)";
+      description: "Request containing the URL of a data file to be processed.";
+      required: ["file_url"];
     }
   };
-  oneof payload { 
-    string filename = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
-      description: "Name of the file being uploaded (sent usually as the first message)." ;
-      example: "\"water_quality_jan2023.csv\"";
-    }];
-    string file_type = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
-      description: "Type of the file (sent usually after filename)." ;
-      example: "\"csv\"";
-    }];
-    bytes data_chunk = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
-      description: "Chunk of binary file data (sent in subsequent messages).";
-      format: "byte";
-    }];
-    // Optional: Consider adding data_source_schema_id here if needed
-    // string data_source_schema_id = 4 [(...)] 
-  }
+  string file_url = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "URL pointing to the data file to be processed (e.g., a publicly accessible GGDrive or S3 URL).";
+    example: "\"https://storage.googleapis.com/bucket-name/water_quality_jan2023.csv\"";
+  }];
+  // Optional: Consider adding data_source_schema_id here if needed for processing
+  // string data_source_schema_id = 2 [(...)] 
 }
 
 message UploadDataResponse {
@@ -769,6 +760,148 @@ message ListDataSourceSchemasResponse {
   }];
 }
 
+// --- ThresholdConfig ---
+
+message ThresholdConfig {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Threshold Configuration";
+      description: "Represents water quality parameter threshold configuration.";
+      required: ["id", "created_at", "updated_at", "element_name", "min_value", "max_value"];
+    }
+  };
+  // Base fields inline
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Unique identifier for the threshold config (UUID format).";
+    example: "\"a1b2c3d4-e5f6-7890-1234-567890abcdef\"";
+  }];
+  google.protobuf.Timestamp created_at = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the threshold config was created.";
+    example: "\"2023-01-15T10:30:00Z\"";
+  }];
+  google.protobuf.Timestamp updated_at = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the threshold config was last updated.";
+    example: "\"2023-01-16T11:00:00Z\"";
+  }];
+  optional google.protobuf.Timestamp deleted_at = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Timestamp when the threshold config was soft-deleted. Null if not deleted.";
+    example: "\"2023-01-17T12:00:00Z\"";
+  }];
+  // ThresholdConfig specific fields
+  string element_name = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Name of the water quality element/parameter.";
+    example: "\"pH\"";
+  }];
+  double min_value = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Minimum acceptable value for the element.";
+    example: "6.5";
+  }];
+  double max_value = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Maximum acceptable value for the element.";
+    example: "8.5";
+  }];
+}
+
+message ThresholdConfigInput {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Threshold Configuration Input";
+      description: "Data required to create a new threshold configuration.";
+      required: ["element_name", "min_value", "max_value"];
+    }
+  };
+  string element_name = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Name of the water quality element/parameter.";
+    example: "\"pH\"";
+  }];
+  double min_value = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Minimum acceptable value for the element.";
+    example: "6.5";
+  }];
+  double max_value = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Maximum acceptable value for the element.";
+    example: "8.5";
+  }];
+}
+
+message CreateThresholdConfigsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Create Threshold Configs Request";
+      description: "Request to create one or more new threshold configurations.";
+      required: ["configs"];
+    }
+  };
+  repeated ThresholdConfigInput configs = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of threshold configurations to create.";
+  }];
+}
+
+message CreateThresholdConfigsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Create Threshold Configs Response";
+      description: "Contains details of the newly created threshold configurations.";
+    }
+  };
+  repeated ThresholdConfig configs = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of created threshold configurations with system-generated fields populated.";
+  }];
+}
+
+message UpdateThresholdConfigsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Update Threshold Configs Request";
+      description: "Request to update one or more existing threshold configurations.";
+      required: ["configs"];
+    }
+  };
+  repeated ThresholdConfig configs = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of threshold configurations with updated fields. Each must include ID.";
+  }];
+}
+
+message UpdateThresholdConfigsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Update Threshold Configs Response";
+      description: "Contains details of the updated threshold configurations.";
+    }
+  };
+  repeated ThresholdConfig configs = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of updated threshold configurations.";
+  }];
+}
+
+message ListThresholdConfigsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List Threshold Configs Request";
+      description: "Request to list threshold configurations with filtering and pagination options.";
+    }
+  };
+  core.FilterOptions options = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Filtering, pagination, and sorting options.";
+  }];
+}
+
+message ListThresholdConfigsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "List Threshold Configs Response";
+      description: "Contains a paginated list of threshold configurations.";
+      required: ["configs", "pagination"];
+    }
+  };
+  repeated ThresholdConfig configs = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "List of threshold configurations matching the filter criteria.";
+  }];
+  core.PaginationInfo pagination = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    description: "Pagination information including total count and current page.";
+  }];
+}
+
 // --- Service Definition ---
 
 service WaterQualityService {
@@ -898,15 +1031,15 @@ service WaterQualityService {
     };
   }
 
-  // File Upload RPC
-  rpc UploadData(stream UploadRequest) returns (UploadDataResponse) {
+  // File Upload RPC - Changed to Unary
+  rpc UploadData(UploadRequest) returns (UploadDataResponse) { // Removed 'stream' keyword
     option (google.api.http) = {
       post: "/api/v1/water-quality/upload";
       body: "*";
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      summary: "Upload Data";
-      description: "Streams a data file for processing and importing water quality data.";
+      summary: "Upload Data via URL";
+      description: "Initiates processing of a water quality data file specified by a URL.";
       tags: ["Data Import"];
     };
   }
@@ -955,6 +1088,54 @@ service WaterQualityService {
       summary: "List Data Source Schemas";
       description: "Retrieves a paginated list of data source schemas with filtering options.";
       tags: ["Data Source Schemas"];
+    };
+  }
+
+  // ThresholdConfig RPCs
+  rpc CreateThresholdConfigs(CreateThresholdConfigsRequest) returns (CreateThresholdConfigsResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/water-quality/threshold-configs";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Create Threshold Configurations";
+      description: "Creates one or more new threshold configurations.";
+      tags: ["Threshold Configurations"];
+    };
+  }
+  
+  rpc UpdateThresholdConfigs(UpdateThresholdConfigsRequest) returns (UpdateThresholdConfigsResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/water-quality/threshold-configs";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Update Threshold Configurations";
+      description: "Updates one or more existing threshold configurations.";
+      tags: ["Threshold Configurations"];
+    };
+  }
+  
+  rpc DeleteThresholdConfigs(DeleteRequest) returns (DeleteResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/water-quality/threshold-configs/delete";
+      body: "*";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Delete Threshold Configurations";
+      description: "Deletes one or more threshold configurations. Can be soft or hard delete.";
+      tags: ["Threshold Configurations"];
+    };
+  }
+  
+  rpc ListThresholdConfigs(ListThresholdConfigsRequest) returns (ListThresholdConfigsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/water-quality/threshold-configs";
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "List Threshold Configurations";
+      description: "Retrieves a paginated list of threshold configurations with filtering options.";
+      tags: ["Threshold Configurations"];
     };
   }
 } 

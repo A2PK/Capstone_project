@@ -1,0 +1,734 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Notification Service API",
+    "description": "API for managing user notifications.",
+    "version": "1.0"
+  },
+  "tags": [
+    {
+      "name": "NotificationService",
+      "description": "Operations related to user notifications"
+    }
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/notifications": {
+      "get": {
+        "summary": "List Notifications",
+        "operationId": "NotificationService_List",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceListNotificationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "options.limit",
+            "description": "Maximum number of items to return per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "50"
+          },
+          {
+            "name": "options.offset",
+            "description": "Number of items to skip before starting to collect the result set (for pagination).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          {
+            "name": "options.sortBy",
+            "description": "Field name to sort the results by (e.g., 'created_at', 'name').",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "default": "\"created_at\""
+          },
+          {
+            "name": "options.sortDesc",
+            "description": "Set to true to sort in descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "options.filters",
+            "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"}).",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "options.includeDeleted",
+            "description": "Set to true to include soft-deleted records in the results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "post": {
+        "summary": "Create Notification",
+        "operationId": "NotificationService_Create",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceCreateNotificationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userserviceCreateNotificationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/bulk": {
+      "post": {
+        "summary": "Create Multiple Notifications",
+        "operationId": "NotificationService_CreateMany",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceCreateNotificationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userserviceCreateNotificationsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/mark-read": {
+      "post": {
+        "summary": "Mark Notifications As Read",
+        "operationId": "NotificationService_MarkAsRead",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userserviceMarkNotificationsAsReadRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}": {
+      "get": {
+        "summary": "Get Notification By ID",
+        "operationId": "NotificationService_GetByID",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceGetNotificationByIDResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "UUID of the notification to retrieve.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Notification",
+        "operationId": "NotificationService_Delete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "UUID of the notification to delete.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "hardDelete",
+            "description": "Corrected boolean example\n\nPerform hard delete if true.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "patch": {
+        "summary": "Update Notification",
+        "operationId": "NotificationService_Update",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceUpdateNotificationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "UUID of the notification to update.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userserviceNotificationServiceUpdateBody"
+            }
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/users/{userId}/notifications": {
+      "get": {
+        "summary": "Find Notifications By User",
+        "operationId": "NotificationService_FindByUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceFindByUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "Target user ID (UUID).",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "read",
+            "description": "Optional filter for read status (maps to query parameter ?read=true or ?read=false)\n\nFilter by read status (optional).",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "options.limit",
+            "description": "Maximum number of items to return per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "50"
+          },
+          {
+            "name": "options.offset",
+            "description": "Number of items to skip before starting to collect the result set (for pagination).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          {
+            "name": "options.sortBy",
+            "description": "Field name to sort the results by (e.g., 'created_at', 'name').",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "default": "\"created_at\""
+          },
+          {
+            "name": "options.sortDesc",
+            "description": "Set to true to sort in descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "options.filters",
+            "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"}).",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "options.includeDeleted",
+            "description": "Set to true to include soft-deleted records in the results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "coreFilterOptions": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "example": 50,
+          "default": "50",
+          "description": "Maximum number of items to return per page."
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "example": 0,
+          "default": "0",
+          "description": "Number of items to skip before starting to collect the result set (for pagination)."
+        },
+        "sortBy": {
+          "type": "string",
+          "example": "created_at",
+          "default": "\"created_at\"",
+          "description": "Field name to sort the results by (e.g., 'created_at', 'name')."
+        },
+        "sortDesc": {
+          "type": "boolean",
+          "example": true,
+          "default": "true",
+          "description": "Set to true to sort in descending order."
+        },
+        "filters": {
+          "type": "object",
+          "example": {
+            "email": "user@gmail.com"
+          },
+          "additionalProperties": {},
+          "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"})."
+        },
+        "includeDeleted": {
+          "type": "boolean",
+          "example": false,
+          "default": "false",
+          "description": "Set to true to include soft-deleted records in the results."
+        }
+      },
+      "description": "Represents common filtering, pagination, and sorting options.\nBased on pkg/core/types/common.go FilterOptions struct."
+    },
+    "corePaginationInfo": {
+      "type": "object",
+      "properties": {
+        "totalItems": {
+          "type": "string",
+          "format": "int64",
+          "example": 1234,
+          "description": "Total number of items matching the query criteria across all pages."
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "example": 50,
+          "description": "The limit (page size) used for the current response."
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "example": 0,
+          "description": "The offset (number of items skipped) used for the current response."
+        }
+      },
+      "description": "Represents common pagination metadata included in list responses.\nBased on pkg/core/types/common.go PaginationResult struct (metadata fields only).\nSpecific list responses should include this alongside their repeated items field."
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "userserviceCreateNotificationRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "Task Reminder",
+          "description": "Notification title."
+        },
+        "description": {
+          "type": "string",
+          "example": "Remember to submit your report.",
+          "description": "Notification details."
+        },
+        "userId": {
+          "type": "string",
+          "example": "user-uuid-string",
+          "description": "Target user ID (UUID).",
+          "title": "'read' defaults to false server-side"
+        }
+      },
+      "title": "Create Notification Request",
+      "required": [
+        "title",
+        "description",
+        "userId"
+      ]
+    },
+    "userserviceCreateNotificationResponse": {
+      "type": "object",
+      "properties": {
+        "notification": {
+          "$ref": "#/definitions/userserviceNotification"
+        }
+      },
+      "title": "Create Notification Response"
+    },
+    "userserviceCreateNotificationsRequest": {
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userserviceCreateNotificationRequest"
+          },
+          "description": "A list of notifications to create."
+        }
+      },
+      "title": "Create Multiple Notifications Request",
+      "required": [
+        "notifications"
+      ]
+    },
+    "userserviceCreateNotificationsResponse": {
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userserviceNotification"
+          },
+          "description": "The list of newly created notifications."
+        }
+      },
+      "title": "Create Multiple Notifications Response"
+    },
+    "userserviceFindByUserResponse": {
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userserviceNotification"
+          }
+        },
+        "paginationInfo": {
+          "$ref": "#/definitions/corePaginationInfo"
+        }
+      },
+      "title": "Find By User Response"
+    },
+    "userserviceGetNotificationByIDResponse": {
+      "type": "object",
+      "properties": {
+        "notification": {
+          "$ref": "#/definitions/userserviceNotification"
+        }
+      },
+      "title": "Get Notification By ID Response"
+    },
+    "userserviceListNotificationsResponse": {
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userserviceNotification"
+          }
+        },
+        "paginationInfo": {
+          "$ref": "#/definitions/corePaginationInfo"
+        }
+      },
+      "title": "List Notifications Response"
+    },
+    "userserviceMarkNotificationsAsReadRequest": {
+      "type": "object",
+      "properties": {
+        "notificationIds": {
+          "type": "array",
+          "example": [
+            "noti-uuid-1",
+            "noti-uuid-2"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "List of notification UUIDs to mark as read.",
+          "title": "Corrected repeated string example"
+        }
+      },
+      "title": "Mark Notifications As Read Request",
+      "required": [
+        "notificationIds"
+      ]
+    },
+    "userserviceNotification": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "notification-uuid-string",
+          "description": "Unique identifier (UUID)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-10-27T10:00:00Z",
+          "description": "Creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-10-27T11:30:00Z",
+          "description": "Last update timestamp."
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-10-28T09:15:00Z",
+          "description": "Deletion timestamp (if soft-deleted)."
+        },
+        "title": {
+          "type": "string",
+          "example": "New Message Received",
+          "description": "Notification title."
+        },
+        "description": {
+          "type": "string",
+          "example": "You have a new message from John Doe.",
+          "description": "Notification details."
+        },
+        "read": {
+          "type": "boolean",
+          "example": false,
+          "description": "Whether the notification has been read.",
+          "title": "Corrected boolean example"
+        },
+        "userId": {
+          "type": "string",
+          "example": "user-uuid-string",
+          "description": "ID (UUID) of the user this notification is for."
+        }
+      },
+      "description": "Represents a user notification entity.",
+      "title": "Notification",
+      "required": [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "title",
+        "description",
+        "read",
+        "userId"
+      ]
+    },
+    "userserviceNotificationServiceUpdateBody": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "Updated Title",
+          "description": "New title."
+        },
+        "description": {
+          "type": "string",
+          "example": "Updated description...",
+          "description": "New description."
+        },
+        "read": {
+          "type": "boolean",
+          "example": true,
+          "description": "New read status.",
+          "title": "Corrected boolean example"
+        }
+      },
+      "title": "Update Notification Request"
+    },
+    "userserviceUpdateNotificationResponse": {
+      "type": "object",
+      "properties": {
+        "notification": {
+          "$ref": "#/definitions/userserviceNotification"
+        }
+      },
+      "title": "Update Notification Response"
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "description": "JWT Bearer token (e.g., 'Bearer ey...')",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}

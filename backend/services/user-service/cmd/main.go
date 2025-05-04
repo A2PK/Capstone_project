@@ -16,7 +16,12 @@ func main() {
 	}
 
 	// Setup all services
-	grpcServer, err := SetupServices()
+	// grpcServer, err := SetupServices()
+	deps, err := SetupDependencies()
+	if err != nil {
+		log.Fatalf("Failed to setup services: %v", err)
+	}
+	grpcServer, err := SetupGrpcServer(deps)
 	if err != nil {
 		log.Fatalf("Failed to setup services: %v", err)
 	}

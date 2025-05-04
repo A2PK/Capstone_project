@@ -69,6 +69,8 @@ func NewBaseGrpcServerWithConfig(logger logger.Logger, config *GrpcServerConfig)
 
 	// Create gRPC server with middleware
 	server := grpc.NewServer(
+		grpc.MaxRecvMsgSize(2<<30),
+		grpc.MaxSendMsgSize(2<<30),
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionIdle:     config.MaxConnectionIdle,
 			MaxConnectionAge:      config.MaxConnectionAge,

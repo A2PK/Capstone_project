@@ -16,6 +16,7 @@ WORKDIR /root/
 
 COPY --from=builder /app/user-service .
 COPY --from=builder /app/services/user-service/.env .
+COPY --from=builder /app/services/user-service/credentials.json .
 
 ENV $(cat .env | xargs)
 

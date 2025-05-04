@@ -251,14 +251,10 @@ class ListAllDataPointsResponse(_message.Message):
     def __init__(self, data_points: _Optional[_Iterable[_Union[DataPoint, _Mapping]]] = ..., pagination: _Optional[_Union[_common_pb2.PaginationInfo, _Mapping]] = ...) -> None: ...
 
 class UploadRequest(_message.Message):
-    __slots__ = ("filename", "file_type", "data_chunk")
-    FILENAME_FIELD_NUMBER: _ClassVar[int]
-    FILE_TYPE_FIELD_NUMBER: _ClassVar[int]
-    DATA_CHUNK_FIELD_NUMBER: _ClassVar[int]
-    filename: str
-    file_type: str
-    data_chunk: bytes
-    def __init__(self, filename: _Optional[str] = ..., file_type: _Optional[str] = ..., data_chunk: _Optional[bytes] = ...) -> None: ...
+    __slots__ = ("file_url",)
+    FILE_URL_FIELD_NUMBER: _ClassVar[int]
+    file_url: str
+    def __init__(self, file_url: _Optional[str] = ...) -> None: ...
 
 class UploadDataResponse(_message.Message):
     __slots__ = ("message", "records_processed", "records_failed", "data_source_schema_id", "errors")
@@ -359,3 +355,69 @@ class ListDataSourceSchemasResponse(_message.Message):
     schemas: _containers.RepeatedCompositeFieldContainer[DataSourceSchema]
     pagination: _common_pb2.PaginationInfo
     def __init__(self, schemas: _Optional[_Iterable[_Union[DataSourceSchema, _Mapping]]] = ..., pagination: _Optional[_Union[_common_pb2.PaginationInfo, _Mapping]] = ...) -> None: ...
+
+class ThresholdConfig(_message.Message):
+    __slots__ = ("id", "created_at", "updated_at", "deleted_at", "element_name", "min_value", "max_value")
+    ID_FIELD_NUMBER: _ClassVar[int]
+    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
+    UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
+    DELETED_AT_FIELD_NUMBER: _ClassVar[int]
+    ELEMENT_NAME_FIELD_NUMBER: _ClassVar[int]
+    MIN_VALUE_FIELD_NUMBER: _ClassVar[int]
+    MAX_VALUE_FIELD_NUMBER: _ClassVar[int]
+    id: str
+    created_at: _timestamp_pb2.Timestamp
+    updated_at: _timestamp_pb2.Timestamp
+    deleted_at: _timestamp_pb2.Timestamp
+    element_name: str
+    min_value: float
+    max_value: float
+    def __init__(self, id: _Optional[str] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., deleted_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., element_name: _Optional[str] = ..., min_value: _Optional[float] = ..., max_value: _Optional[float] = ...) -> None: ...
+
+class ThresholdConfigInput(_message.Message):
+    __slots__ = ("element_name", "min_value", "max_value")
+    ELEMENT_NAME_FIELD_NUMBER: _ClassVar[int]
+    MIN_VALUE_FIELD_NUMBER: _ClassVar[int]
+    MAX_VALUE_FIELD_NUMBER: _ClassVar[int]
+    element_name: str
+    min_value: float
+    max_value: float
+    def __init__(self, element_name: _Optional[str] = ..., min_value: _Optional[float] = ..., max_value: _Optional[float] = ...) -> None: ...
+
+class CreateThresholdConfigsRequest(_message.Message):
+    __slots__ = ("configs",)
+    CONFIGS_FIELD_NUMBER: _ClassVar[int]
+    configs: _containers.RepeatedCompositeFieldContainer[ThresholdConfigInput]
+    def __init__(self, configs: _Optional[_Iterable[_Union[ThresholdConfigInput, _Mapping]]] = ...) -> None: ...
+
+class CreateThresholdConfigsResponse(_message.Message):
+    __slots__ = ("configs",)
+    CONFIGS_FIELD_NUMBER: _ClassVar[int]
+    configs: _containers.RepeatedCompositeFieldContainer[ThresholdConfig]
+    def __init__(self, configs: _Optional[_Iterable[_Union[ThresholdConfig, _Mapping]]] = ...) -> None: ...
+
+class UpdateThresholdConfigsRequest(_message.Message):
+    __slots__ = ("configs",)
+    CONFIGS_FIELD_NUMBER: _ClassVar[int]
+    configs: _containers.RepeatedCompositeFieldContainer[ThresholdConfig]
+    def __init__(self, configs: _Optional[_Iterable[_Union[ThresholdConfig, _Mapping]]] = ...) -> None: ...
+
+class UpdateThresholdConfigsResponse(_message.Message):
+    __slots__ = ("configs",)
+    CONFIGS_FIELD_NUMBER: _ClassVar[int]
+    configs: _containers.RepeatedCompositeFieldContainer[ThresholdConfig]
+    def __init__(self, configs: _Optional[_Iterable[_Union[ThresholdConfig, _Mapping]]] = ...) -> None: ...
+
+class ListThresholdConfigsRequest(_message.Message):
+    __slots__ = ("options",)
+    OPTIONS_FIELD_NUMBER: _ClassVar[int]
+    options: _common_pb2.FilterOptions
+    def __init__(self, options: _Optional[_Union[_common_pb2.FilterOptions, _Mapping]] = ...) -> None: ...
+
+class ListThresholdConfigsResponse(_message.Message):
+    __slots__ = ("configs", "pagination")
+    CONFIGS_FIELD_NUMBER: _ClassVar[int]
+    PAGINATION_FIELD_NUMBER: _ClassVar[int]
+    configs: _containers.RepeatedCompositeFieldContainer[ThresholdConfig]
+    pagination: _common_pb2.PaginationInfo
+    def __init__(self, configs: _Optional[_Iterable[_Union[ThresholdConfig, _Mapping]]] = ..., pagination: _Optional[_Union[_common_pb2.PaginationInfo, _Mapping]] = ...) -> None: ...

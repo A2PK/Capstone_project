@@ -69,8 +69,8 @@ func (r *GormBaseRepository[T]) FindByID(ctx context.Context, id uuid.UUID) (*T,
 	return entityPtr, nil
 }
 
-// applyFilterOptions applies the provided filter options to a GORM query
-func (r *GormBaseRepository[T]) applyFilterOptions(db *gorm.DB, opts types.FilterOptions) *gorm.DB {
+// ApplyFiltersOptions applies the provided filter options to a GORM query
+func (r *GormBaseRepository[T]) ApplyFiltersOptions(db *gorm.DB, opts types.FilterOptions) *gorm.DB {
 	if len(opts.Filters) > 0 {
 		db = db.Where(opts.Filters)
 	}
@@ -116,13 +116,13 @@ func (r *GormBaseRepository[T]) FindAll(ctx context.Context, opts types.FilterOp
 		Filters:        opts.Filters,
 		IncludeDeleted: opts.IncludeDeleted,
 	}
-	countDB = r.applyFilterOptions(countDB, countOpts)
+	countDB = r.ApplyFiltersOptions(countDB, countOpts)
 	if err := countDB.Count(&totalCount).Error; err != nil {
 		return nil, fmt.Errorf("failed to count items: %w", err)
 	}
 
 	// Apply all options for fetching items
-	queryDB := r.applyFilterOptions(db, opts)
+	queryDB := r.ApplyFiltersOptions(db, opts)
 	if err := queryDB.Find(&entities).Error; err != nil {
 		return nil, fmt.Errorf("failed to find items: %w", err)
 	}

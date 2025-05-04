@@ -32,7 +32,7 @@ func SetupServices() (*grpc.BaseGrpcServer, error) {
 	appLogger.Info("Connected to database")
 
 	// Auto migrate models (Remove Indicator)
-	if err := db.MigrateModels(&entity.Station{}, &entity.DataPoint{} /*&entity.Indicator{},*/, &entity.DataSourceSchema{}); err != nil {
+	if err := db.MigrateModels(&entity.Station{}, &entity.DataPoint{}, &entity.DataSourceSchema{}, &entity.ThresholdConfig{}); err != nil {
 		appLogger.Error("Failed to auto-migrate models", "error", err)
 		return nil, err
 	}
@@ -40,8 +40,8 @@ func SetupServices() (*grpc.BaseGrpcServer, error) {
 	// Initialize repositories (Remove IndicatorRepo)
 	stationRepo := repository.NewGormStationRepository(db.DB)
 	dataPointRepo := repository.NewGormDataPointRepository(db.DB)
-	// indicatorRepo := repository.NewGormIndicatorRepository(db.DB) // Removed
 	schemaRepo := repository.NewGormDataSourceSchemaRepository(db.DB)
+	thresholdConfigRepo := repository.NewThresholdConfigRepository(db.DB)
 
 	// Initialize use cases
 	stationUseCase := usecase.NewStationUsecase(
@@ -51,19 +51,12 @@ func SetupServices() (*grpc.BaseGrpcServer, error) {
 
 	dataPointUseCase := usecase.NewDataPointUsecase(
 		dataPointRepo,
-		// indicatorRepo, // Removed
 		appLogger,
 	)
-
-	// indicatorUseCase := usecase.NewIndicatorUsecase( // Removed
-	// 	indicatorRepo,
-	// 	appLogger,
-	// )
 
 	importUseCase := usecase.NewImportService(
 		stationRepo,
 		dataPointRepo,
-		// indicatorRepo, // Removed
 		schemaRepo,
 		appLogger,
 	)
@@ -71,6 +64,11 @@ func SetupServices() (*grpc.BaseGrpcServer, error) {
 	// Initialize DataSourceSchema usecase
 	schemaUseCase := usecase.NewDataSourceSchemaUsecase(
 		schemaRepo,
+		appLogger,
+	)
+
+	thresholdConfigUseCase := usecase.NewThresholdConfigUsecase(
+		thresholdConfigRepo,
 		appLogger,
 	)
 
@@ -85,9 +83,9 @@ func SetupServices() (*grpc.BaseGrpcServer, error) {
 		grpcServer.Server(),
 		stationUseCase,
 		dataPointUseCase,
-		// indicatorUseCase, // Removed
 		importUseCase,
 		schemaUseCase,
+		thresholdConfigUseCase,
 		mapper,
 	)
 
