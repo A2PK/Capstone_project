@@ -233,7 +233,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ token, existingArticle, onSuc
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="common">Thông thường</SelectItem>
-            <SelectItem value="good">Tốt</SelectItem>
+            <SelectItem value="good">Quan trọng</SelectItem>
             <SelectItem value="danger">Khẩn cấp</SelectItem>
           </SelectContent>
         </Select>

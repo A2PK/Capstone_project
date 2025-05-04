@@ -20,7 +20,7 @@ export async function getUserById(id: string): Promise<User> {
     const res = await axios.get(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${id}`
     );
-    return res.data;
+    return res.data.user;
   } catch (error) {
     console.log(error);
     throw new Error("Failed to get user by id");

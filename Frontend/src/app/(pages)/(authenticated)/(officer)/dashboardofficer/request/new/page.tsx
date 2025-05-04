@@ -21,19 +21,15 @@ import { uploadFile } from "@/lib/file"; // Import the UPDATED uploadFile functi
 
 // --- Constants ---
 const ALLOWED_EXTENSIONS = ["csv", "xlsx"];
-const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_MB = 500;
 const MAX_FILES = 5; // Limit number of files
-// Define the exact expected header row for validation
-const EXPECTED_HEADER: string[] = ["Điểm Quan Trắc", "Tỉnh", "Huyện", "Tọa độ", "Ngày quan trắc", "Nhiệt độ", "pH", "DO", "Độ dẫn", "Độ kiềm", "N-NO2", "N-NH4", "P-PO4", "H2S", "TSS", "COD", "Aeromonas tổng số", "Edwardsiella ictaluri", "Aeromonas hydrophila", "Coliform", "WQI (tính theo Aeromonas)", "Chất lượng nước", "Chỉ tiêu vượt ngưỡng", "Khuyến cáo"];
+const EXPECTED_HEADER: string[] = ["Điểm Quan Trắc", "Tỉnh", "Huyện", "Tọa độ", "Ngày quan trắc", "pH", "DO", "EC", "N-NO2", "N-NH4", "P-PO4", "TSS", "COD", "AH", "WQI", "Chất lượng nước", "Khuyến cáo"];
 
-
-// --- Interface for storing file state ---
-// Removed base64Data property
 interface FileToUpload {
-    file: File; // The actual File object
+    file: File; 
     isUploading: boolean;
     uploadError: string | null;
-    uploadedId: string | null; // Store ID after successful upload
+    uploadedId: string | null; 
 }
 
 export default function NewRequestPage() {
@@ -88,7 +84,7 @@ export default function NewRequestPage() {
                 try {
                     // Assume getAllUsers now requires token
                     const userData = await getAllUsers(token, { limit: 500 }); // Fetch a reasonable limit
-                    const admins = userData.users.filter(user => user.role === 'admin');
+                    const admins = userData.users.filter(user => ((user.role === 'admin')||(user.role === 'manager')));
                     setAdminUsers(admins);
                 } catch (err) {
                     console.error("Failed to fetch admin users:", err);
@@ -197,13 +193,13 @@ export default function NewRequestPage() {
 
             // 2. Header Validation (Asynchronous)
             try {
-                // const headerIsValid = await validateFileHeader(file);
-                // if (!headerIsValid) {
-                //     setError(`Tệp "${file.name}" có cấu trúc cột không đúng theo file mẫu. Vui lòng kiểm tra lại.`);
-                //     setShowErrorDialog(true);
-                //     validationErrorOccurred = true;
-                //     break; // Stop processing further files
-                // }
+                const headerIsValid = await validateFileHeader(file);
+                if (!headerIsValid) {
+                    setError(`Tệp "${file.name}" có cấu trúc cột không đúng theo file mẫu. Vui lòng kiểm tra lại.`);
+                    setShowErrorDialog(true);
+                    validationErrorOccurred = true;
+                    break; // Stop processing further files
+                }
                 // If validation passes, prepare the file object for the state
                  filesToAdd.push({
                     file, // Store the actual File object
@@ -220,14 +216,9 @@ export default function NewRequestPage() {
                  break; // Stop processing further files
             }
         } // End of loop through files
-
-        // Only add files to state if no validation errors occurred during the loop
         if (!validationErrorOccurred) {
             setFilesToUpload(prev => [...prev, ...filesToAdd]);
         }
-
-        // Clear the input value regardless of validation outcome
-        // so the same file can be selected again if needed after fixing errors.
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -265,23 +256,13 @@ export default function NewRequestPage() {
 
             // Use a loop that respects the current state
             for (let i = 0; i < filesToUpload.length; i++) {
-                 // Get the potentially updated file item from state inside the loop
-                 // NOTE: It's generally safer to read from the *state* inside the loop if state updates can happen
-                 // For this sequential upload, reading the initial array `filesToUpload[i]` might be okay,
-                 // but using state ensures consistency if the logic becomes more complex.
-                 // Let's get the item from the current state for robustness:
                  const currentFileItem = (filesToUploadState => filesToUploadState[i])(filesToUpload);
-
-
-                 // Skip if already uploaded or already failed (based on potentially updated state)
                  if (currentFileItem.uploadedId || currentFileItem.uploadError) {
                      continue;
                  }
 
                 try {
                     console.log(`Uploading file: ${currentFileItem.file.name}`);
-
-                    // Pass the File object directly
                     const fileParam: postFileParam = {
                         file: currentFileItem.file, // Pass the actual File object
                         name: currentFileItem.file.name, // Use original filename or a custom one if needed
@@ -302,12 +283,9 @@ export default function NewRequestPage() {
                 } catch (uploadError: any) {
                     console.error(`Failed to upload ${currentFileItem.file.name}:`, uploadError);
                     uploadFailed = true;
-                    // Update state for this specific file upon failure
-                    // Use functional update
                      setFilesToUpload(prev => prev.map((f, idx) =>
                         idx === i ? { ...f, isUploading: false, uploadError: uploadError.message || "Lỗi không xác định" } : f
                     ));
-                    // Stop the whole submission process if one file fails
                     break;
                 }
             }
@@ -427,7 +405,7 @@ export default function NewRequestPage() {
                                 </Button>
                                 {/* Link to download template file */}
                                 <Button variant="link" asChild className="text-blue-600 underline p-0 h-auto">
-                                     <a href="/file_test.xlsx" download="file_mau_quan_trac.xlsx"> Tải file mẫu (.xlsx) </a>
+                                     <a href="/file_mau.xlsx" download="file_mau_quan_trac.xlsx"> Tải file mẫu (.xlsx) </a>
                                 </Button>
                             </div>
                              <p className="text-xs text-muted-foreground mt-1">Đã chọn: {filesToUpload.length}/{MAX_FILES} tệp. Yêu cầu tệp phải đúng cấu trúc cột theo file mẫu.</p>

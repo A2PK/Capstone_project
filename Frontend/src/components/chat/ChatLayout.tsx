@@ -21,7 +21,7 @@ import axios from 'axios'; // Import axios để kiểm tra lỗi
 // Interface này phải khớp với định nghĩa trong file user.ts
 
 
-const UNSEEN_POLLING_INTERVAL = 5000; // Thời gian poll tin nhắn chưa đọc (ms)
+const UNSEEN_POLLING_INTERVAL = 2000; // Thời gian poll tin nhắn chưa đọc (ms)
 
 const ChatLayout = () => {
     // State từ hook xác thực
@@ -178,7 +178,7 @@ const ChatLayout = () => {
             const lowerCaseQuery = query.toLowerCase();
             if (!currentUser) { setIsSearching(false); return; }
 
-            if (currentUser.role === 'admin') {
+            if ((currentUser.role === 'admin')||(currentUser.role === 'manager')) {
                 // Admin: Lọc client-side
                 foundUsers = allUsers.filter(u =>
                     u.id !== currentUser.id &&
@@ -191,7 +191,7 @@ const ChatLayout = () => {
                 // Officer:
                 // 1. Tìm Admin (client-side)
                 const foundAdmins = allUsers.filter(u =>
-                    u.role === 'admin' &&
+                    ((u.role === 'admin')||(u.role === 'manager')) &&
                     u.id !== currentUser!.id &&
                     (`${u.firstName ?? ''} ${u.lastName ?? ''}`.toLowerCase().includes(lowerCaseQuery) ||
                      u.email.toLowerCase().includes(lowerCaseQuery))
@@ -277,7 +277,7 @@ const ChatLayout = () => {
     const handleSelectUser = useCallback((user: User) => {
         setSelectedChatPartner(user);
         // Logic "ghim" user
-        if (currentUser && currentUser.role === 'officer' && user.role !== 'admin') {
+        if (currentUser && currentUser.role === 'officer' && ((user.role !== 'admin')&&(user.role !== 'manager'))) {
             setPersistedPartnerIds(prev => {
                 if (prev.has(user.id)) return prev;
                 const newSet = new Set(prev);
@@ -306,15 +306,15 @@ const ChatLayout = () => {
 
         // Logic hiển thị mặc định (Admin + Officer đã ghim / Tất cả user khác)
         let baseContacts: User[] = [];
-        if (currentUser.role === 'admin') {
+        if ((currentUser.role === 'admin')||(currentUser.role === 'manager')) {
             baseContacts = allUsers.filter(u => u.id !== currentUser.id);
         } else {
-            baseContacts = allUsers.filter(u => u.role === 'admin' && u.id !== currentUser.id);
+            baseContacts = allUsers.filter(u => ((u.role === 'admin')||(u.role === 'manager')) && u.id !== currentUser.id);
         }
 
         const persistedPartners: User[] = Array.from(persistedPartnerIds)
             .map(id => persistedPartnerDetails.get(id) || allUsers.find(u => u.id === id))
-            .filter((user): user is User => !!user && user.id !== currentUser.id && user.role !== 'admin');
+            .filter((user): user is User => !!user && user.id !== currentUser.id && user.role !== 'admin' && user.role !== 'manager');
 
         const combined = [...baseContacts, ...persistedPartners];
         const uniqueMap = new Map<string, User>();

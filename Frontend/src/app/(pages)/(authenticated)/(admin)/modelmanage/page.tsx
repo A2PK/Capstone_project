@@ -1,4 +1,3 @@
-// src/app/dashboard/modelManagement/page.tsx
 "use client";
 
 import { ModelAI } from "@/types/models";
@@ -6,8 +5,6 @@ import { Station, QueryOptions } from "@/types/station2";
 import React, { useEffect, useState, useCallback, useMemo } from "react"; // Import useMemo
 import dynamic from "next/dynamic";
 
-// --- Các import khác giữ nguyên ---
-// ... (imports for Shadcn/UI, Custom Components, Icons, API Functions) ...
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,9 +34,6 @@ import {
 import { getStations } from "@/lib/station";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-
-// --- Định nghĩa kiểu cho form (giữ nguyên) ---
-// ... (Interfaces: UpdateFormData, TrainFormData, PredictFormData) ...
 interface UpdateFormData {
     name: string;
     description: string;
@@ -64,11 +58,10 @@ export default function ModelManagement() {
     const MODEL_DISPLAY_NAMES: { [key: string]: string } = {
         'rf': 'Random Forest',
         'xgb': 'XGBoost',
-        'ETSformer':'ETSformer',
-        'ETSformerPar':'ETSformer Parallel',
-      };
-    // --- States (giữ nguyên) ---
-    // ... (all states: allFetchedModels, displayedModels, stations, etc.) ...
+        'ETSformer': 'ETSformer',
+        'ETSformerPar': 'ETSformer Parallel',
+    };
+
     const [allFetchedModels, setAllFetchedModels] = useState<ModelAI[]>([]);
     const [displayedModels, setDisplayedModels] = useState<ModelAI[]>([]);
     const [stations, setStations] = useState<Station[]>([]);
@@ -94,9 +87,6 @@ export default function ModelManagement() {
     const [trainFormData, setTrainFormData] = useState<TrainFormData>({ train_test_ratio: 0.7, place_ids: [], date_tag: '' });
     const [predictFormData, setPredictFormData] = useState<PredictFormData>({ num_step: 7, freq_days: 7, model_types: MODEL_TYPES_OPTIONS.length > 0 ? [MODEL_TYPES_OPTIONS[0]] : [], place_ids: [] });
 
-
-    // --- Constants (giữ nguyên) ---
-    // ... (AVAILABLE_STATUSES, SORTABLE_FIELDS, MODEL_TYPES_OPTIONS) ...
     const AVAILABLE_STATUSES = [
         { value: 'available', label: 'sẵn sàng' },
         { value: 'unavailable', label: 'Không sẵn sàng' },
@@ -109,14 +99,10 @@ export default function ModelManagement() {
         { value: 'version', label: 'Phiên bản' },
     ];
 
-
-
     useEffect(() => {
         setIsClient(true);
     }, []);
 
-    // --- Fetching Functions (giữ nguyên) ---
-    // ... (fetchAllModelsData, fetchStations) ...
     const fetchAllModelsData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -149,8 +135,6 @@ export default function ModelManagement() {
     }, [toast]);
 
 
-    // --- Effect tải dữ liệu ban đầu (giữ nguyên) ---
-    // ... (useEffect for initial fetch) ...
     useEffect(() => {
         if (isClient) {
             fetchAllModelsData();
@@ -158,11 +142,8 @@ export default function ModelManagement() {
         }
     }, [isClient, fetchAllModelsData, fetchStations]);
 
-
-    // --- Sửa: Tính toán danh sách ID các trạm có model ---
     const stationIdsWithModels = useMemo(() => {
         const ids = new Set<string>();
-        // Chỉ xem xét các model chưa bị xóa và có station_id
         allFetchedModels.forEach(model => {
             if (model.station_id && !model.deleted_at) {
                 ids.add(model.station_id);
@@ -171,15 +152,10 @@ export default function ModelManagement() {
         return ids;
     }, [allFetchedModels]);
 
-    // --- Sửa: Lọc danh sách trạm để hiển thị trong Predict form ---
     const stationsAvailableForPrediction = useMemo(() => {
-        // Lọc danh sách stations dựa trên những ID có model
         return stations.filter(station => stationIdsWithModels.has(station.id));
     }, [stations, stationIdsWithModels]);
 
-
-    // --- Effect xử lý lọc, sắp xếp, phân trang client-side (giữ nguyên) ---
-    // ... (useEffect for client-side processing) ...
     useEffect(() => {
         if (!isClient || isLoading) return;
 
@@ -229,7 +205,6 @@ export default function ModelManagement() {
             return sortDesc ? comparison * -1 : comparison;
         });
 
-        // 3. Pagination
         setTotalItems(processedModels.length);
         const calculatedOffset = (currentPage - 1) * itemsPerPage;
         const calculatedLimit = itemsPerPage;
@@ -248,16 +223,10 @@ export default function ModelManagement() {
 
     }, [allFetchedModels, currentPage, itemsPerPage, filterStationId, filterStatus, sortBy, sortDesc, isClient, isLoading, selectedModel]);
 
-
-    // --- Handlers cho Pagination (giữ nguyên) ---
-    // ... (handlePageChange) ...
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
 
-
-    // --- Handlers cho Filter/Sort (giữ nguyên) ---
-    // ... (handleFilterChange, handleSortChange, clearFilters) ...
     const handleFilterChange = (type: 'station' | 'status', value: string) => {
         if (type === 'station') setFilterStationId(value);
         if (type === 'status') setFilterStatus(value);
@@ -276,9 +245,6 @@ export default function ModelManagement() {
         setCurrentPage(1);
     };
 
-
-    // --- Handlers Mở Modal (giữ nguyên) ---
-    // ... (openUpdateModal, openGlobalTrainModal, openGlobalPredictModal) ...
     // Mở modal Update (gắn với model cụ thể)
     const openUpdateModal = (model: ModelAI) => {
         setCurrentModelForAction(model); // Cần model này để biết ID cần update
@@ -318,65 +284,100 @@ export default function ModelManagement() {
         setIsPredictModalOpen(true);
     };
 
-
-    // --- Handlers cho Form Input (giữ nguyên) ---
-    // ... (handleFormInputChange) ...
+    // const handleFormInputChange = (
+    //     form: 'update' | 'train' | 'predict',
+    //     field: keyof UpdateFormData | keyof TrainFormData | keyof PredictFormData,
+    //     value: any
+    // ) => {
+    //     if (form === 'update') {
+    //         setUpdateFormData(prev => ({ ...prev, [field]: value as never }));
+    //     } else if (form === 'train') {
+    //         if (field === 'place_ids') {
+    //             setTrainFormData(prev => ({
+    //                 ...prev,
+    //                 place_ids: prev.place_ids.includes(value)
+    //                     ? prev.place_ids.filter(id => id !== value)
+    //                     : [...prev.place_ids, value]
+    //             }));
+    //         } else {
+    //             setTrainFormData(prev => ({ ...prev, [field]: value as never }));
+    //         }
+    //     } else if (form === 'predict') {
+    //         if (field === 'place_ids') { // Xử lý place_ids (array) như cũ
+    //             setPredictFormData(prev => {
+    //                 const currentValues = prev.place_ids;
+    //                 return {
+    //                     ...prev,
+    //                     place_ids: currentValues.includes(value)
+    //                         ? currentValues.filter(id => id !== value)
+    //                         : [...currentValues, value]
+    //                 };
+    //             });
+    //         } else if (field === 'model_types') { // Xử lý khi RadioGroup thay đổi
+    //             setPredictFormData(prev => ({
+    //                 ...prev,
+    //                 model_types: [value]
+    //             }));
+    //         } else { // Xử lý các trường khác (num_step, freq_days)
+    //             setPredictFormData(prev => ({
+    //                 ...prev,
+    //                 [field]: value as never
+    //             }));
+    //         }
+    //     }
+    // };
     const handleFormInputChange = (
         form: 'update' | 'train' | 'predict',
         field: keyof UpdateFormData | keyof TrainFormData | keyof PredictFormData,
-        value: any
+        value: any, 
+        isChecked?: boolean // Thêm isChecked cho trường hợp Checkbox
     ) => {
         if (form === 'update') {
             setUpdateFormData(prev => ({ ...prev, [field]: value as never }));
         } else if (form === 'train') {
-            if (field === 'place_ids') {
+            if (field === 'place_ids') { 
                 setTrainFormData(prev => ({
                     ...prev,
                     place_ids: prev.place_ids.includes(value)
                         ? prev.place_ids.filter(id => id !== value)
                         : [...prev.place_ids, value]
                 }));
-            } else {
+            } else { 
                 setTrainFormData(prev => ({ ...prev, [field]: value as never }));
             }
         } else if (form === 'predict') {
-            if (field === 'place_ids') { // Xử lý place_ids (array) như cũ
+            if (field === 'place_ids') { // Xử lý Checkbox cho trạm
+                setPredictFormData(prev => ({
+                    ...prev,
+                    place_ids: prev.place_ids.includes(value)
+                        ? prev.place_ids.filter(id => id !== value)
+                        : [...prev.place_ids, value]
+                }));
+            } else if (field === 'model_types') { // Xử lý Checkbox cho model types
                 setPredictFormData(prev => {
-                    const currentValues = prev.place_ids;
-                    return {
-                        ...prev,
-                        place_ids: currentValues.includes(value)
-                            ? currentValues.filter(id => id !== value)
-                            : [...currentValues, value]
-                    };
+                    const currentTypes = prev.model_types;
+                    if (isChecked) { // Nếu checkbox được check
+                        // Thêm vào mảng nếu chưa có
+                        const updatedTypes = new Set([...currentTypes, value]);
+                        return { ...prev, model_types: Array.from(updatedTypes) };
+                    } else { // Nếu checkbox được uncheck
+                        // Loại bỏ khỏi mảng
+                        return { ...prev, model_types: currentTypes.filter(type => type !== value) };
+                    }
                 });
-            } else if (field === 'model_types') { // Xử lý khi RadioGroup thay đổi
-                // value ở đây là chuỗi đơn ('xgb' hoặc 'rf') được chọn
-                setPredictFormData(prev => ({
-                    ...prev,
-                    // Luôn đặt model_types thành một mảng chỉ chứa giá trị mới nhất được chọn
-                    model_types: [value]
-                }));
             } else { // Xử lý các trường khác (num_step, freq_days)
-                setPredictFormData(prev => ({
-                    ...prev,
-                    [field]: value as never
-                }));
+                setPredictFormData(prev => ({ ...prev, [field]: value as never }));
             }
         }
     };
-
-
-    // --- Handlers cho Submit Forms (giữ nguyên) ---
-    // ... (handleTrainSubmit, handlePredictSubmit, handleUpdateSubmit) ...
     const handleTrainSubmit = async () => {
         const actionKey = 'global-train';
         if (!trainFormData.date_tag) {
             toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng nhập Date Tag." });
             return;
         }
-        if (trainFormData.train_test_ratio <= 0 || trainFormData.train_test_ratio >= 1) {
-            toast({ variant: "destructive", title: "Lỗi", description: "Train/Test Ratio phải nằm trong khoảng (0, 1)." });
+        if (trainFormData.train_test_ratio < 0.1 || trainFormData.train_test_ratio > 0.9) {
+            toast({ variant: "destructive", title: "Lỗi", description: "Tỉ lệ Train phải nằm trong khoảng [0.1, 0.9] !" });
             return;
         }
         setIsProcessing(prev => ({ ...prev, [actionKey]: true }));
@@ -406,21 +407,20 @@ export default function ModelManagement() {
     const handlePredictSubmit = async () => {
         const actionKey = 'global-predict';
         if (predictFormData.num_step < 1 || predictFormData.num_step > 14) {
-            toast({ variant: "destructive", title: "Lỗi", description: "Num Step phải từ 1 đến 14." });
+            toast({ variant: "destructive", title: "Lỗi", description: "Số bước dự đoán phải từ 1 đến 14." });
             return;
         }
         if (predictFormData.freq_days < 1 || predictFormData.freq_days > 14) {
-            toast({ variant: "destructive", title: "Lỗi", description: "Freq Days phải từ 1 đến 14." });
+            toast({ variant: "destructive", title: "Lỗi", description: "Tần suất dự đoán phải từ 1 đến 14." });
             return;
         }
         if (predictFormData.model_types.length === 0) {
             toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn một Model Type." });
             return;
         }
-        // Sửa: Thêm kiểm tra nếu bắt buộc chọn trạm
         if (predictFormData.place_ids.length === 0) {
             toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn ít nhất một trạm để dự đoán." });
-            return; // Ngăn submit nếu không chọn trạm nào
+            return; 
         }
 
         setIsProcessing(prev => ({ ...prev, [actionKey]: true }));
@@ -935,163 +935,182 @@ export default function ModelManagement() {
                     {/* Train Modal (giữ nguyên) */}
                     {/* ... (Train Modal Dialog) ... */}
                     {/* Huấn luyện Models */}
-<Dialog open={isTrainModalOpen} onOpenChange={setIsTrainModalOpen}>
-  <DialogContent className="max-w-screen-md p-6">
-    <DialogHeader>
-      <DialogTitle>Huấn luyện Models</DialogTitle>
-      <DialogDescription>Cấu hình tham số cho quá trình huấn luyện.</DialogDescription>
-    </DialogHeader>
-    <div className="grid gap-4 py-4">
-      <div className="grid grid-cols-[150px_1fr] items-center gap-4">
-        <Label htmlFor="train-ratio" className="text-right">Tỷ lệ Train/Test</Label>
-        <Input
-          id="train-ratio"
-          type="number"
-          step="0.05"
-          min="0.1"
-          max="0.9"
-          value={trainFormData.train_test_ratio}
-          onChange={(e) => handleFormInputChange('train', 'train_test_ratio', e.target.value)}
-        />
-      </div>
+                    <Dialog open={isTrainModalOpen} onOpenChange={setIsTrainModalOpen}>
+                        <DialogContent className="max-w-screen-md p-6">
+                            <DialogHeader>
+                                <DialogTitle>Huấn luyện Models</DialogTitle>
+                                <DialogDescription>Cấu hình tham số cho quá trình huấn luyện.</DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-[150px_1fr] items-center gap-4">
+                                    <Label htmlFor="train-ratio" className="text-right">Tỷ lệ Train</Label>
+                                    <Input
+                                        id="train-ratio"
+                                        type="number"
+                                        step="0.05"
+                                        min="0.1"
+                                        max="0.9"
+                                        value={trainFormData.train_test_ratio}
+                                        onChange={(e) => handleFormInputChange('train', 'train_test_ratio', e.target.value)}
+                                    />
+                                </div>
 
-      <div className="grid grid-cols-[150px_1fr] items-center gap-4">
-        <Label htmlFor="train-date-tag" className="text-right">Phiên bản</Label>
-        <Input
-          id="train-date-tag"
-          value={trainFormData.date_tag}
-          onChange={(e) => handleFormInputChange('train', 'date_tag', e.target.value)}
-          placeholder="ddmmyy"
-        />
-      </div>
+                                <div className="grid grid-cols-[150px_1fr] items-center gap-4">
+                                    <Label htmlFor="train-date-tag" className="text-right">Phiên bản</Label>
+                                    <Input
+                                        id="train-date-tag"
+                                        value={trainFormData.date_tag}
+                                        onChange={(e) => handleFormInputChange('train', 'date_tag', e.target.value)}
+                                        placeholder="ddmmyy"
+                                    />
+                                </div>
 
-      <div className="grid grid-cols-[150px_1fr] items-start gap-4">
-        <Label className="text-right pt-2">Chọn Trạm</Label>
-        <div className="space-y-2 w-full">
-          <ScrollArea className="h-72 w-full rounded-md border p-2">
-            <div className="space-y-2">
-              {stations.length > 0 ? (
-                stations.map((station) => (
-                  <div key={station.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`train-station-${station.id}`}
-                      checked={trainFormData.place_ids.includes(station.id)}
-                      onCheckedChange={() => handleFormInputChange('train', 'place_ids', station.id)}
-                    />
-                    <Label htmlFor={`train-station-${station.id}`} className="font-normal">
-                      {station.name}
-                    </Label>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-muted-foreground">Đang tải trạm...</p>
-              )}
-            </div>
-          </ScrollArea>
-          <p className="text-xs text-muted-foreground">Để trống nếu huấn luyện tất cả trạm.</p>
-        </div>
-      </div>
-    </div>
-    <DialogFooter>
-      <DialogClose asChild>
-        <Button variant="outline" disabled={isProcessing['global-train']}>Hủy</Button>
-      </DialogClose>
-      <Button type="submit" onClick={handleTrainSubmit} disabled={isProcessing['global-train']}>
-        {isProcessing['global-train'] ? "Đang huấn luyện..." : "Bắt đầu huấn luyện"}
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+                                <div className="grid grid-cols-[150px_1fr] items-start gap-4">
+                                    <Label className="text-right pt-2">Chọn Trạm</Label>
+                                    <div className="space-y-2 w-full">
+                                        <ScrollArea className="h-72 w-full rounded-md border p-2">
+                                            <div className="space-y-2">
+                                                {stations.length > 0 ? (
+                                                    stations.map((station) => (
+                                                        <div key={station.id} className="flex items-center space-x-2">
+                                                            <Checkbox
+                                                                id={`train-station-${station.id}`}
+                                                                checked={trainFormData.place_ids.includes(station.id)}
+                                                                onCheckedChange={() => handleFormInputChange('train', 'place_ids', station.id)}
+                                                            />
+                                                            <Label htmlFor={`train-station-${station.id}`} className="font-normal">
+                                                                {station.name}
+                                                            </Label>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-xs text-muted-foreground">Đang tải trạm...</p>
+                                                )}
+                                            </div>
+                                        </ScrollArea>
+                                        <p className="text-xs text-muted-foreground">Để trống nếu huấn luyện tất cả trạm.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="outline" disabled={isProcessing['global-train']}>Hủy</Button>
+                                </DialogClose>
+                                <Button type="submit" onClick={handleTrainSubmit} disabled={isProcessing['global-train']}>
+                                    {isProcessing['global-train'] ? "Đang huấn luyện..." : "Bắt đầu huấn luyện"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
 
                     {/* Predict Modal (Toàn cục) - Sửa phần chọn Trạm */}
                     <Dialog open={isPredictModalOpen} onOpenChange={setIsPredictModalOpen}>
-  <DialogContent className="max-w-screen-md p-6">
-    <DialogHeader>
-      <DialogTitle>Dự đoán Models</DialogTitle>
-      <DialogDescription>Cấu hình tham số cho quá trình dự đoán.</DialogDescription>
-    </DialogHeader>
-    <div className="grid gap-4 py-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="predict-num-step">Num Step (1-14)</Label>
-          <Input
-            id="predict-num-step"
-            type="number"
-            min="1"
-            max="14"
-            value={predictFormData.num_step}
-            onChange={(e) => handleFormInputChange('predict', 'num_step', e.target.value)}
-          />
-        </div>
-        <div>
-          <Label htmlFor="predict-freq-days">Freq Days (1-14)</Label>
-          <Input
-            id="predict-freq-days"
-            type="number"
-            min="1"
-            max="14"
-            value={predictFormData.freq_days}
-            onChange={(e) => handleFormInputChange('predict', 'freq_days', e.target.value)}
-          />
-        </div>
-      </div>
+                        <DialogContent className="max-w-screen-md p-6">
+                            <DialogHeader>
+                                <DialogTitle>Dự đoán Models</DialogTitle>
+                                <DialogDescription>Cấu hình tham số cho quá trình dự đoán.</DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="predict-num-step">Số bước dự đoán (1–14)</Label>
+                                        <Input
+                                            id="predict-num-step"
+                                            type="number"
+                                            min="1"
+                                            max="14"
+                                            value={predictFormData.num_step}
+                                            onChange={(e) => handleFormInputChange('predict', 'num_step', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="predict-freq-days">Tần suất dự đoán (1–14 ngày)</Label>
+                                        <Input
+                                            id="predict-freq-days"
+                                            type="number"
+                                            min="1"
+                                            max="14"
+                                            value={predictFormData.freq_days}
+                                            onChange={(e) => handleFormInputChange('predict', 'freq_days', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
 
-      <div className="grid grid-cols-[150px_1fr] items-start gap-4">
-        <Label htmlFor="model-type-group" className="text-right pt-2">Model Type</Label>
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">Chọn loại model sẽ sử dụng để dự đoán (chọn một).</p>
-          <RadioGroup
-            id="model-type-group"
-            value={predictFormData.model_types[0] || ''}
-            onValueChange={(newValue) => handleFormInputChange('predict', 'model_types', newValue)}
-            className="flex flex-wrap gap-x-4 gap-y-2"
-          >
-            {MODEL_TYPES_OPTIONS.map((type) => (
-              <div key={type} className="flex items-center space-x-2">
-                <RadioGroupItem value={type} id={`predict-type-${type}`} />
-                <Label htmlFor={`predict-type-${type}`} className="font-normal">{MODEL_DISPLAY_NAMES[type]}</Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-[150px_1fr] items-start gap-4">
-        <Label className="text-right pt-2">Chọn Trạm</Label>
-        <div className="space-y-2 w-full">
-          <ScrollArea className="h-72 w-full rounded-md border p-2">
-            <div className="space-y-2">
-              {stationsAvailableForPrediction.length > 0 ? (
-                stationsAvailableForPrediction.map((station) => (
-                  <div key={station.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`predict-station-${station.id}`}
-                      checked={predictFormData.place_ids.includes(station.id)}
-                      onCheckedChange={() => handleFormInputChange('predict', 'place_ids', station.id)}
-                    />
-                    <Label htmlFor={`predict-station-${station.id}`} className="font-normal">
-                      {station.name}
-                    </Label>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-muted-foreground">Không có trạm nào có model AI liên kết để dự đoán.</p>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-      </div>
-    </div>
-    <DialogFooter>
-      <DialogClose asChild>
-        <Button variant="outline" disabled={isProcessing['global-predict']}>Hủy</Button>
-      </DialogClose>
-      <Button type="submit" onClick={handlePredictSubmit} disabled={isProcessing['global-predict']}>
-        {isProcessing['global-predict'] ? "Đang dự đoán..." : "Bắt đầu dự đoán"}
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+                                {/* <div className="grid grid-cols-[150px_1fr] items-start gap-4">
+                                    <Label htmlFor="model-type-group" className="text-right pt-2">Dạng model</Label>
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">Chọn loại model sẽ sử dụng để dự đoán (chọn một).</p>
+                                        <RadioGroup
+                                            id="model-type-group"
+                                            value={predictFormData.model_types[0] || ''}
+                                            onValueChange={(newValue) => handleFormInputChange('predict', 'model_types', newValue)}
+                                            className="flex flex-wrap gap-x-4 gap-y-2"
+                                        >
+                                            {MODEL_TYPES_OPTIONS.map((type) => (
+                                                <div key={type} className="flex items-center space-x-2">
+                                                    <RadioGroupItem value={type} id={`predict-type-${type}`} />
+                                                    <Label htmlFor={`predict-type-${type}`} className="font-normal">{MODEL_DISPLAY_NAMES[type]}</Label>
+                                                </div>
+                                            ))}
+                                        </RadioGroup>
+                                    </div>
+                                </div> */}
+                                <div className="grid grid-cols-[150px_1fr] items-start gap-4">
+                                    <Label className="text-right pt-2">Chọn loại model</Label>
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">Chọn một hoặc nhiều loại model để dự đoán.</p>
+                                        <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                            {MODEL_TYPES_OPTIONS.map((type) => (
+                                                <div key={type} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={`predict-type-${type}`}
+                                                        // Kiểm tra xem type có trong mảng predictFormData.model_types không
+                                                        checked={predictFormData.model_types.includes(type)}
+                                                        // Gọi handler khi trạng thái check thay đổi
+                                                        onCheckedChange={(checked) => handleFormInputChange('predict', 'model_types', type, !!checked)}
+                                                    />
+                                                    <Label htmlFor={`predict-type-${type}`} className="font-normal">{MODEL_DISPLAY_NAMES[type] || type}</Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-[150px_1fr] items-start gap-4">
+                                    <Label className="text-right pt-2">Chọn Trạm</Label>
+                                    <div className="space-y-2 w-full">
+                                        <ScrollArea className="h-72 w-full rounded-md border p-2">
+                                            <div className="space-y-2">
+                                                {stationsAvailableForPrediction.length > 0 ? (
+                                                    stationsAvailableForPrediction.map((station) => (
+                                                        <div key={station.id} className="flex items-center space-x-2">
+                                                            <Checkbox
+                                                                id={`predict-station-${station.id}`}
+                                                                checked={predictFormData.place_ids.includes(station.id)}
+                                                                onCheckedChange={() => handleFormInputChange('predict', 'place_ids', station.id)}
+                                                            />
+                                                            <Label htmlFor={`predict-station-${station.id}`} className="font-normal">
+                                                                {station.name}
+                                                            </Label>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-xs text-muted-foreground">Không có trạm nào có model AI liên kết để dự đoán.</p>
+                                                )}
+                                            </div>
+                                        </ScrollArea>
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="outline" disabled={isProcessing['global-predict']}>Hủy</Button>
+                                </DialogClose>
+                                <Button type="submit" onClick={handlePredictSubmit} disabled={isProcessing['global-predict']}>
+                                    {isProcessing['global-predict'] ? "Đang dự đoán..." : "Bắt đầu dự đoán"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
 
                 </main>
             </div>

@@ -20,11 +20,10 @@ function Unauthorized() {
   return (
     <div className="flex items-center justify-center h-screen text-center p-4">
       <div>
-        <h1 className="text-3xl font-bold text-red-600 mb-4">Unauthorized Access</h1>
-        <p className="text-lg text-gray-700">You do not have permission to view this page.</p>
-        <p className="text-sm text-gray-500 mt-2">Please contact the administrator if you believe this is an error.</p>
-        {/* Optional: Link về trang chủ hoặc trang login */}
-        <a href="/" className="text-blue-600 hover:underline mt-4 inline-block">Go to Homepage</a>
+        <h1 className="text-3xl font-bold text-red-600 mb-4">Truy cập Không được chấp nhận</h1>
+        <p className="text-lg text-gray-700">Bạn không có quyền xem trang này.</p>
+        <p className="text-sm text-gray-500 mt-2">Chỉ người dùng có vai trò {'"'}quản trị{'"'} mới có thể truy cập.</p>
+        <a href="/" className="text-blue-600 hover:underline mt-4 inline-block">Quay lại trang chủ</a>
       </div>
     </div>
   );
@@ -38,15 +37,15 @@ export default async function DashboardLayout({
 }>) {
   const role = await getUserRole();
   if (role === null) {
-    console.log("DashboardLayout (Admin): User not logged in. Redirecting to login.");
+    //console.log("DashboardLayout (Admin): User not logged in. Redirecting to login.");
     redirect('/auth/login'); // Chuyển hướng về trang login
   }
-  if (role !== 'admin') {
-    console.warn(`DashboardLayout (Admin): Unauthorized access attempt by user with role: ${role}`);
+  if ((role !== 'admin') && (role !== 'manager')) {
+    //console.warn(`DashboardLayout (Admin): Unauthorized access attempt by user with role: ${role}`);
     return <Unauthorized />;
   }
 
-  console.log("DashboardLayout (Admin): Access granted.");
+  //console.log("DashboardLayout (Admin): Access granted.");
   return (
     <>
       <Navbar />

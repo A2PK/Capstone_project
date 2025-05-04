@@ -90,9 +90,9 @@ export async function markAsReadNotifications(
     }
 
     try {
-        const url = `${getBaseUrl()}/api/v1/notifications`;
+        const url = `${getBaseUrl()}/api/v1/notifications/mark-read`;
         console.log(`POST Request URL: ${url}`);
-        console.log(`POST Request Data:`, Ids); 
+        console.log(`POST Request Data:`, {notificationIds: Ids}); 
 
         const res = await axios.post(url, {notificationIds: Ids}, { 
             headers: {

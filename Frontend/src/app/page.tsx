@@ -36,7 +36,7 @@ export default function RootPage() {
       if (fetchedRole) {
         if (fetchedRole === "officer") {
           intendedRoute = "/dashboardofficer/homepage";
-        } else if (fetchedRole === "admin") {
+        } else if ((fetchedRole === "admin")||(fetchedRole === "manager")) {
           intendedRoute = "/homead";
         }
       }

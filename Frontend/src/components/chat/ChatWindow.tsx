@@ -22,7 +22,7 @@ interface ChatWindowProps {
   token: string | null; // Có thể là null nếu chưa đăng nhập xong
 }
 
-const POLLING_INTERVAL = 5000; // Thời gian poll tin nhắn mới (ms)
+const POLLING_INTERVAL = 2000; // Thời gian poll tin nhắn mới (ms)
 const MESSAGE_FETCH_LIMIT = 40; // Số lượng tin nhắn fetch mỗi lần
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, chatPartner, token }) => {
@@ -264,6 +264,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, chatPartner, token
         <div className="flex-1 min-w-0">
           <p className="font-semibold truncate text-sm">{chatPartner.firstName} {chatPartner.lastName}</p>
            {chatPartner.role === 'admin' && <p className="text-xs text-orange-600">Quản trị viên</p>}
+           {chatPartner.role === 'manager' && <p className="text-xs text-blue-600">Tổng quản trị</p>}
           {/* TODO: Thêm trạng thái online/offline nếu có */}
         </div>
         {/* TODO: Thêm nút gọi điện, video call,... nếu cần */}

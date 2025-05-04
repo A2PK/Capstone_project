@@ -1,4 +1,3 @@
-// src/app/(pages)/(authenticated)/(admin)/dashboardadmin/requests/page.tsx (Adjust path as needed)
 "use client"
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation"; // Import if needed for navigation
@@ -64,7 +63,7 @@ export default function AdminRequestsPage() {
     const [alertAction, setAlertAction] = useState<'approve' | 'reject' | null>(null);
     const [addToDatabaseAlertOpen, setAddToDatabaseAlertOpen] = useState(false);
     const [importSuccess, setImportSuccess] = useState(false); // Track import success for the button state
-
+    const activeRequest = requests.find(req => req.id === activeRequestId);
     // Session State
     const [token, setToken] = useState<string | null>(null);
     const [currentAdmin, setCurrentAdmin] = useState<User | null>(null);
@@ -77,7 +76,7 @@ export default function AdminRequestsPage() {
                 if (!response.ok) throw new Error('Failed to fetch session');
                 const data: { isLoggedIn: boolean; user: User | null; token: string | null } = await response.json();
                 // Ensure user exists and is an admin
-                if (data.isLoggedIn && data.user && data.token && data.user.role === 'admin') {
+                if (data.isLoggedIn && data.user && data.token && ((data.user.role === 'admin')||(data.user.role === 'manager'))) {
                     setCurrentAdmin(data.user);
                     setToken(data.token);
                     console.log("Admin session loaded:", data.user.id);
@@ -323,7 +322,8 @@ export default function AdminRequestsPage() {
                     variant: "success",
                 });
                 // Optionally: Close the preview dialog after successful import
-                // setFileDialogOpen(false);
+                window.location.reload();
+                setFileDialogOpen(false);
             } else {
                  // Handle non-2xx status codes as errors
                  throw new Error(`API trả về trạng thái không thành công: ${status}`);
@@ -430,27 +430,27 @@ export default function AdminRequestsPage() {
         <div className="flex flex-wrap gap-2 items-center"> {/* Thêm items-center nếu muốn căn giữa theo chiều dọc */}
             {request.fileIds.map((fileId) => (
                 <div key={fileId}> {/* Bọc mỗi mục bằng div để xử lý key */}
-                    {request.status === 'approved' ? (
-                        // --- Nếu đã duyệt: Hiển thị text thay vì Button ---
+                    {/* {request.status === 'approved' ? (
+
                         <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 border border-gray-300">
-                             <FileText className="h-3.5 w-3.5" /> {/* Icon file thay cho mắt */}
-                             {/* Chỉ hiển thị ID vì chưa có tên ở đây */}
+                             <FileText className="h-3.5 w-3.5" /> 
+                            
                              File ID: {fileId}
                         </span>
-                    ) : (
-                        // --- Nếu chưa duyệt (pending, rejected,...): Hiển thị Button như cũ ---
+                    ) : ( */}
+                        
                         <Button
                             variant="outline"
                             size="sm"
                             className="flex items-center gap-1.5 text-xs h-8"
                             onClick={() => handleFilePreview(request, fileId)}
                             // Disable nếu đang import hoặc request không còn pending
-                            disabled={actionLoading[request.id] === 'import' || request.status !== 'pending'}
+                            //disabled={actionLoading[request.id] === 'import' || request.status !== 'pending'}
                         >
                             <Eye className="h-3.5 w-3.5" />
                             Xem File
                         </Button>
-                    )}
+                    {/* )} */}
                 </div>
             ))}
         </div>
@@ -552,8 +552,8 @@ export default function AdminRequestsPage() {
                             variant="default"
                             className="w-full sm:w-auto"
                             onClick={() => setAddToDatabaseAlertOpen(true)}
-                            // Disable if loading, importing, no content, or already imported
-                            disabled={fileContentLoading || !!actionLoading[activeRequestId ?? ''] || selectedFileContent.length === 0 || importSuccess}
+                            // Disable if loading, importing, no content, or already imported disabled={actionLoading[request.id] === 'import' || request.status !== 'pending'}
+                            disabled={fileContentLoading || !!actionLoading[activeRequestId ?? ''] || selectedFileContent.length === 0 || importSuccess || activeRequest?.status !== 'pending'}
                         >
                             {actionLoading[activeRequestId ?? ''] === 'import' ? (
                                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Đang xử lý...</>

@@ -30,9 +30,9 @@ const AppFooter = () => {
           </h3>
           <nav className="flex flex-col items-center sm:items-start gap-2">
             <Link href="/" className="hover:text-white transition-colors duration-200">Trang chủ</Link>
-            <Link href="/about" className="hover:text-white transition-colors duration-200">Về chúng tôi</Link>
-            <Link href="/features" className="hover:text-white transition-colors duration-200">Tính năng</Link>
-            <Link href="/contact" className="hover:text-white transition-colors duration-200">Liên hệ</Link>
+            <Link href="/" className="hover:text-white transition-colors duration-200">Về chúng tôi</Link>
+            <Link href="/" className="hover:text-white transition-colors duration-200">Tính năng</Link>
+            <Link href="/" className="hover:text-white transition-colors duration-200">Liên hệ</Link>
           </nav>
         </div>
 
@@ -49,16 +49,16 @@ const AppFooter = () => {
             <div className="flex items-center gap-2">
               <Phone size={16} className="text-slate-400 flex-shrink-0" />
               {/* Thay đổi số điện thoại nếu cần */}
-              <a href="tel:+18005551234" className="hover:text-white transition-colors duration-200">+1 (800) 555-1234</a>
+              <Link href="tel:+18005551234" className="hover:text-white transition-colors duration-200">+1 (800) 555-1234</Link>
             </div>
             <div className="flex items-center gap-2">
               <Mail size={16} className="text-slate-400 flex-shrink-0" />
-              <a
+              <Link
                 href="mailto:info@watermonitoring.com"
                 className="hover:text-white transition-colors duration-200" // Thống nhất màu hover
               >
                 info@watermonitoring.com
-              </a>
+              </Link>
             </div>
           </address>
         </div>

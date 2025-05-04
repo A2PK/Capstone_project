@@ -113,13 +113,13 @@ export default function LoginPage() {
               </div>
             </div>
              {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between mb-6">
+            {/* <div className="flex items-center justify-between mb-6">
               <label className="flex items-center space-x-2">
                 <input type="checkbox" name="rememberMe" className="form-checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
                 <span className="text-sm">Ghi nhớ đăng nhập</span>
               </label>
               <Link href="/forgot-password" className="text-sm text-blue-500">Quên mật khẩu?</Link>
-            </div>
+            </div> */}
              {/* Nút Submit */}
             <SubmitButton />
             {/* Hiển thị lỗi chung từ state nếu có */}

@@ -223,9 +223,14 @@ export default function HomeGuestPage() {
             setIsLoadingNews(true);
             setErrorNews(null);
             try {
-                const options: ArticleQueryOptions = { limit: 3, sortBy: 'created_at', sortDesc: true };
+                const options: ArticleQueryOptions = { limit: 100, sortBy: 'created_at', sortDesc: true };
                 const fetchedNews = await getAllArticles(options);
-                setNewsArticles(fetchedNews || []);
+                const allArticles = fetchedNews || [];
+                const dangerArticles = allArticles.filter(article => article.badge === 'danger');
+
+            // 3. Lấy 3 bài đầu tiên từ danh sách đã lọc (vì đã sắp xếp sẵn)
+                const latestThreeDangerArticles = dangerArticles.slice(0, 3);
+                setNewsArticles(latestThreeDangerArticles);
             } catch (err) {
                 console.error("Failed to fetch news articles:", err);
                 setErrorNews("Không thể tải các bài viết mới nhất. Vui lòng thử lại sau.");
