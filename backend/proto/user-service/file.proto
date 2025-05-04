@@ -1,0 +1,155 @@
+syntax = "proto3";
+
+package userservice;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "proto/core/common.proto"; // Import common definitions
+import "google/api/annotations.proto"; // HTTP annotations
+import "protoc-gen-openapiv2/options/annotations.proto"; // OpenAPI annotations
+
+option go_package = "golang-microservices-boilerplate/proto/user-service";
+
+// --- OpenAPI Info ---
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "File Service API";
+    version: "1.0";
+    description: "API for managing file uploads and deletion.";
+  };
+  schemes: [HTTP, HTTPS];
+  consumes: ["application/json"];
+  produces: ["application/json"];
+  security_definitions: {
+    security: {
+      key: "BearerAuth"; // Matches user.proto
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+        description: "JWT Bearer token (e.g., 'Bearer ey...')";
+      }
+    }
+  };
+  security: {
+    security_requirement: {
+      key: "BearerAuth";
+      value: {};
+    }
+  }
+};
+
+// --- File Message ---
+message File {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "File";
+      description: "Represents file metadata stored in the system.";
+      required: ["id", "created_at", "updated_at", "name", "service_internal_id", "type", "size", "url"];
+    }
+  };
+
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Unique identifier (UUID).", example: "\"uuid-string\""}];
+  google.protobuf.Timestamp created_at = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Creation timestamp.", example: "\"timestamp-string\""}];
+  google.protobuf.Timestamp updated_at = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Last update timestamp.", example: "\"timestamp-string\""}];
+  optional google.protobuf.Timestamp deleted_at = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Deletion timestamp (if soft-deleted).", example: "\"timestamp-string\""}];
+  string name = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Original filename.", example: "\"document.pdf\""}];
+  string service_internal_id = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Internal ID used by the file storage service (e.g., Google Drive File ID).", example: "\"storage-service-id-123\""}];
+  string type = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "MIME type of the file.", example: "\"application/pdf\""}];
+  int64 size = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "File size in bytes.", example: "1048576"}]; // 1 MB
+  string url = 10 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Direct URL to download the file.", example: "\"https://storage.example.com/download/storage-service-id-123\""}];
+}
+
+// --- Upload Request/Response (Client Streaming with Flattened Metadata) ---
+message UploadFileRequest {
+  // Defines the data sent in each message of the client stream.
+  // PROTOCOL EXPECTATION:
+  // 1. The VERY FIRST message MUST contain the 'name'.
+  // 2. The SECOND message MUST contain the 'type'.
+  // 3. ALL SUBSEQUENT messages MUST contain 'chunk_data'.
+  // Deviation from this sequence will likely cause errors on the server.
+  oneof request_data {
+    // Metadata fields (sent individually at the start)
+    string name = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Original filename (MUST be sent in the first stream message).", example: "\"image.jpg\""}];
+    string type = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "MIME type (MUST be sent in the second stream message).", example: "\"image/jpeg\""}];
+
+    // File content chunk
+    bytes chunk_data = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "A chunk of the file's binary data (MUST be sent in the third and subsequent stream messages)."}];
+  }
+}
+
+message UploadFileResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Upload File Response" } };
+  File file = 1;
+}
+
+// --- List User Files Request/Response ---
+message ListUserFilesRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List User Files Request", required: ["user_id"] } };
+  string user_id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "UUID of the user whose uploaded files to list.", example: "\"user-uuid-string\""}];
+  core.FilterOptions options = 2; // Reuse core filter options
+}
+
+message ListUserFilesResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List User Files Response" } };
+  repeated File files = 1;
+  core.PaginationInfo pagination_info = 2; // Reuse core pagination info
+}
+
+// --- Get Files By IDs --- (New Messages)
+message GetFilesByIDsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Get Files By IDs Request", required: ["ids"] } };
+  repeated string ids = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "List of file UUIDs to retrieve.", example: "[\"file-uuid-1\", \"file-uuid-2\"]"}];
+}
+
+message GetFilesByIDsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Get Files By IDs Response" } };
+  repeated File files = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "List of found files matching the provided IDs."}];
+  // Note: No pagination here, returns all found files matching the IDs.
+}
+
+// --- Delete Request --- (Response is google.protobuf.Empty)
+message DeleteFileRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Delete File Request" } };
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "UUID of the file metadata to delete.", example: "\"file-uuid-string\""}];
+  bool hard_delete = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Perform hard delete if true (also deletes from storage).", default: "false", example: "false"}];
+}
+
+// --- File Service ---
+service FileService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "Operations related to file upload, deletion, and listing.";
+  };
+
+  // Upload (Client Streaming)
+  rpc Upload(stream UploadFileRequest) returns (UploadFileResponse) {
+    option (google.api.http) = { post: "/api/v1/files", body: "*" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Upload File", tags: ["Files"] }; // Updated Summary for clarity
+  }
+
+  // Get By IDs (New RPC)
+  rpc GetByIDs(GetFilesByIDsRequest) returns (GetFilesByIDsResponse) {
+    // Using POST for potentially long lists of IDs
+    option (google.api.http) = { post: "/api/v1/files/batch", body: "*" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Get Multiple Files By IDs", tags: ["Files"] };
+  }
+
+  // Delete
+  rpc Delete(DeleteFileRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = { delete: "/api/v1/files/{id}" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Delete File", tags: ["Files"] };
+  }
+
+  // List User Files
+  rpc ListUserFiles(ListUserFilesRequest) returns (ListUserFilesResponse) {
+    option (google.api.http) = { get: "/api/v1/users/{user_id}/files" }; // Define REST endpoint
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "List Files Uploaded by User";
+      description: "Retrieves a paginated list of file metadata uploaded by a specific user.";
+      tags: ["Files", "Users"];
+    };
+  }
+
+  // Add specific RPCs based on repository methods if any
+  // e.g., rpc FindByServiceInternalID(...) returns (...) { ... }
+}

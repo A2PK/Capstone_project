@@ -1,0 +1,205 @@
+syntax = "proto3";
+
+package userservice;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto"; // For optional fields in updates
+import "proto/core/common.proto"; // Import common definitions - Ensure this path is correct
+import "google/api/annotations.proto"; // HTTP annotations
+import "protoc-gen-openapiv2/options/annotations.proto"; // OpenAPI annotations
+
+option go_package = "golang-microservices-boilerplate/proto/user-service";
+
+// --- OpenAPI Info ---
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Notification Service API";
+    version: "1.0";
+    description: "API for managing user notifications.";
+  };
+  schemes: [HTTP, HTTPS];
+  consumes: ["application/json"];
+  produces: ["application/json"];
+  security_definitions: {
+    security: {
+      key: "BearerAuth"; // Matches user.proto
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+        description: "JWT Bearer token (e.g., 'Bearer ey...')";
+      }
+    }
+  };
+  security: {
+    security_requirement: {
+      key: "BearerAuth";
+      value: {};
+    }
+  }
+};
+
+// --- Notification Message ---
+message Notification {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "Notification";
+      description: "Represents a user notification entity.";
+      required: ["id", "created_at", "updated_at", "title", "description", "read", "user_id"];
+    }
+  };
+
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Unique identifier (UUID).", example: "\"notification-uuid-string\""}];
+  google.protobuf.Timestamp created_at = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Creation timestamp.", example: "\"2023-10-27T10:00:00Z\""}];
+  google.protobuf.Timestamp updated_at = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Last update timestamp.", example: "\"2023-10-27T11:30:00Z\""}];
+  optional google.protobuf.Timestamp deleted_at = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Deletion timestamp (if soft-deleted).", example: "\"2023-10-28T09:15:00Z\""}];
+  string title = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Notification title.", example: "\"New Message Received\""}];
+  string description = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Notification details.", example: "\"You have a new message from John Doe.\""}];
+  bool read = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Whether the notification has been read.", example: "false"}]; // Corrected boolean example
+  string user_id = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "ID (UUID) of the user this notification is for.", example: "\"user-uuid-string\""}];
+}
+
+// --- Request/Response Messages ---
+
+// Create
+message CreateNotificationRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Create Notification Request", required: ["title", "description", "user_id"] } };
+  string title = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Notification title.", example: "\"Task Reminder\""}];
+  string description = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Notification details.", example: "\"Remember to submit your report.\""}];
+  string user_id = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Target user ID (UUID).", example: "\"user-uuid-string\""}];
+  // 'read' defaults to false server-side
+}
+message CreateNotificationResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Create Notification Response" } };
+  Notification notification = 1;
+}
+
+// Get By ID
+message GetNotificationByIDRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Get Notification By ID Request", required: ["id"] } };
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "UUID of the notification to retrieve.", example: "\"notification-uuid-string\""}];
+}
+message GetNotificationByIDResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Get Notification By ID Response" } };
+  Notification notification = 1;
+}
+
+// List (Standard)
+message ListNotificationsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List Notifications Request" } };
+  core.FilterOptions options = 1;
+}
+message ListNotificationsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "List Notifications Response" } };
+  repeated Notification notifications = 1;
+  core.PaginationInfo pagination_info = 2;
+}
+
+// Update
+message UpdateNotificationRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Update Notification Request", required: ["id"] } };
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "UUID of the notification to update.", example: "\"notification-uuid-string\""}];
+  optional google.protobuf.StringValue title = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "New title.", example: "\"Updated Title\""}];
+  optional google.protobuf.StringValue description = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "New description.", example: "\"Updated description...\""}];
+  optional google.protobuf.BoolValue read = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "New read status.", example: "true"}]; // Corrected boolean example
+}
+message UpdateNotificationResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Update Notification Response" } };
+  Notification notification = 1;
+}
+
+// Delete
+message DeleteNotificationRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Delete Notification Request", required: ["id"] } };
+  string id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "UUID of the notification to delete.", example: "\"notification-uuid-string\""}];
+  bool hard_delete = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Perform hard delete if true.", default: "false", example: "false"}]; // Corrected boolean example
+}
+// Response is google.protobuf.Empty
+
+// Find By User
+message FindByUserRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Find By User Request", required: ["user_id"] } };
+  string user_id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Target user ID (UUID).", example: "\"user-uuid-string\""}];
+  // Optional filter for read status (maps to query parameter ?read=true or ?read=false)
+  optional bool read = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Filter by read status (optional).", example: "false"}]; // Corrected boolean example
+  core.FilterOptions options = 3; // For pagination/sorting
+}
+message FindByUserResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Find By User Response" } };
+  repeated Notification notifications = 1;
+  core.PaginationInfo pagination_info = 2;
+}
+
+// Mark As Read
+message MarkNotificationsAsReadRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Mark Notifications As Read Request", required: ["notification_ids"] } };
+  repeated string notification_ids = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "List of notification UUIDs to mark as read.", example: "[\"noti-uuid-1\", \"noti-uuid-2\"]"}]; // Corrected repeated string example
+}
+// Response is google.protobuf.Empty
+
+// --- Bulk Create --- (New Messages)
+message CreateNotificationsRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Create Multiple Notifications Request", required: ["notifications"] } };
+  repeated CreateNotificationRequest notifications = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "A list of notifications to create."}];
+}
+
+message CreateNotificationsResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = { json_schema: { title: "Create Multiple Notifications Response" } };
+  repeated Notification notifications = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The list of newly created notifications."}];
+}
+
+// --- Notification Service ---
+service NotificationService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "Operations related to user notifications"
+  };
+
+  // Create (Single)
+  rpc Create(CreateNotificationRequest) returns (CreateNotificationResponse) {
+    option (google.api.http) = { post: "/api/v1/notifications", body: "*" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Create Notification", tags: ["Notifications"] };
+  }
+
+  // Create Many (Bulk)
+  rpc CreateMany(CreateNotificationsRequest) returns (CreateNotificationsResponse) {
+    option (google.api.http) = { post: "/api/v1/notifications/bulk", body: "*" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Create Multiple Notifications", tags: ["Notifications"] };
+  }
+
+  // Get By ID
+  rpc GetByID(GetNotificationByIDRequest) returns (GetNotificationByIDResponse) {
+    option (google.api.http) = { get: "/api/v1/notifications/{id}" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Get Notification By ID", tags: ["Notifications"] };
+  }
+
+  // List (Standard)
+  rpc List(ListNotificationsRequest) returns (ListNotificationsResponse) {
+    option (google.api.http) = { get: "/api/v1/notifications" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "List Notifications", tags: ["Notifications"] };
+  }
+
+  // Update
+  rpc Update(UpdateNotificationRequest) returns (UpdateNotificationResponse) {
+    option (google.api.http) = { patch: "/api/v1/notifications/{id}", body: "*" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Update Notification", tags: ["Notifications"] };
+  }
+
+  // Delete
+  rpc Delete(DeleteNotificationRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = { delete: "/api/v1/notifications/{id}" }; // hard_delete as query param: ?hard_delete=true
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Delete Notification", tags: ["Notifications"] };
+  }
+
+  // Find By User (Using GET with user ID in path, read status and options map to query)
+  rpc FindByUser(FindByUserRequest) returns (FindByUserResponse) {
+    option (google.api.http) = { get: "/api/v1/users/{user_id}/notifications" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Find Notifications By User", tags: ["Notifications"] };
+  }
+
+  // Mark As Read (Using POST for action on multiple resources)
+  rpc MarkAsRead(MarkNotificationsAsReadRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = { post: "/api/v1/notifications/mark-read", body: "*" };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = { summary: "Mark Notifications As Read", tags: ["Notifications"] };
+  }
+} // End of Service definition

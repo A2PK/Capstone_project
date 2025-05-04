@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "ai-service"
+version = "0.1.0"
+description = ""
+authors = ["nct2309 <nctstuti@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.12"
+uvicorn = "^0.34.1"
+numpy = "^2.2.4"
+pandas = "^2.2.3"
+scikit-learn = "^1.6.1"
+xgboost = "^3.0.0"
+joblib = "^1.4.2"
+python-multipart = "^0.0.20"
+python-dotenv = "^1.1.0"
+sqlalchemy = "^2.0.40"
+asyncpg = "^0.30.0"
+grpcio = ">=1.72.0rc1"
+protobuf = "^6.30.2"
+protoc-gen-openapiv2 = "^0.0.1"
+apscheduler = "^3.11.0"
+einops = "^0.8.1"
+torch = {version = "^2.6.0+cpu", source = "pytorch_cpu"}
+
+
+[[tool.poetry.source]]
+name = "pytorch_cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

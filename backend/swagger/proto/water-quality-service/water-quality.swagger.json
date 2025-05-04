@@ -1,0 +1,2113 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Water Quality Service API",
+    "description": "API for managing water quality monitoring data.",
+    "version": "1.0"
+  },
+  "tags": [
+    {
+      "name": "WaterQualityService",
+      "description": "Operations related to water quality monitoring"
+    }
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/water-quality/data-points": {
+      "post": {
+        "summary": "Create Data Points",
+        "description": "Creates one or more new data points with their associated indicators.",
+        "operationId": "WaterQualityService_CreateDataPoints",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateDataPointsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to create one or more new data points.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateDataPointsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Data Points"
+        ]
+      },
+      "put": {
+        "summary": "Update Data Points",
+        "description": "Updates one or more existing data points.",
+        "operationId": "WaterQualityService_UpdateDataPoints",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityUpdateDataPointsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to update one or more existing data points.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityUpdateDataPointsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Data Points"
+        ]
+      }
+    },
+    "/api/v1/water-quality/data-points/delete": {
+      "post": {
+        "summary": "Delete Data Points",
+        "description": "Deletes one or more data points. Can be soft or hard delete.",
+        "operationId": "WaterQualityService_DeleteDataPoints",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityDeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to delete one or more entities by their IDs.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityDeleteRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Data Points"
+        ]
+      }
+    },
+    "/api/v1/water-quality/data-points/list-all": {
+      "post": {
+        "summary": "List All Data Points",
+        "description": "Retrieves a paginated list of data points across all stations. Uses POST with JSON body.",
+        "operationId": "WaterQualityService_ListAllDataPoints",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityListAllDataPointsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to list data points across all stations with filtering and pagination options.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityListAllDataPointsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Data Points"
+        ]
+      }
+    },
+    "/api/v1/water-quality/data-points/list-by-station": {
+      "post": {
+        "summary": "List Data Points by Station (POST)",
+        "description": "Retrieves a paginated list of data points using POST. All filter/pagination parameters, including station_id, must be provided in the JSON request body.",
+        "operationId": "WaterQualityService_ListDataPointsByStationPost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityListDataPointsByStationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to list data points for a specific station with filtering and pagination options.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityListDataPointsByStationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Data Points"
+        ]
+      }
+    },
+    "/api/v1/water-quality/schemas": {
+      "get": {
+        "summary": "List Data Source Schemas",
+        "description": "Retrieves a paginated list of data source schemas with filtering options.",
+        "operationId": "WaterQualityService_ListDataSourceSchemas",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityListDataSourceSchemasResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "options.limit",
+            "description": "Maximum number of items to return per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "50"
+          },
+          {
+            "name": "options.offset",
+            "description": "Number of items to skip before starting to collect the result set (for pagination).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          {
+            "name": "options.sortBy",
+            "description": "Field name to sort the results by (e.g., 'created_at', 'name').",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "default": "\"created_at\""
+          },
+          {
+            "name": "options.sortDesc",
+            "description": "Set to true to sort in descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "options.filters",
+            "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"}).",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "options.includeDeleted",
+            "description": "Set to true to include soft-deleted records in the results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Data Source Schemas"
+        ]
+      },
+      "post": {
+        "summary": "Create Data Source Schema",
+        "description": "Creates a new data source schema definition.",
+        "operationId": "WaterQualityService_CreateDataSourceSchema",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateDataSourceSchemaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to create a new data source schema definition.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateDataSourceSchemaRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Data Source Schemas"
+        ]
+      }
+    },
+    "/api/v1/water-quality/schemas/{id}": {
+      "get": {
+        "summary": "Get Data Source Schema",
+        "description": "Retrieves a specific data source schema by ID.",
+        "operationId": "WaterQualityService_GetDataSourceSchema",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityGetDataSourceSchemaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "UUID of the schema to retrieve.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Data Source Schemas"
+        ]
+      }
+    },
+    "/api/v1/water-quality/schemas/{schema.id}": {
+      "put": {
+        "summary": "Update Data Source Schema",
+        "description": "Updates an existing data source schema definition.",
+        "operationId": "WaterQualityService_UpdateDataSourceSchema",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityUpdateDataSourceSchemaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "schema.id",
+            "description": "Unique identifier for the schema (UUID format).",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/WaterQualityServiceUpdateDataSourceSchemaBody"
+            }
+          }
+        ],
+        "tags": [
+          "Data Source Schemas"
+        ]
+      }
+    },
+    "/api/v1/water-quality/stations": {
+      "get": {
+        "summary": "List Stations",
+        "description": "Retrieves a paginated list of monitoring stations with filtering options.",
+        "operationId": "WaterQualityService_ListStations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityListStationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "options.limit",
+            "description": "Maximum number of items to return per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "50"
+          },
+          {
+            "name": "options.offset",
+            "description": "Number of items to skip before starting to collect the result set (for pagination).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          {
+            "name": "options.sortBy",
+            "description": "Field name to sort the results by (e.g., 'created_at', 'name').",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "default": "\"created_at\""
+          },
+          {
+            "name": "options.sortDesc",
+            "description": "Set to true to sort in descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "options.filters",
+            "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"}).",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "options.includeDeleted",
+            "description": "Set to true to include soft-deleted records in the results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Stations"
+        ]
+      },
+      "post": {
+        "summary": "Create Stations",
+        "description": "Creates one or more new monitoring stations.",
+        "operationId": "WaterQualityService_CreateStations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateStationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to create one or more new monitoring stations.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateStationsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Stations"
+        ]
+      },
+      "put": {
+        "summary": "Update Stations",
+        "description": "Updates one or more existing monitoring stations.",
+        "operationId": "WaterQualityService_UpdateStations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityUpdateStationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to update one or more existing monitoring stations.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityUpdateStationsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Stations"
+        ]
+      }
+    },
+    "/api/v1/water-quality/stations/delete": {
+      "post": {
+        "summary": "Delete Stations",
+        "description": "Deletes one or more monitoring stations. Can be soft or hard delete.",
+        "operationId": "WaterQualityService_DeleteStations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityDeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to delete one or more entities by their IDs.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityDeleteRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Stations"
+        ]
+      }
+    },
+    "/api/v1/water-quality/stations/{stationId}/data-points": {
+      "get": {
+        "summary": "List Data Points by Station",
+        "description": "Retrieves a paginated list of data points for a specific station.",
+        "operationId": "WaterQualityService_ListDataPointsByStation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityListDataPointsByStationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "stationId",
+            "description": "UUID of the station to list data points for.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "options.limit",
+            "description": "Maximum number of items to return per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "50"
+          },
+          {
+            "name": "options.offset",
+            "description": "Number of items to skip before starting to collect the result set (for pagination).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          {
+            "name": "options.sortBy",
+            "description": "Field name to sort the results by (e.g., 'created_at', 'name').",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "default": "\"created_at\""
+          },
+          {
+            "name": "options.sortDesc",
+            "description": "Set to true to sort in descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "options.filters",
+            "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"}).",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "options.includeDeleted",
+            "description": "Set to true to include soft-deleted records in the results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Data Points"
+        ]
+      }
+    },
+    "/api/v1/water-quality/threshold-configs": {
+      "get": {
+        "summary": "List Threshold Configurations",
+        "description": "Retrieves a paginated list of threshold configurations with filtering options.",
+        "operationId": "WaterQualityService_ListThresholdConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityListThresholdConfigsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "options.limit",
+            "description": "Maximum number of items to return per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "50"
+          },
+          {
+            "name": "options.offset",
+            "description": "Number of items to skip before starting to collect the result set (for pagination).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          {
+            "name": "options.sortBy",
+            "description": "Field name to sort the results by (e.g., 'created_at', 'name').",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "default": "\"created_at\""
+          },
+          {
+            "name": "options.sortDesc",
+            "description": "Set to true to sort in descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "options.filters",
+            "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"}).",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "options.includeDeleted",
+            "description": "Set to true to include soft-deleted records in the results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Threshold Configurations"
+        ]
+      },
+      "post": {
+        "summary": "Create Threshold Configurations",
+        "description": "Creates one or more new threshold configurations.",
+        "operationId": "WaterQualityService_CreateThresholdConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateThresholdConfigsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to create one or more new threshold configurations.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityCreateThresholdConfigsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Threshold Configurations"
+        ]
+      },
+      "put": {
+        "summary": "Update Threshold Configurations",
+        "description": "Updates one or more existing threshold configurations.",
+        "operationId": "WaterQualityService_UpdateThresholdConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityUpdateThresholdConfigsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to update one or more existing threshold configurations.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityUpdateThresholdConfigsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Threshold Configurations"
+        ]
+      }
+    },
+    "/api/v1/water-quality/threshold-configs/delete": {
+      "post": {
+        "summary": "Delete Threshold Configurations",
+        "description": "Deletes one or more threshold configurations. Can be soft or hard delete.",
+        "operationId": "WaterQualityService_DeleteThresholdConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityDeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to delete one or more entities by their IDs.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityDeleteRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Threshold Configurations"
+        ]
+      }
+    },
+    "/api/v1/water-quality/upload": {
+      "post": {
+        "summary": "Upload Data via URL",
+        "description": "Initiates processing of a water quality data file specified by a URL.",
+        "operationId": "WaterQualityService_UploadData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/waterqualityUploadDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request containing the URL of a data file to be processed.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/waterqualityUploadRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Data Import"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "WaterQualityServiceUpdateDataSourceSchemaBody": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "createdAt": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2023-01-15T10:30:00Z",
+              "description": "Timestamp when the schema was created."
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2023-01-16T11:00:00Z",
+              "description": "Timestamp when the schema was last updated."
+            },
+            "deletedAt": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2023-01-17T12:00:00Z",
+              "description": "Timestamp when the schema was soft-deleted. Null if not deleted."
+            },
+            "name": {
+              "type": "string",
+              "example": "Ministry of Environment Monthly Reports",
+              "description": "Name of the data source schema."
+            },
+            "sourceIdentifier": {
+              "type": "string",
+              "example": "moe_monthly_*.csv",
+              "description": "Unique identifier for the source (e.g., URL, file pattern, API endpoint)."
+            },
+            "sourceType": {
+              "type": "string",
+              "example": "csv",
+              "description": "Type of the data source (csv, json, excel, api, manual)."
+            },
+            "description": {
+              "type": "string",
+              "example": "Monthly water quality reports from the Ministry of Environment monitoring stations.",
+              "description": "Detailed description of the data source and its contents."
+            },
+            "schemaDefinition": {
+              "type": "object",
+              "example": {
+                "fields": [
+                  {
+                    "source_name": "Station ID",
+                    "data_type": "string",
+                    "target_entity": "Station",
+                    "target_field": "Name"
+                  },
+                  {
+                    "source_name": "pH",
+                    "data_type": "float",
+                    "target_entity": "Indicator",
+                    "purpose": "display"
+                  }
+                ]
+              },
+              "description": "JSON structure defining the fields and their mappings to entities. Represents []FieldDefinition from Go entity."
+            }
+          },
+          "description": "Defines the structure and mapping of an external data source.",
+          "title": "Data Source Schema"
+        }
+      },
+      "description": "Request to update an existing data source schema definition.",
+      "title": "Update Data Source Schema Request",
+      "required": [
+        "schema",
+        "createdAt",
+        "updatedAt",
+        "name",
+        "sourceType",
+        "schemaDefinition"
+      ]
+    },
+    "coreFilterOptions": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "example": 50,
+          "default": "50",
+          "description": "Maximum number of items to return per page."
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "example": 0,
+          "default": "0",
+          "description": "Number of items to skip before starting to collect the result set (for pagination)."
+        },
+        "sortBy": {
+          "type": "string",
+          "example": "created_at",
+          "default": "\"created_at\"",
+          "description": "Field name to sort the results by (e.g., 'created_at', 'name')."
+        },
+        "sortDesc": {
+          "type": "boolean",
+          "example": true,
+          "default": "true",
+          "description": "Set to true to sort in descending order."
+        },
+        "filters": {
+          "type": "object",
+          "example": {
+            "email": "user@gmail.com"
+          },
+          "additionalProperties": {},
+          "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"})."
+        },
+        "includeDeleted": {
+          "type": "boolean",
+          "example": false,
+          "default": "false",
+          "description": "Set to true to include soft-deleted records in the results."
+        }
+      },
+      "description": "Represents common filtering, pagination, and sorting options.\nBased on pkg/core/types/common.go FilterOptions struct."
+    },
+    "corePaginationInfo": {
+      "type": "object",
+      "properties": {
+        "totalItems": {
+          "type": "string",
+          "format": "int64",
+          "example": 1234,
+          "description": "Total number of items matching the query criteria across all pages."
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "example": 50,
+          "description": "The limit (page size) used for the current response."
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "example": 0,
+          "description": "The offset (number of items skipped) used for the current response."
+        }
+      },
+      "description": "Represents common pagination metadata included in list responses.\nBased on pkg/core/types/common.go PaginationResult struct (metadata fields only).\nSpecific list responses should include this alongside their repeated items field."
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "waterqualityCreateDataPointsRequest": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataPointInput"
+          },
+          "description": "List of data points to create."
+        }
+      },
+      "description": "Request to create one or more new data points.",
+      "title": "Create Data Points Request",
+      "required": [
+        "dataPoints"
+      ]
+    },
+    "waterqualityCreateDataPointsResponse": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataPoint"
+          },
+          "description": "List of created data points with system-generated fields populated."
+        }
+      },
+      "description": "Contains details of the newly created data points.",
+      "title": "Create Data Points Response"
+    },
+    "waterqualityCreateDataSourceSchemaRequest": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "$ref": "#/definitions/waterqualityDataSourceSchemaInput",
+          "description": "Schema definition to create."
+        }
+      },
+      "description": "Request to create a new data source schema definition.",
+      "title": "Create Data Source Schema Request",
+      "required": [
+        "schema"
+      ]
+    },
+    "waterqualityCreateDataSourceSchemaResponse": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "$ref": "#/definitions/waterqualityDataSourceSchema",
+          "description": "Created schema with system-generated fields populated."
+        }
+      },
+      "description": "Contains the newly created data source schema.",
+      "title": "Create Data Source Schema Response",
+      "required": [
+        "schema"
+      ]
+    },
+    "waterqualityCreateStationsRequest": {
+      "type": "object",
+      "properties": {
+        "stations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityStationInput"
+          },
+          "description": "List of stations to create."
+        }
+      },
+      "description": "Request to create one or more new monitoring stations.",
+      "title": "Create Stations Request",
+      "required": [
+        "stations"
+      ]
+    },
+    "waterqualityCreateStationsResponse": {
+      "type": "object",
+      "properties": {
+        "stations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityStation"
+          },
+          "description": "List of created stations with system-generated fields populated."
+        }
+      },
+      "description": "Contains details of the newly created monitoring stations.",
+      "title": "Create Stations Response"
+    },
+    "waterqualityCreateThresholdConfigsRequest": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfigInput"
+          },
+          "description": "List of threshold configurations to create."
+        }
+      },
+      "description": "Request to create one or more new threshold configurations.",
+      "title": "Create Threshold Configs Request",
+      "required": [
+        "configs"
+      ]
+    },
+    "waterqualityCreateThresholdConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfig"
+          },
+          "description": "List of created threshold configurations with system-generated fields populated."
+        }
+      },
+      "description": "Contains details of the newly created threshold configurations.",
+      "title": "Create Threshold Configs Response"
+    },
+    "waterqualityDataPoint": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+          "description": "Unique identifier for the data point (UUID format).",
+          "title": "Base fields inline"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-15T10:30:00Z",
+          "description": "Timestamp when the data point was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-16T11:00:00Z",
+          "description": "Timestamp when the data point was last updated."
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-17T12:00:00Z",
+          "description": "Timestamp when the data point was soft-deleted. Null if not deleted."
+        },
+        "monitoringTime": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-14T08:45:00Z",
+          "description": "Timestamp when the water quality measurements were taken.",
+          "title": "DataPoint specific fields"
+        },
+        "wqi": {
+          "type": "number",
+          "format": "double",
+          "example": 78.5,
+          "description": "Water Quality Index - a calculated value representing overall water quality."
+        },
+        "stationId": {
+          "type": "string",
+          "example": "b2c3d4e5-f6a7-8901-2345-67890abcdef0",
+          "description": "Reference to the monitoring station UUID where the data was collected."
+        },
+        "source": {
+          "type": "string",
+          "example": "manual-entry",
+          "description": "Source of the data (e.g., filename, API endpoint, sensor ID)."
+        },
+        "observationType": {
+          "$ref": "#/definitions/waterqualityObservationType",
+          "example": "OBSERVATION_TYPE_ACTUAL",
+          "description": "Type of observation (actual, interpolation, predicted, realtime_monitoring)."
+        },
+        "dataSourceSchemaId": {
+          "type": "string",
+          "example": "d4e5f6a7-b8c9-0123-4567-890abcdef012",
+          "description": "Reference to the DataSourceSchema UUID used to process this data point."
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataPointFeature"
+          },
+          "description": "List of specific water quality measurements/features associated with this data point.",
+          "title": "Updated features field"
+        }
+      },
+      "description": "Represents a single water quality data collection event at a monitoring station.",
+      "title": "Data Point",
+      "required": [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "monitoringTime",
+        "stationId",
+        "source",
+        "observationType",
+        "dataSourceSchemaId"
+      ]
+    },
+    "waterqualityDataPointFeature": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "pH",
+          "description": "Name of the feature (e.g., pH, DO, Temperature, Recommendations)."
+        },
+        "value": {
+          "type": "number",
+          "format": "double",
+          "example": 7.4,
+          "description": "Numerical value of the feature measurement. Null if textual_value is used."
+        },
+        "textualValue": {
+          "type": "string",
+          "example": "Slightly alkaline",
+          "description": "Textual value for non-numeric features (e.g., recommendations, quality status). Null if value is used."
+        },
+        "purpose": {
+          "$ref": "#/definitions/waterqualityIndicatorPurpose",
+          "example": "INDICATOR_PURPOSE_ANALYSIS",
+          "description": "Purpose of this feature (prediction, display, analysis)."
+        },
+        "source": {
+          "type": "string",
+          "example": "lab-test-batch-123",
+          "description": "Source of this specific feature measurement (e.g., sensor ID, calculation method). Inherits from DataPoint source if empty.",
+          "title": "No base entity fields (ID, CreatedAt etc.) as this is embedded"
+        }
+      },
+      "description": "Represents a single water quality measurement/feature within a DataPoint.",
+      "title": "Data Point Feature",
+      "required": [
+        "name",
+        "purpose",
+        "source"
+      ]
+    },
+    "waterqualityDataPointFeatureInput": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "pH",
+          "description": "Name of the feature."
+        },
+        "value": {
+          "type": "number",
+          "format": "double",
+          "example": 7.4,
+          "description": "Numerical value."
+        },
+        "textualValue": {
+          "type": "string",
+          "example": "Normal",
+          "description": "Textual value."
+        },
+        "purpose": {
+          "$ref": "#/definitions/waterqualityIndicatorPurpose",
+          "example": "INDICATOR_PURPOSE_ANALYSIS",
+          "description": "Purpose (prediction, display, analysis)."
+        },
+        "source": {
+          "type": "string",
+          "example": "lab-test-batch-123",
+          "description": "Source of the feature measurement."
+        }
+      },
+      "description": "Data required to define a feature within a DataPointInput.",
+      "title": "Data Point Feature Input",
+      "required": [
+        "name",
+        "purpose",
+        "source"
+      ]
+    },
+    "waterqualityDataPointInput": {
+      "type": "object",
+      "properties": {
+        "monitoringTime": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-14T08:45:00Z",
+          "description": "Timestamp when the water quality measurements were taken."
+        },
+        "wqi": {
+          "type": "number",
+          "format": "double",
+          "example": 78.5,
+          "description": "Water Quality Index - a calculated value representing overall water quality."
+        },
+        "stationId": {
+          "type": "string",
+          "example": "b2c3d4e5-f6a7-8901-2345-67890abcdef0",
+          "description": "Reference to the monitoring station UUID where the data was collected."
+        },
+        "source": {
+          "type": "string",
+          "example": "manual-entry",
+          "description": "Source of the data (e.g., filename, API endpoint, sensor ID)."
+        },
+        "observationType": {
+          "$ref": "#/definitions/waterqualityObservationType",
+          "example": "OBSERVATION_TYPE_ACTUAL",
+          "description": "Type of observation."
+        },
+        "dataSourceSchemaId": {
+          "type": "string",
+          "example": "d4e5f6a7-b8c9-0123-4567-890abcdef012",
+          "description": "Reference to the DataSourceSchema UUID."
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataPointFeatureInput"
+          },
+          "description": "Collection of individual water quality measurements/features associated with this data point.",
+          "title": "Updated features field"
+        }
+      },
+      "description": "Data required to create a new data point with optional feature indicators.",
+      "title": "Data Point Input",
+      "required": [
+        "monitoringTime",
+        "stationId",
+        "source",
+        "observationType",
+        "dataSourceSchemaId"
+      ]
+    },
+    "waterqualityDataSourceSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "d4e5f6a7-b8c9-0123-4567-890abcdef012",
+          "description": "Unique identifier for the schema (UUID format)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-15T10:30:00Z",
+          "description": "Timestamp when the schema was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-16T11:00:00Z",
+          "description": "Timestamp when the schema was last updated."
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-17T12:00:00Z",
+          "description": "Timestamp when the schema was soft-deleted. Null if not deleted."
+        },
+        "name": {
+          "type": "string",
+          "example": "Ministry of Environment Monthly Reports",
+          "description": "Name of the data source schema."
+        },
+        "sourceIdentifier": {
+          "type": "string",
+          "example": "moe_monthly_*.csv",
+          "description": "Unique identifier for the source (e.g., URL, file pattern, API endpoint)."
+        },
+        "sourceType": {
+          "type": "string",
+          "example": "csv",
+          "description": "Type of the data source (csv, json, excel, api, manual)."
+        },
+        "description": {
+          "type": "string",
+          "example": "Monthly water quality reports from the Ministry of Environment monitoring stations.",
+          "description": "Detailed description of the data source and its contents."
+        },
+        "schemaDefinition": {
+          "type": "object",
+          "example": {
+            "fields": [
+              {
+                "source_name": "Station ID",
+                "data_type": "string",
+                "target_entity": "Station",
+                "target_field": "Name"
+              },
+              {
+                "source_name": "pH",
+                "data_type": "float",
+                "target_entity": "Indicator",
+                "purpose": "display"
+              }
+            ]
+          },
+          "description": "JSON structure defining the fields and their mappings to entities. Represents []FieldDefinition from Go entity."
+        }
+      },
+      "description": "Defines the structure and mapping of an external data source.",
+      "title": "Data Source Schema",
+      "required": [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "name",
+        "sourceType",
+        "schemaDefinition"
+      ]
+    },
+    "waterqualityDataSourceSchemaInput": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "Ministry of Environment Monthly Reports",
+          "description": "Name of the data source schema."
+        },
+        "sourceIdentifier": {
+          "type": "string",
+          "example": "moe_monthly_*.csv",
+          "description": "Unique identifier for the source (e.g., URL, file pattern, API endpoint)."
+        },
+        "sourceType": {
+          "type": "string",
+          "example": "csv",
+          "description": "Type of the data source (csv, json, excel, api, manual)."
+        },
+        "description": {
+          "type": "string",
+          "example": "Monthly water quality reports from the Ministry of Environment monitoring stations.",
+          "description": "Detailed description of the data source and its contents."
+        },
+        "schemaDefinition": {
+          "type": "object",
+          "example": {
+            "fields": [
+              {
+                "source_name": "Station ID",
+                "data_type": "string",
+                "target_entity": "Station",
+                "target_field": "Name"
+              },
+              {
+                "source_name": "pH",
+                "data_type": "float",
+                "target_entity": "Indicator",
+                "purpose": "display"
+              }
+            ]
+          },
+          "description": "JSON structure defining the fields and their mappings to entities."
+        }
+      },
+      "description": "Data required to create a new data source schema definition.",
+      "title": "Data Source Schema Input",
+      "required": [
+        "name",
+        "sourceType",
+        "schemaDefinition"
+      ]
+    },
+    "waterqualityDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "example": [
+            "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+            "b2c3d4e5-f6a7-8901-2345-67890abcdef0"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "List of entity UUIDs to delete."
+        },
+        "hardDelete": {
+          "type": "boolean",
+          "example": false,
+          "default": "false",
+          "description": "If true, performs a permanent (hard) delete. If false or omitted, performs a soft delete."
+        }
+      },
+      "description": "Request to delete one or more entities by their IDs.",
+      "title": "Delete Request",
+      "required": [
+        "ids"
+      ]
+    },
+    "waterqualityDeleteResponse": {
+      "type": "object",
+      "properties": {
+        "affectedCount": {
+          "type": "string",
+          "format": "int64",
+          "example": 2,
+          "description": "Number of entities that were successfully deleted."
+        }
+      },
+      "description": "Contains information about the deletion operation.",
+      "title": "Delete Response",
+      "required": [
+        "affectedCount"
+      ]
+    },
+    "waterqualityGetDataSourceSchemaResponse": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "$ref": "#/definitions/waterqualityDataSourceSchema",
+          "description": "The retrieved schema."
+        }
+      },
+      "description": "Contains the requested data source schema.",
+      "title": "Get Data Source Schema Response",
+      "required": [
+        "schema"
+      ]
+    },
+    "waterqualityIndicatorPurpose": {
+      "type": "string",
+      "enum": [
+        "INDICATOR_PURPOSE_UNSPECIFIED",
+        "INDICATOR_PURPOSE_PREDICTION",
+        "INDICATOR_PURPOSE_DISPLAY",
+        "INDICATOR_PURPOSE_ANALYSIS"
+      ],
+      "default": "INDICATOR_PURPOSE_UNSPECIFIED",
+      "title": "- INDICATOR_PURPOSE_UNSPECIFIED: Default value"
+    },
+    "waterqualityListAllDataPointsRequest": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "$ref": "#/definitions/coreFilterOptions",
+          "description": "Filtering, pagination, and sorting options."
+        }
+      },
+      "description": "Request to list data points across all stations with filtering and pagination options.",
+      "title": "List All Data Points Request"
+    },
+    "waterqualityListAllDataPointsResponse": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataPoint"
+          },
+          "description": "List of data points matching the filter criteria."
+        },
+        "pagination": {
+          "$ref": "#/definitions/corePaginationInfo",
+          "description": "Pagination information including total count and current page."
+        }
+      },
+      "description": "Contains a paginated list of data points from all stations.",
+      "title": "List All Data Points Response",
+      "required": [
+        "dataPoints",
+        "pagination"
+      ]
+    },
+    "waterqualityListDataPointsByStationRequest": {
+      "type": "object",
+      "properties": {
+        "stationId": {
+          "type": "string",
+          "example": "b2c3d4e5-f6a7-8901-2345-67890abcdef0",
+          "description": "UUID of the station to list data points for."
+        },
+        "options": {
+          "$ref": "#/definitions/coreFilterOptions",
+          "description": "Filtering, pagination, and sorting options."
+        }
+      },
+      "description": "Request to list data points for a specific station with filtering and pagination options.",
+      "title": "List Data Points By Station Request",
+      "required": [
+        "stationId"
+      ]
+    },
+    "waterqualityListDataPointsByStationResponse": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataPoint"
+          },
+          "description": "List of data points matching the filter criteria."
+        },
+        "pagination": {
+          "$ref": "#/definitions/corePaginationInfo",
+          "description": "Pagination information including total count and current page."
+        }
+      },
+      "description": "Contains a paginated list of data points for a specific station.",
+      "title": "List Data Points By Station Response",
+      "required": [
+        "dataPoints",
+        "pagination"
+      ]
+    },
+    "waterqualityListDataSourceSchemasResponse": {
+      "type": "object",
+      "properties": {
+        "schemas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataSourceSchema"
+          },
+          "description": "List of schemas matching the filter criteria."
+        },
+        "pagination": {
+          "$ref": "#/definitions/corePaginationInfo",
+          "description": "Pagination information including total count and current page."
+        }
+      },
+      "description": "Contains a paginated list of data source schemas.",
+      "title": "List Data Source Schemas Response",
+      "required": [
+        "schemas",
+        "pagination"
+      ]
+    },
+    "waterqualityListStationsResponse": {
+      "type": "object",
+      "properties": {
+        "stations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityStation"
+          },
+          "description": "List of stations matching the filter criteria."
+        },
+        "pagination": {
+          "$ref": "#/definitions/corePaginationInfo",
+          "description": "Pagination information including total count and current page."
+        }
+      },
+      "description": "Contains a paginated list of monitoring stations.",
+      "title": "List Stations Response",
+      "required": [
+        "stations",
+        "pagination"
+      ]
+    },
+    "waterqualityListThresholdConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfig"
+          },
+          "description": "List of threshold configurations matching the filter criteria."
+        },
+        "pagination": {
+          "$ref": "#/definitions/corePaginationInfo",
+          "description": "Pagination information including total count and current page."
+        }
+      },
+      "description": "Contains a paginated list of threshold configurations.",
+      "title": "List Threshold Configs Response",
+      "required": [
+        "configs",
+        "pagination"
+      ]
+    },
+    "waterqualityObservationType": {
+      "type": "string",
+      "enum": [
+        "OBSERVATION_TYPE_UNSPECIFIED",
+        "OBSERVATION_TYPE_ACTUAL",
+        "OBSERVATION_TYPE_INTERPOLATION",
+        "OBSERVATION_TYPE_PREDICTED",
+        "OBSERVATION_TYPE_REALTIME_MONITORING"
+      ],
+      "default": "OBSERVATION_TYPE_UNSPECIFIED",
+      "title": "- OBSERVATION_TYPE_UNSPECIFIED: Default value"
+    },
+    "waterqualityStation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+          "description": "Unique identifier for the station (UUID format).",
+          "title": "Base fields inline"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-15T10:30:00Z",
+          "description": "Timestamp when the station was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-16T11:00:00Z",
+          "description": "Timestamp when the station was last updated."
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-17T12:00:00Z",
+          "description": "Timestamp when the station was soft-deleted. Null if not deleted."
+        },
+        "name": {
+          "type": "string",
+          "example": "River Thames Station 1",
+          "description": "Name of the monitoring station.",
+          "title": "Station specific fields"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double",
+          "example": 51.5074,
+          "description": "Latitude coordinate of the station."
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double",
+          "example": -0.1278,
+          "description": "Longitude coordinate of the station."
+        },
+        "country": {
+          "type": "string",
+          "example": "United Kingdom",
+          "description": "Country where the station is located."
+        },
+        "location": {
+          "type": "string",
+          "example": "Central London",
+          "description": "Additional location details."
+        }
+      },
+      "description": "Represents a water quality monitoring station.",
+      "title": "Station",
+      "required": [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "name",
+        "latitude",
+        "longitude",
+        "country"
+      ]
+    },
+    "waterqualityStationInput": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "River Thames Station 1",
+          "description": "Name of the monitoring station.",
+          "title": "No base fields needed for input typically"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double",
+          "example": 51.5074,
+          "description": "Latitude coordinate of the station (decimal degrees)."
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double",
+          "example": -0.1278,
+          "description": "Longitude coordinate of the station (decimal degrees)."
+        },
+        "country": {
+          "type": "string",
+          "example": "United Kingdom",
+          "description": "Country where the station is located."
+        },
+        "location": {
+          "type": "string",
+          "example": "Central London",
+          "description": "Additional location details (city, region, water body name)."
+        }
+      },
+      "description": "Data required to create a new monitoring station.",
+      "title": "Station Input",
+      "required": [
+        "name",
+        "latitude",
+        "longitude",
+        "country"
+      ]
+    },
+    "waterqualityThresholdConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+          "description": "Unique identifier for the threshold config (UUID format).",
+          "title": "Base fields inline"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-15T10:30:00Z",
+          "description": "Timestamp when the threshold config was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-16T11:00:00Z",
+          "description": "Timestamp when the threshold config was last updated."
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-01-17T12:00:00Z",
+          "description": "Timestamp when the threshold config was soft-deleted. Null if not deleted."
+        },
+        "elementName": {
+          "type": "string",
+          "example": "pH",
+          "description": "Name of the water quality element/parameter.",
+          "title": "ThresholdConfig specific fields"
+        },
+        "minValue": {
+          "type": "number",
+          "format": "double",
+          "example": 6.5,
+          "description": "Minimum acceptable value for the element."
+        },
+        "maxValue": {
+          "type": "number",
+          "format": "double",
+          "example": 8.5,
+          "description": "Maximum acceptable value for the element."
+        }
+      },
+      "description": "Represents water quality parameter threshold configuration.",
+      "title": "Threshold Configuration",
+      "required": [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "elementName",
+        "minValue",
+        "maxValue"
+      ]
+    },
+    "waterqualityThresholdConfigInput": {
+      "type": "object",
+      "properties": {
+        "elementName": {
+          "type": "string",
+          "example": "pH",
+          "description": "Name of the water quality element/parameter."
+        },
+        "minValue": {
+          "type": "number",
+          "format": "double",
+          "example": 6.5,
+          "description": "Minimum acceptable value for the element."
+        },
+        "maxValue": {
+          "type": "number",
+          "format": "double",
+          "example": 8.5,
+          "description": "Maximum acceptable value for the element."
+        }
+      },
+      "description": "Data required to create a new threshold configuration.",
+      "title": "Threshold Configuration Input",
+      "required": [
+        "elementName",
+        "minValue",
+        "maxValue"
+      ]
+    },
+    "waterqualityUpdateDataPointsRequest": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataPoint"
+          },
+          "description": "List of data points with updated fields. Each must include ID."
+        }
+      },
+      "description": "Request to update one or more existing data points.",
+      "title": "Update Data Points Request",
+      "required": [
+        "dataPoints"
+      ]
+    },
+    "waterqualityUpdateDataPointsResponse": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityDataPoint"
+          },
+          "description": "List of updated data points."
+        }
+      },
+      "description": "Contains details of the updated data points.",
+      "title": "Update Data Points Response"
+    },
+    "waterqualityUpdateDataSourceSchemaResponse": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "$ref": "#/definitions/waterqualityDataSourceSchema",
+          "description": "Updated schema."
+        }
+      },
+      "description": "Contains the updated data source schema.",
+      "title": "Update Data Source Schema Response",
+      "required": [
+        "schema"
+      ]
+    },
+    "waterqualityUpdateStationsRequest": {
+      "type": "object",
+      "properties": {
+        "stations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityStation"
+          },
+          "description": "List of stations with updated fields. Each must include ID."
+        }
+      },
+      "description": "Request to update one or more existing monitoring stations.",
+      "title": "Update Stations Request",
+      "required": [
+        "stations"
+      ]
+    },
+    "waterqualityUpdateStationsResponse": {
+      "type": "object",
+      "properties": {
+        "stations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityStation"
+          },
+          "description": "List of updated stations."
+        }
+      },
+      "description": "Contains details of the updated monitoring stations.",
+      "title": "Update Stations Response"
+    },
+    "waterqualityUpdateThresholdConfigsRequest": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfig"
+          },
+          "description": "List of threshold configurations with updated fields. Each must include ID."
+        }
+      },
+      "description": "Request to update one or more existing threshold configurations.",
+      "title": "Update Threshold Configs Request",
+      "required": [
+        "configs"
+      ]
+    },
+    "waterqualityUpdateThresholdConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/waterqualityThresholdConfig"
+          },
+          "description": "List of updated threshold configurations."
+        }
+      },
+      "description": "Contains details of the updated threshold configurations.",
+      "title": "Update Threshold Configs Response"
+    },
+    "waterqualityUploadDataResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Upload successful, processed 125 records.",
+          "description": "Summary message about the upload processing."
+        },
+        "recordsProcessed": {
+          "type": "string",
+          "format": "int64",
+          "example": 125,
+          "description": "Number of records successfully processed."
+        },
+        "recordsFailed": {
+          "type": "string",
+          "format": "int64",
+          "example": 3,
+          "description": "Number of records that failed to process."
+        },
+        "dataSourceSchemaId": {
+          "type": "string",
+          "example": "d4e5f6a7-b8c9-0123-4567-890abcdef012",
+          "description": "ID of schema used or created during processing."
+        },
+        "errors": {
+          "type": "array",
+          "example": [
+            "Row 15: Invalid pH value",
+            "Row 23: Missing station reference"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "List of errors encountered during processing."
+        }
+      },
+      "description": "Response after processing an uploaded file.",
+      "title": "Upload Data Response",
+      "required": [
+        "message",
+        "recordsProcessed",
+        "recordsFailed"
+      ]
+    },
+    "waterqualityUploadRequest": {
+      "type": "object",
+      "properties": {
+        "fileUrl": {
+          "type": "string",
+          "example": "https://storage.googleapis.com/bucket-name/water_quality_jan2023.csv",
+          "description": "URL pointing to the data file to be processed (e.g., a publicly accessible GGDrive or S3 URL).",
+          "title": "Optional: Consider adding data_source_schema_id here if needed for processing\n string data_source_schema_id = 2 [(...)]"
+        }
+      },
+      "description": "Request containing the URL of a data file to be processed.",
+      "title": "Upload Request (URL Based)",
+      "required": [
+        "fileUrl"
+      ]
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "description": "JWT Bearer token (e.g., 'Bearer ey...')",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}

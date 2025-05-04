@@ -1,0 +1,576 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Article Service API",
+    "description": "API for managing articles.",
+    "version": "1.0"
+  },
+  "tags": [
+    {
+      "name": "ArticleService",
+      "description": "Operations related to articles"
+    }
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/articles": {
+      "get": {
+        "summary": "List Articles",
+        "operationId": "ArticleService_List",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceListArticlesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "options.limit",
+            "description": "Maximum number of items to return per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "50"
+          },
+          {
+            "name": "options.offset",
+            "description": "Number of items to skip before starting to collect the result set (for pagination).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          {
+            "name": "options.sortBy",
+            "description": "Field name to sort the results by (e.g., 'created_at', 'name').",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "default": "\"created_at\""
+          },
+          {
+            "name": "options.sortDesc",
+            "description": "Set to true to sort in descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "options.filters",
+            "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"}).",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "options.includeDeleted",
+            "description": "Set to true to include soft-deleted records in the results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Articles"
+        ]
+      },
+      "post": {
+        "summary": "Create Article",
+        "operationId": "ArticleService_Create",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceCreateArticleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userserviceCreateArticleRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/api/v1/articles/{id}": {
+      "get": {
+        "summary": "Get Article By ID",
+        "operationId": "ArticleService_GetByID",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceGetArticleByIDResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "UUID of the article to retrieve.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Articles"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Article",
+        "operationId": "ArticleService_Delete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "UUID of the article to delete.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "hardDelete",
+            "description": "Corrected example format for bool\n\nPerform hard delete if true.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Articles"
+        ]
+      },
+      "patch": {
+        "summary": "Update Article",
+        "operationId": "ArticleService_Update",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceUpdateArticleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "UUID of the article to update.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userserviceArticleServiceUpdateBody"
+            }
+          }
+        ],
+        "tags": [
+          "Articles"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "coreFilterOptions": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "example": 50,
+          "default": "50",
+          "description": "Maximum number of items to return per page."
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "example": 0,
+          "default": "0",
+          "description": "Number of items to skip before starting to collect the result set (for pagination)."
+        },
+        "sortBy": {
+          "type": "string",
+          "example": "created_at",
+          "default": "\"created_at\"",
+          "description": "Field name to sort the results by (e.g., 'created_at', 'name')."
+        },
+        "sortDesc": {
+          "type": "boolean",
+          "example": true,
+          "default": "true",
+          "description": "Set to true to sort in descending order."
+        },
+        "filters": {
+          "type": "object",
+          "example": {
+            "email": "user@gmail.com"
+          },
+          "additionalProperties": {},
+          "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"})."
+        },
+        "includeDeleted": {
+          "type": "boolean",
+          "example": false,
+          "default": "false",
+          "description": "Set to true to include soft-deleted records in the results."
+        }
+      },
+      "description": "Represents common filtering, pagination, and sorting options.\nBased on pkg/core/types/common.go FilterOptions struct."
+    },
+    "corePaginationInfo": {
+      "type": "object",
+      "properties": {
+        "totalItems": {
+          "type": "string",
+          "format": "int64",
+          "example": 1234,
+          "description": "Total number of items matching the query criteria across all pages."
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "example": 50,
+          "description": "The limit (page size) used for the current response."
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "example": 0,
+          "description": "The offset (number of items skipped) used for the current response."
+        }
+      },
+      "description": "Represents common pagination metadata included in list responses.\nBased on pkg/core/types/common.go PaginationResult struct (metadata fields only).\nSpecific list responses should include this alongside their repeated items field."
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "userserviceArticle": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "uuid-string",
+          "description": "Unique identifier (UUID)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-10-27T10:00:00Z",
+          "description": "Creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-10-27T11:30:00Z",
+          "description": "Last update timestamp."
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-10-28T09:15:00Z",
+          "description": "Deletion timestamp (if soft-deleted)."
+        },
+        "title": {
+          "type": "string",
+          "example": "Article Title",
+          "description": "Article title."
+        },
+        "content": {
+          "type": "string",
+          "example": "Article content here...",
+          "description": "Article content."
+        },
+        "authorId": {
+          "type": "string",
+          "example": "author-uuid-string",
+          "description": "Author's user ID (UUID)."
+        },
+        "pictureUrl": {
+          "type": "string",
+          "example": "https://example.com/image.jpg",
+          "description": "URL of the associated picture (optional)."
+        },
+        "badge": {
+          "type": "string",
+          "example": "common",
+          "description": "Article badge ('common', 'good', 'danger')."
+        },
+        "fileIds": {
+          "type": "array",
+          "example": [
+            "file-uuid-1",
+            "file-uuid-2"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "List of associated file IDs (UUIDs).",
+          "title": "Corrected example format"
+        }
+      },
+      "description": "Represents an article entity.",
+      "title": "Article",
+      "required": [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "title",
+        "content",
+        "authorId",
+        "badge"
+      ]
+    },
+    "userserviceArticleServiceUpdateBody": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "Updated Title",
+          "description": "New title."
+        },
+        "content": {
+          "type": "string",
+          "example": "Updated content...",
+          "description": "New content."
+        },
+        "pictureUrl": {
+          "type": "string",
+          "example": "https://example.com/updated_image.jpg",
+          "description": "New picture URL.",
+          "title": "author_id typically shouldn't be updated"
+        },
+        "badge": {
+          "type": "string",
+          "example": "danger",
+          "description": "New badge ('common', 'good', 'danger')."
+        },
+        "fileIds": {
+          "$ref": "#/definitions/userserviceFileIDsUpdate",
+          "description": "Replace associated file IDs.",
+          "title": "Use a specific message/field for managing file associations if needed, simple replacement shown here"
+        }
+      },
+      "title": "Update Article Request"
+    },
+    "userserviceCreateArticleRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "New Article Title",
+          "description": "Article title."
+        },
+        "content": {
+          "type": "string",
+          "example": "Content for the new article.",
+          "description": "Article content."
+        },
+        "authorId": {
+          "type": "string",
+          "example": "author-uuid-string",
+          "description": "Author's user ID (UUID)."
+        },
+        "pictureUrl": {
+          "type": "string",
+          "example": "https://example.com/new_image.jpg",
+          "description": "URL of the associated picture (optional)."
+        },
+        "badge": {
+          "type": "string",
+          "example": "good",
+          "description": "Article badge ('common', 'good', 'danger'). Defaults to 'common'."
+        },
+        "fileIds": {
+          "type": "array",
+          "example": [
+            "file-uuid-1"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "List of associated file IDs (UUIDs, optional).",
+          "title": "Corrected example format"
+        }
+      },
+      "title": "Create Article Request",
+      "required": [
+        "title",
+        "content",
+        "authorId"
+      ]
+    },
+    "userserviceCreateArticleResponse": {
+      "type": "object",
+      "properties": {
+        "article": {
+          "$ref": "#/definitions/userserviceArticle"
+        }
+      },
+      "title": "Create Article Response"
+    },
+    "userserviceFileIDsUpdate": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "example": [
+            "file-uuid-3",
+            "file-uuid-4"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "New list of associated file IDs (UUIDs).",
+          "title": "Corrected example format"
+        }
+      },
+      "title": "File IDs Update"
+    },
+    "userserviceGetArticleByIDResponse": {
+      "type": "object",
+      "properties": {
+        "article": {
+          "$ref": "#/definitions/userserviceArticle"
+        }
+      },
+      "title": "Get Article By ID Response"
+    },
+    "userserviceListArticlesResponse": {
+      "type": "object",
+      "properties": {
+        "articles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userserviceArticle"
+          }
+        },
+        "paginationInfo": {
+          "$ref": "#/definitions/corePaginationInfo"
+        }
+      },
+      "title": "List Articles Response"
+    },
+    "userserviceUpdateArticleResponse": {
+      "type": "object",
+      "properties": {
+        "article": {
+          "$ref": "#/definitions/userserviceArticle"
+        }
+      },
+      "title": "Update Article Response"
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "description": "JWT Bearer token (e.g., 'Bearer ey...')",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}

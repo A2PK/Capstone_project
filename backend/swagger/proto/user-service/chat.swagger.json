@@ -1,0 +1,463 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Direct Messaging Service API",
+    "description": "API for managing direct messages between users.",
+    "version": "1.0"
+  },
+  "tags": [
+    {
+      "name": "DirectMessageService",
+      "description": "Operations related to direct messages"
+    }
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/messages": {
+      "post": {
+        "summary": "Send Direct Message",
+        "operationId": "DirectMessageService_SendMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceSendMessageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userserviceSendMessageRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
+    "/api/v1/messages/conversation": {
+      "get": {
+        "summary": "List Messages Between Two Users",
+        "operationId": "DirectMessageService_ListMessagesBetweenUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceListMessagesBetweenUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId1",
+            "description": "ID of the first user in the conversation.",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "userId2",
+            "description": "ID of the second user in the conversation.",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "options.limit",
+            "description": "Maximum number of items to return per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "50"
+          },
+          {
+            "name": "options.offset",
+            "description": "Number of items to skip before starting to collect the result set (for pagination).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          {
+            "name": "options.sortBy",
+            "description": "Field name to sort the results by (e.g., 'created_at', 'name').",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "default": "\"created_at\""
+          },
+          {
+            "name": "options.sortDesc",
+            "description": "Set to true to sort in descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "options.filters",
+            "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"}).",
+            "in": "query",
+            "required": false
+          },
+          {
+            "name": "options.includeDeleted",
+            "description": "Set to true to include soft-deleted records in the results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
+    "/api/v1/messages/read": {
+      "post": {
+        "summary": "Mark Messages as Read",
+        "operationId": "DirectMessageService_MarkMessagesAsRead",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userserviceMarkMessagesAsReadRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
+    "/api/v1/messages/unseen": {
+      "get": {
+        "summary": "List Unseen Messages for Current User",
+        "operationId": "DirectMessageService_ListUnseenMessagesForUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userserviceListUnseenMessagesForUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "coreFilterOptions": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "example": 50,
+          "default": "50",
+          "description": "Maximum number of items to return per page."
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "example": 0,
+          "default": "0",
+          "description": "Number of items to skip before starting to collect the result set (for pagination)."
+        },
+        "sortBy": {
+          "type": "string",
+          "example": "created_at",
+          "default": "\"created_at\"",
+          "description": "Field name to sort the results by (e.g., 'created_at', 'name')."
+        },
+        "sortDesc": {
+          "type": "boolean",
+          "example": true,
+          "default": "true",
+          "description": "Set to true to sort in descending order."
+        },
+        "filters": {
+          "type": "object",
+          "example": {
+            "email": "user@gmail.com"
+          },
+          "additionalProperties": {},
+          "description": "Key-value pairs for specific field filtering. Values should correspond to google.protobuf.Value structure (e.g., {\"email\": \"user@gmail.com\"})."
+        },
+        "includeDeleted": {
+          "type": "boolean",
+          "example": false,
+          "default": "false",
+          "description": "Set to true to include soft-deleted records in the results."
+        }
+      },
+      "description": "Represents common filtering, pagination, and sorting options.\nBased on pkg/core/types/common.go FilterOptions struct."
+    },
+    "corePaginationInfo": {
+      "type": "object",
+      "properties": {
+        "totalItems": {
+          "type": "string",
+          "format": "int64",
+          "example": 1234,
+          "description": "Total number of items matching the query criteria across all pages."
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "example": 50,
+          "description": "The limit (page size) used for the current response."
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "example": 0,
+          "description": "The offset (number of items skipped) used for the current response."
+        }
+      },
+      "description": "Represents common pagination metadata included in list responses.\nBased on pkg/core/types/common.go PaginationResult struct (metadata fields only).\nSpecific list responses should include this alongside their repeated items field."
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "userserviceDirectChatMessage": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "msg-uuid-123",
+          "description": "Unique message identifier (UUID)."
+        },
+        "senderId": {
+          "type": "string",
+          "example": "user-uuid-sender",
+          "description": "ID of the user who sent the message."
+        },
+        "receiverId": {
+          "type": "string",
+          "example": "user-uuid-receiver",
+          "description": "ID of the user who received the message."
+        },
+        "message": {
+          "type": "string",
+          "example": "Hello there!",
+          "description": "The text content of the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-10-27T10:05:00Z",
+          "description": "Timestamp when the message was created (sent)."
+        },
+        "read": {
+          "type": "boolean",
+          "example": false,
+          "description": "Indicates if the receiver has read the message."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2023-10-27T10:05:00Z",
+          "description": "Last update timestamp.",
+          "title": "updated_at and deleted_at from BaseEntity can be added if needed by clients"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Deletion timestamp (if soft-deleted)."
+        }
+      },
+      "description": "Represents a single direct message between two users.",
+      "title": "DirectChatMessage",
+      "required": [
+        "id",
+        "senderId",
+        "receiverId",
+        "message",
+        "createdAt",
+        "read"
+      ]
+    },
+    "userserviceListMessagesBetweenUsersResponse": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userserviceDirectChatMessage"
+          }
+        },
+        "paginationInfo": {
+          "$ref": "#/definitions/corePaginationInfo"
+        }
+      },
+      "title": "List Messages Between Users Response"
+    },
+    "userserviceListUnseenMessagesForUserResponse": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userserviceDirectChatMessage"
+          },
+          "title": "Maybe add total count if useful\n int64 total_unseen = 2;"
+        }
+      },
+      "title": "List Unseen Messages For User Response"
+    },
+    "userserviceMarkMessagesAsReadRequest": {
+      "type": "object",
+      "properties": {
+        "messageIds": {
+          "type": "array",
+          "example": [
+            "msg-uuid-1",
+            "msg-uuid-2"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "List of message UUIDs to mark as read.",
+          "title": "Corrected example format"
+        }
+      },
+      "title": "Mark Messages As Read Request",
+      "required": [
+        "messageIds"
+      ]
+    },
+    "userserviceSendMessageRequest": {
+      "type": "object",
+      "properties": {
+        "receiverId": {
+          "type": "string",
+          "example": "user-uuid-receiver",
+          "description": "ID of the user to send the message to.",
+          "title": "sender_id is usually inferred from the authenticated user context (JWT) on the server-side\nstring sender_id = 1; // Can be added if needed explicitly"
+        },
+        "message": {
+          "type": "string",
+          "example": "This is a test message.",
+          "description": "The text content of the message."
+        }
+      },
+      "title": "Send Message Request",
+      "required": [
+        "receiverId",
+        "message"
+      ]
+    },
+    "userserviceSendMessageResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "$ref": "#/definitions/userserviceDirectChatMessage"
+        }
+      },
+      "title": "Send Message Response"
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "description": "JWT Bearer token (e.g., 'Bearer ey...')",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}
