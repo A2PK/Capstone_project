@@ -1,17 +1,28 @@
-#Web application
-Our Water Quality Monitoring system: https://water-quality-system.vercel.app
+# Water Quality Monitoring System
 
-#Account to login the website
-The accounts: 
-   - Officer role:
-     + email: user@gmail.com
-     + password: StrongP@ssw0rd!
-   - Admin role:
-     + email: admin@gmail.com
-     + password: StrongP@ssw0rd!
-   - Manager role:
-     + email: manager@gmail.com
-     + password: StrongP@ssw0rd!
+Access the web application here: [Water Quality System](https://water-quality-system.vercel.app)
 
-#Models integrated to the system
-The models we have integrated to the system: XGBoost, Random Forest, Original ETSFormer, Parallel ETSFormer.
+## Login Credentials
+
+You can use the following demo accounts to log in:
+
+- **Officer**
+  - Email: `user@gmail.com`
+  - Password: `StrongP@ssw0rd!`
+
+- **Admin**
+  - Email: `admin@gmail.com`
+  - Password: `StrongP@ssw0rd!`
+
+- **Manager**
+  - Email: `manager@gmail.com`
+  - Password: `StrongP@ssw0rd!`
+
+## Integrated Models
+
+The system integrates the following machine learning models:
+- XGBoost
+- Random Forest
+- Original ETSFormer
+- Parallel ETSFormer
+
