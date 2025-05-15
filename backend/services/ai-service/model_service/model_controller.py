@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from uuid import UUID
 import os
 import grpc # Added for gRPC
@@ -22,7 +22,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 
 
 from database import AsyncSession, get_db_session # Changed to absolute import
-from .model import AIModelPydantic, AIModelCreate, AIModelUpdate, BaseModel
+from .model import AIModelPydantic, AIModelCreate, AIModelUpdate, BaseModel, ModelMetricsCreate, ModelMetricsPydantic
 from .model_repo import ModelRepository, SQLAlchemyModelRepository
 from .model_usecase import ModelUseCase, AIModelService, NotFoundError, UseCaseError
 from MLCodeForAPI import trainWithMLModel, predictWithMLModel, readCSVfile
@@ -41,6 +41,13 @@ router = APIRouter(
 AI_PREDICTION_SCHEMA_NAME = "ai-service-predictions"
 AI_PREDICTION_SCHEMA_IDENTIFIER = "ai-service"
 
+METRIC_DESCRIPTIONS = {
+    "mse": "Mean Squared Error (MSE): Measures the average squared difference between predicted and actual values. Lower values indicate better model performance.",
+    "rmse": "Root Mean Square Error (RMSE): Square root of MSE, in the same unit as the target variable. Lower values indicate better prediction accuracy.",
+    "mae": "Mean Absolute Error (MAE): Average absolute difference between predicted and actual values. More robust to outliers than MSE/RMSE.",
+    "r2": "R-squared (R²): Proportion of variance in the dependent variable predictable from the independent variable(s). Higher values (closer to 1) indicate better fit.",
+    "hrse": "Highest Root Square Error (HRSE): Maximum error in predictions, useful for identifying worst-case scenarios. Lower values indicate better worst-case performance."
+}
 
 # --- Dependency Providers --- (Can be moved to a separate dependencies.py)
 
@@ -70,6 +77,16 @@ class PredictionResult(BaseModel):
      error: Optional[str] = None
      predicted_datapoints_created: Optional[int] = 0 # Default to 0
      schema_id_used: Optional[str] = None
+
+# Re-add MetricsRecommendation definition
+class MetricsRecommendation(BaseModel):
+    parameter_name: str
+    best_model: str
+    best_metric_value: float
+    metric_name: str
+    metric_description: str
+    all_metrics: List[ModelMetricsPydantic]
+    recommendation: str
 
 # --- Helper Functions ---
 
@@ -400,17 +417,6 @@ async def training_api(
 
 
                     logger.info(f"Starting model training for station {station_id_str}...")
-                    # Train model - Assume trainWithMLModel returns dict for paths, list for types
-                    # model_paths, eval_dict, model_type_list = trainWithMLModel(
-                    #     file=temp_file, # Use the wrapper
-                    #     elements_list=features_list,
-                    #     date_column_name=date_col,
-                    #     place_column_name=place_col,
-                    #     train_test_ratio=train_test_ratio,
-                    #     place_id=station_id_str, # Pass the specific station ID
-                    #     date_tag=date_tag,
-                    #     model_dir=model_dir # Use hardcoded dir
-                    # )
                     model_path_DL, eval_dict_DL, model_type_list_DL = trainWithDLModel(
                         df=df,
                         elements_list=features_list,
@@ -447,7 +453,6 @@ async def training_api(
                             logger.warning(f"Could not find model path for type \'{model_type}\' in returned paths dict for station {station_id_str}. Skipping metadata save for this type.")
                             continue
 
-
                         model_description = f"Mô hình {model_type} huấn luyện cho trạm {station_id_str}.\n Huấn luyện vào: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
 
                         # Create Pydantic payload
@@ -456,11 +461,8 @@ async def training_api(
                             version=date_tag, # Use date_tag as version
                             file_path=model_path, # Use the specific path for this model type
                             description=model_description,
-                            # trained_at=datetime.now(timezone.utc), # Set training time
-                            # now in Vietnam timezone
                             trained_at=datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=7))),
                             station_id=station_uuid, # Use the UUID object
-                            # availability defaults to True in Pydantic model
                             parameter_list=features_list # Store the features used for training (filtered ones)
                         )
 
@@ -469,9 +471,31 @@ async def training_api(
                             created_db_model = await use_case.create_model(model_create_payload)
                             created_models.append(created_db_model)
                             logger.info(f"Metadata saved successfully for model ID: {created_db_model.id}")
+
+                            # Create metrics for each parameter
+                            eval_dict_for_type = eval_dict.get(model_type, {})
+                            for param_name in features_list:
+                                param_metrics = eval_dict_for_type.get(param_name, {})
+                                if param_metrics:
+                                    metrics_create = ModelMetricsCreate(
+                                        model_id=created_db_model.id,
+                                        model_name=model_type,
+                                        parameter_name=param_name,
+                                        station_id=station_uuid,  # Use the station_uuid directly instead of created_db_model.station_id
+                                        mse=param_metrics.get('mse'),
+                                        rmse=param_metrics.get('rmse'),
+                                        mae=param_metrics.get('mae'),
+                                        r2=param_metrics.get('r2'),
+                                        hrse=param_metrics.get('hrse')
+                                    )
+                                    try:
+                                        await use_case.create_metrics(metrics_create)
+                                        logger.info(f"Metrics saved for model {model_type}, parameter {param_name}, station {station_uuid}")
+                                    except Exception as metrics_err:
+                                        logger.error(f"Error saving metrics for model {model_type}, parameter {param_name}, station {station_uuid}: {metrics_err}")
+
                         except UseCaseError as uc_err:
                             logger.error(f"Error saving metadata for model {model_type}: {uc_err}", exc_info=True)
-                            # Decide if one failure should stop processing others
                         except Exception as meta_err:
                             logger.error(f"Unexpected error saving metadata for model {model_type}: {meta_err}", exc_info=True)
                     # --- End Metadata Creation ---
@@ -971,3 +995,96 @@ def make_proto_value_map(d: dict) -> dict:
         # For this specific case ("observation_type": "actual"), string is sufficient
         value_map[key] = pb_value.fields[key]
     return value_map
+
+@router.get("/metrics/newest", response_model=MetricsRecommendation, tags=["AI Models Metrics"])
+async def get_newest_metrics(
+    parameter_name: str = Query(..., description="Name of the parameter to get metrics for"),
+    station_id: Optional[UUID] = Query(None, description="Optional station ID to filter metrics for a specific station"),
+    metric_name: str = Query("rmse", description="Name of the metric to base recommendation on (mse, rmse, mae, r2, hrse)"),
+    use_case: ModelUseCase = Depends(get_model_use_case)
+):
+    """
+    Gets the newest metrics for all model types for a specific parameter and provides a recommendation
+    based on the specified metric. Returns the best performing model and detailed metrics information.
+    
+    Available metrics:
+    - mse: Mean Squared Error (lower is better)
+    - rmse: Root Mean Square Error (lower is better) - Default
+    - mae: Mean Absolute Error (lower is better)
+    - r2: R-squared (higher is better)
+    - hrse: Highest Root Square Error (lower is better)
+    """
+    logger.info(f"API: Getting newest metrics for parameter: {parameter_name}, metric: {metric_name}, station: {station_id}")
+    
+    if metric_name not in METRIC_DESCRIPTIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid metric name. Must be one of: {', '.join(METRIC_DESCRIPTIONS.keys())}"
+        )
+
+    try:
+        metrics_dict = await use_case.get_newest_metrics_by_parameters([parameter_name], station_id)
+        if not metrics_dict or parameter_name not in metrics_dict:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No metrics found for parameter: {parameter_name}" + 
+                      (f" and station: {station_id}" if station_id else "")
+            )
+
+        metrics_list = metrics_dict[parameter_name]
+        if not metrics_list:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No metrics found for parameter: {parameter_name}" +
+                      (f" and station: {station_id}" if station_id else "")
+            )
+
+        # Find best model based on the specified metric
+        best_model = None
+        best_value = None
+        is_higher_better = metric_name == "r2"  # R² is the only metric where higher is better
+
+        for metric in metrics_list:
+            metric_value = getattr(metric, metric_name)
+            if metric_value is None:
+                continue
+
+            if best_value is None or (
+                (is_higher_better and metric_value > best_value) or
+                (not is_higher_better and metric_value < best_value)
+            ):
+                best_value = metric_value
+                best_model = metric.model_name
+
+        if best_model is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No valid {metric_name} values found for any models"
+            )
+
+        # Generate recommendation
+        station_info = f" for station {station_id}" if station_id else ""
+        recommendation = f"For parameter '{parameter_name}'{station_info}, the {best_model} model performs best with a {metric_name.upper()} of {best_value:.4f}. "
+        if is_higher_better:
+            recommendation += f"This indicates the model explains {best_value*100:.1f}% of the variance in the data."
+        else:
+            recommendation += f"This indicates the model's predictions are off by an average of {best_value:.4f} units."
+
+        return MetricsRecommendation(
+            parameter_name=parameter_name,
+            best_model=best_model,
+            best_metric_value=best_value,
+            metric_name=metric_name,
+            metric_description=METRIC_DESCRIPTIONS[metric_name],
+            all_metrics=metrics_list,
+            recommendation=recommendation
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"API Error getting newest metrics: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error getting metrics"
+        )

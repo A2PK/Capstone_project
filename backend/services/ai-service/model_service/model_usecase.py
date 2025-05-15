@@ -1,10 +1,13 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from uuid import UUID
 from datetime import datetime
 
-from .model import AIModelSQL, AIModelPydantic, AIModelCreate, AIModelUpdate
+from .model import (
+    AIModelSQL, AIModelPydantic, AIModelCreate, AIModelUpdate,
+    ModelMetricsSQL, ModelMetricsPydantic, ModelMetricsCreate
+)
 from .model_repo import ModelRepository
 
 logger = logging.getLogger(__name__)
@@ -49,6 +52,18 @@ class ModelUseCase(ABC):
 
     @abstractmethod
     async def find_newest_model_for_station(self, station_id: UUID, model_type: str) -> Optional[AIModelPydantic]:
+        pass
+
+    @abstractmethod
+    async def create_metrics(self, metrics_create: ModelMetricsCreate) -> ModelMetricsPydantic:
+        pass
+
+    @abstractmethod
+    async def get_metrics_by_model_id(self, model_id: UUID) -> List[ModelMetricsPydantic]:
+        pass
+
+    @abstractmethod
+    async def get_newest_metrics_by_parameters(self, parameter_names: List[str], station_id: Optional[UUID] = None) -> Dict[str, List[ModelMetricsPydantic]]:
         pass
 
 
@@ -146,3 +161,34 @@ class AIModelService(ModelUseCase):
              logger.warning(f"Newest model found for station {station_id} type {model_type} (ID: {model_sql.id}) is not available.")
              return None
         return AIModelPydantic.model_validate(model_sql)
+
+    async def create_metrics(self, metrics_create: ModelMetricsCreate) -> ModelMetricsPydantic:
+        logger.info(f"Use case: Creating metrics for model {metrics_create.model_name}, parameter {metrics_create.parameter_name}")
+        
+        metrics_sql = ModelMetricsSQL(
+            model_id=metrics_create.model_id,
+            model_name=metrics_create.model_name,
+            parameter_name=metrics_create.parameter_name,
+            station_id=metrics_create.station_id,
+            mse=metrics_create.mse,
+            rmse=metrics_create.rmse,
+            mae=metrics_create.mae,
+            r2=metrics_create.r2,
+            hrse=metrics_create.hrse
+        )
+        
+        created_sql = await self.repository.create_metrics(metrics_sql)
+        return ModelMetricsPydantic.model_validate(created_sql)
+
+    async def get_metrics_by_model_id(self, model_id: UUID) -> List[ModelMetricsPydantic]:
+        logger.info(f"Use case: Getting metrics for model ID {model_id}")
+        metrics_sql = await self.repository.get_metrics_by_model_id(model_id)
+        return [ModelMetricsPydantic.model_validate(m) for m in metrics_sql]
+
+    async def get_newest_metrics_by_parameters(self, parameter_names: List[str], station_id: Optional[UUID] = None) -> Dict[str, List[ModelMetricsPydantic]]:
+        logger.info(f"Use case: Getting newest metrics for parameters {parameter_names} and station {station_id}")
+        metrics_dict = await self.repository.get_newest_metrics_by_parameters(parameter_names, station_id)
+        return {
+            param: [ModelMetricsPydantic.model_validate(m) for m in metrics]
+            for param, metrics in metrics_dict.items()
+        }
