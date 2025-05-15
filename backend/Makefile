@@ -56,7 +56,7 @@ apply-config:
 	kubectl apply -f k8s/api-gateway/ # Apply ConfigMap, Deployment, Service, Ingress
 	kubectl apply -f k8s/user-service/ # Apply ConfigMap, Deployment, Service
 	kubectl apply -f k8s/water-quality-service/ # Apply ConfigMap, Deployment, Service
-	# kubectl apply -f k8s/ai-service/ # Apply ConfigMap, Deployment, Service
+	kubectl apply -f k8s/ai-service/ # Apply ConfigMap, Deployment, Service
 
 .PHONY: describe-api
 describe-api:

@@ -1,13 +1,13 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from uuid import UUID
 
 from sqlalchemy import select, update, delete, func
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .model import AIModelSQL, AIModelPydantic # Assuming Pydantic model needed for return typing
+from .model import AIModelSQL, AIModelPydantic, ModelMetricsSQL, ModelMetricsPydantic
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,18 @@ class ModelRepository(ABC):
 
     @abstractmethod
     async def find_newest_by_station_and_type(self, station_id: UUID, model_type_pattern: str) -> Optional[AIModelSQL]:
+        pass
+
+    @abstractmethod
+    async def create_metrics(self, metrics_data: ModelMetricsSQL) -> ModelMetricsSQL:
+        pass
+
+    @abstractmethod
+    async def get_metrics_by_model_id(self, model_id: UUID) -> List[ModelMetricsSQL]:
+        pass
+
+    @abstractmethod
+    async def get_newest_metrics_by_parameters(self, parameter_names: List[str], station_id: Optional[UUID] = None) -> Dict[str, List[ModelMetricsSQL]]:
         pass
 
 
@@ -187,4 +199,69 @@ class SQLAlchemyModelRepository(ModelRepository):
             return result.scalar_one_or_none()
         except Exception as e:
             logger.error(f"Error finding newest model for station {station_id} type pattern {model_type_pattern}: {e}")
+            raise
+
+    async def create_metrics(self, metrics_sql: ModelMetricsSQL) -> ModelMetricsSQL:
+        try:
+            self.session.add(metrics_sql)
+            await self.session.flush()
+            await self.session.refresh(metrics_sql)
+            logger.info(f"Created metrics record for model ID: {metrics_sql.model_id}, parameter: {metrics_sql.parameter_name}")
+            return metrics_sql
+        except IntegrityError as e:
+            await self.session.rollback()
+            logger.error(f"Database integrity error creating metrics: {e}")
+            raise
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error creating metrics record: {e}")
+            raise
+
+    async def get_metrics_by_model_id(self, model_id: UUID) -> List[ModelMetricsSQL]:
+        try:
+            stmt = select(ModelMetricsSQL).where(ModelMetricsSQL.model_id == model_id)
+            result = await self.session.execute(stmt)
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Error retrieving metrics for model ID {model_id}: {e}")
+            raise
+
+    async def get_newest_metrics_by_parameters(self, parameter_names: List[str], station_id: Optional[UUID] = None) -> Dict[str, List[ModelMetricsSQL]]:
+        try:
+            result_dict = {}
+            for param_name in parameter_names:
+                # Subquery to get the latest metrics for each model type and parameter
+                subquery = (
+                    select(
+                        ModelMetricsSQL.model_name,
+                        func.max(ModelMetricsSQL.created_at).label('max_created_at')
+                    )
+                    .where(ModelMetricsSQL.parameter_name == param_name)
+                )
+                
+                if station_id:
+                    subquery = subquery.where(ModelMetricsSQL.station_id == station_id)
+                
+                subquery = subquery.group_by(ModelMetricsSQL.model_name).subquery()
+
+                # Main query to get the actual metrics records
+                stmt = (
+                    select(ModelMetricsSQL)
+                    .join(
+                        subquery,
+                        (ModelMetricsSQL.model_name == subquery.c.model_name) &
+                        (ModelMetricsSQL.created_at == subquery.c.max_created_at)
+                    )
+                    .where(ModelMetricsSQL.parameter_name == param_name)
+                )
+                
+                if station_id:
+                    stmt = stmt.where(ModelMetricsSQL.station_id == station_id)
+
+                result = await self.session.execute(stmt)
+                result_dict[param_name] = result.scalars().all()
+
+            return result_dict
+        except Exception as e:
+            logger.error(f"Error retrieving newest metrics for parameters {parameter_names} and station {station_id}: {e}")
             raise

@@ -97,10 +97,13 @@ def train_export_model_ML (
         for col in columnlist:
             y_true = Y_test[col]
             y_pred = prediction_df[f'predicted_{col}']
-            rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+            mse = mean_squared_error(y_true, y_pred)
+            rmse = np.sqrt(mse)
             mae = mean_absolute_error(y_true, y_pred)
             r2 = r2_score(y_true, y_pred)
-            eval_dict[col] = {'rmse': rmse, 'mae': mae, 'r2':r2}
+            max_se = np.max(np.sqrt((y_true - y_pred)**2)) if len(y_pred) else 0  # HRSE calculation
+            eval_dict[col] = {'mse': mse, 'rmse': rmse, 'mae': mae, 'r2': r2, 'HRSE': max_se}
+            print(f"  {col}: RMSE={rmse:.3f}, MAE={mae:.3f}, R²={r2:.3f}, HRSE={max_se:.3f}")
 
   return model_path,eval_dict
 
