@@ -1,7 +1,7 @@
 import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from .jobs import print_ok_job # Import the job function
+from .jobs import print_ok_job, train_all_stations_job, predict_all_stations_job
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +17,29 @@ def init_scheduler() -> AsyncIOScheduler:
         name="Daily Print Ok Job",
         replace_existing=True
     )
+    # Add the async job to train all stations daily at midnight
+    scheduler.add_job(
+        train_all_stations_job,
+        trigger=CronTrigger(hour=0, minute=0),
+        id="daily_train_all_stations",
+        name="Daily Train All Stations Job",
+        replace_existing=True,
+        coalesce=True
+    )
+    # Add the async job to predict for all stations daily at midnight
+    scheduler.add_job(
+        predict_all_stations_job,
+        trigger=CronTrigger(hour=0, minute=0),
+        id="daily_predict_all_stations",
+        name="Daily Predict All Stations Job",
+        replace_existing=True,
+        coalesce=True
+    )
     
     logger.info("Starting scheduler...")
     scheduler.start()
-    logger.info("Scheduler started. Scheduled jobs:")
+    logger.info("Scheduler started.")
     scheduler.print_jobs()
-    
+    for job in scheduler.get_jobs():
+        logger.info(f"Scheduled job: {job}")
     return scheduler 
