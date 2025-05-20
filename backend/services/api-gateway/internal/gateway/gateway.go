@@ -20,7 +20,10 @@ import (
 
 	"golang-microservices-boilerplate/pkg/core/logger"
 	"golang-microservices-boilerplate/pkg/middleware"
+	"golang-microservices-boilerplate/pkg/utils"
 	"golang-microservices-boilerplate/services/api-gateway/internal/domain"
+
+	"github.com/gofiber/websocket/v2"
 )
 
 // Gateway handles HTTP requests by translating them to gRPC calls using Fiber
@@ -34,6 +37,7 @@ type Gateway struct {
 	serviceConns map[string]*grpc.ClientConn
 	opts         []grpc.DialOption
 	mu           sync.Mutex
+	wsManager    *WebSocketManager
 }
 
 // GatewayOption configures the Gateway
@@ -124,6 +128,33 @@ func NewGateway(
 
 	setupAuthMiddleware(g.app, g.logger)
 
+	// Initialize WebSocket manager
+	kafkaBrokers := []string{utils.GetEnv("KAFKA_BROKER_1", "")}
+	kafkaTopic := utils.GetEnv("KAFKA_TOPIC", "water-quality-realtime")
+	apiKey := utils.GetEnv("KAFKA_API_KEY", "")
+	apiSecret := utils.GetEnv("KAFKA_API_SECRET", "")
+
+	wsManager, err := NewWebSocketManager(kafkaBrokers, kafkaTopic, apiKey, apiSecret)
+	if err != nil {
+		g.logger.Info("Failed to initialize WebSocket manager", "error", err)
+	} else {
+		g.wsManager = wsManager
+	}
+
+	// Add WebSocket middleware
+	g.app.Use("/ws", func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("allowed", true)
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
+
+	// Add WebSocket route
+	g.app.Get("/ws/water-quality", websocket.New(func(c *websocket.Conn) {
+		g.wsManager.HandleWebSocket(c)
+	}))
+
 	// Mount the gRPC-Gateway mux
 	g.app.Use("/api", adaptor.HTTPHandler(g.gwMux))
 
@@ -174,6 +205,14 @@ func (g *Gateway) Start(port string) error {
 // Shutdown gracefully shuts down the Fiber server
 func (g *Gateway) Shutdown(ctx context.Context) error {
 	g.logger.Info("Shutting down Fiber server...")
+
+	// Close WebSocket manager if it exists
+	if g.wsManager != nil {
+		if err := g.wsManager.Close(); err != nil {
+			g.logger.Error("Error closing WebSocket manager", "error", err)
+		}
+	}
+
 	serverErr := g.app.Shutdown()
 
 	// Removed closing of gRPC connections previously managed by discovery
